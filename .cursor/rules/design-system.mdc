@@ -1,0 +1,126 @@
+---
+description: Hearst Connect Design System — règles de style institutionnelles. Appliqué à tous les composants connect/.
+globs: src/components/connect/**/*.tsx
+alwaysApply: false
+---
+
+# Hearst Connect — Design System Lock
+
+Toute modification de style dans `src/components/connect/` DOIT respecter les règles suivantes.
+
+## Source de vérité
+
+- Tokens : `src/components/connect/constants.ts` → objet `TOKENS`
+- Référence visuelle : `design-system.html`
+
+## Règles absolues
+
+### Couleurs — UNIQUEMENT ces valeurs
+```ts
+// ✅
+TOKENS.colors.black       // #000000
+TOKENS.colors.white       // #FFFFFF
+TOKENS.colors.accent      // #a7fb90
+TOKENS.colors.gray500     // #ADB5BD  (texte ghost uniquement)
+TOKENS.colors.gray200     // #E9ECEF  (border subtle)
+TOKENS.colors.gray100     // #F1F3F5  (surface inactive)
+TOKENS.colors.danger      // #EF4444  (erreurs uniquement)
+
+// ❌ INTERDIT
+'#6b7280', '#374151', 'gray', 'rgb(...)', toute couleur hors TOKENS
+```
+
+### Typographie
+```ts
+// Corps / titres
+fontFamily: TOKENS.fonts.sans    // Inter
+fontWeight: TOKENS.fontWeights.black  // 800 — titres principaux
+
+// Données chiffrées, labels, indicateurs
+fontFamily: TOKENS.fonts.mono    // IBM Plex Mono
+fontWeight: TOKENS.fontWeights.bold   // 700
+
+// ❌ INTERDIT : fontFamily hardcodé, fontSize en px brut hors TOKENS.fontSizes.*
+```
+
+### Labels (TOUS les labels sans exception)
+```ts
+// ✅ Pattern obligatoire
+{
+  fontFamily: TOKENS.fonts.mono,
+  fontSize: TOKENS.fontSizes.xs,        // 11px
+  fontWeight: TOKENS.fontWeights.bold,  // 700
+  letterSpacing: TOKENS.letterSpacing.display, // 0.2em
+  textTransform: 'uppercase',
+  borderLeft: `3px solid ${TOKENS.colors.accent}`,
+  paddingLeft: TOKENS.spacing[3],       // 12px
+}
+
+// ❌ INTERDIT : borderLeft 2px, letterSpacing '0.15em', fontSize '10px', var(--color-accent)
+```
+
+### Progress bars
+```ts
+// ✅
+{ height: '12px', background: TOKENS.colors.black }   // track
+{ height: '100%', background: TOKENS.colors.accent }  // fill
+
+// ❌ INTERDIT : height '6px', background gray100 pour le track
+```
+
+### Tables
+```ts
+// Header
+{ borderBottom: `${TOKENS.borders.heavy} solid ${TOKENS.colors.black}` }  // 6px
+
+// Lignes
+{ padding: `${TOKENS.spacing[8]} 0` }   // 32px vertical
+{ borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderMain}` }
+
+// Nom stratégie
+{ fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.black, textTransform: 'uppercase' }
+```
+
+### Sizing contextuel — fontSizes
+```ts
+// Sidebar : valeurs compactes
+TOKENS.fontSizes.xxl   // 24px — chiffres sidebar (Total Deposited)
+TOKENS.fontSizes.lg    // 18px — mono-values tableaux
+
+// Main panel : grande hiérarchie
+TOKENS.fontSizes.xxxl   // 48px — KPI hero cards
+TOKENS.fontSizes.display // clamp(48,5vw,64px) — display H1
+
+// ❌ INTERDIT en sidebar : xxxl, display (trop large, déborde la width 360px)
+```
+
+### Espacement — multiples de 8px exclusivement
+```ts
+// ✅ Utiliser TOKENS.spacing[*]
+TOKENS.spacing[2]  // 8px
+TOKENS.spacing[3]  // 12px
+TOKENS.spacing[4]  // 16px
+TOKENS.spacing[6]  // 24px
+TOKENS.spacing[8]  // 32px
+TOKENS.spacing[12] // 48px
+TOKENS.spacing[16] // 64px
+TOKENS.spacing[20] // 80px
+
+// ❌ INTERDIT : '10px', '20px', '28px', '15px', gap: '10px', valeurs hors grille
+```
+
+### Sidebar
+```ts
+// Dimensions fixes
+width: '360px'
+padding: `${TOKENS.spacing[12]} ${TOKENS.spacing[8]}`  // 48px 32px
+background: TOKENS.colors.black
+borderRight: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderMain}`
+```
+
+## Ce qu'il ne faut JAMAIS faire
+- Utiliser `var(--color-accent)` en inline style React → utiliser `TOKENS.colors.accent`
+- Hardcoder `fontSize: '10px'` → `TOKENS.fontSizes.xs`
+- Hardcoder `letterSpacing: '0.15em'` → `TOKENS.letterSpacing.display`
+- Utiliser des gris intermédiaires non définis dans TOKENS
+- Modifier la logique React (states, handlers, calculs) lors d'une modification de style

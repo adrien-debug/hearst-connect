@@ -1,27 +1,43 @@
-export interface VaultLine {
+interface BaseVault {
   id: string
   name: string
-  type: 'active' | 'available' | 'matured'
   apr: number
-  deposited?: number
-  claimable?: number
-  lockedUntil?: number
-  canWithdraw?: boolean
-  maturity?: string
-  target?: string
-  progress?: number
-  minDeposit?: number
-  lockPeriod?: string
-  risk?: string
-  fees?: string
-  strategy?: string
+  target: string
+  strategy: string
 }
+
+export interface ActiveVault extends BaseVault {
+  type: 'active'
+  deposited: number
+  claimable: number
+  lockedUntil: number
+  canWithdraw: boolean
+  maturity: string
+  progress: number
+}
+
+export interface MaturedVault extends BaseVault {
+  type: 'matured'
+  deposited: number
+  claimable: number
+  maturity: string
+  progress: number
+}
+
+export interface AvailableVault extends BaseVault {
+  type: 'available'
+  minDeposit: number
+  lockPeriod: string
+  risk: string
+  fees: string
+}
+
+export type VaultLine = ActiveVault | MaturedVault | AvailableVault
 
 export interface Aggregate {
   totalDeposited: number
   totalClaimable: number
   avgApr: number
-  anyLocked: boolean
 }
 
 const NOW = Math.floor(Date.now() / 1000)
@@ -82,15 +98,14 @@ export const VAULTS: VaultLine[] = [
 ]
 
 export function aggregate(vaults: VaultLine[]): Aggregate {
-  const active = vaults.filter(v => v.type === 'active')
-  const totalDeposited = active.reduce((s, v) => s + (v.deposited || 0), 0)
+  const active = vaults.filter((v): v is ActiveVault => v.type === 'active')
+  const totalDeposited = active.reduce((s, v) => s + v.deposited, 0)
   return {
     totalDeposited,
-    totalClaimable: active.reduce((s, v) => s + (v.claimable || 0), 0),
+    totalClaimable: active.reduce((s, v) => s + v.claimable, 0),
     avgApr: totalDeposited > 0
-      ? active.reduce((s, v) => s + v.apr * (v.deposited || 0), 0) / totalDeposited
+      ? active.reduce((s, v) => s + v.apr * v.deposited, 0) / totalDeposited
       : 0,
-    anyLocked: active.some(v => !v.canWithdraw),
   }
 }
 

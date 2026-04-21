@@ -23,20 +23,21 @@ export const TOKENS = {
     surfaceHover: '#F1F3F5',
     /** Progress track / inactive bar */
     surfaceActive: '#E9ECEF',
+    danger: '#EF4444',
   },
   fonts: {
     sans: "'Inter', -apple-system, sans-serif",
     mono: "'IBM Plex Mono', monospace",
   },
   fontSizes: {
-    xs: '9px',
-    sm: '11px',
-    md: '12px',
-    lg: '14px',
-    xl: '16px',
-    xxl: '18px',
-    xxxl: '24px',
-    display: 'clamp(32px, 4vw, 48px)',
+    xs: '11px',
+    sm: '13px',
+    md: '14px',
+    lg: '18px',
+    xl: '20px',
+    xxl: '24px',
+    xxxl: '48px',
+    display: 'clamp(48px, 5vw, 64px)',
   },
   fontWeights: {
     regular: 400,
@@ -46,34 +47,32 @@ export const TOKENS = {
     black: 800,
   },
   letterSpacing: {
-    tight: '-0.02em',
+    tight: '-0.04em',
     normal: '0',
-    wide: '0.05em',
-    display: '0.1em',
+    wide: '0.1em',
+    display: '0.2em',
   },
   spacing: {
     0: '0px',
-    2: '4px',
-    3: '8px',
-    4: '12px',
-    6: '16px',
-    8: '20px',
-    12: '24px',
-    16: '32px',
-    20: '48px',
+    2: '8px',
+    3: '12px',
+    4: '16px',
+    6: '24px',
+    8: '32px',
+    12: '48px',
+    16: '64px',
+    20: '80px',
   },
   borders: {
     none: 'none',
     thin: '1px',
     thick: '2px',
-    heavy: '4px',
+    heavy: '6px',
   }
 }
 
-/** Align with `hub-font-scope` / layout (CSS vars from dashboard tokens) */
-export const FONT =
-  "var(--font-sans, 'Satoshi Variable', Inter, -apple-system, sans-serif)"
-export const MONO = "var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace)"
+export const FONT = TOKENS.fonts.sans
+export const MONO = TOKENS.fonts.mono
 
 export function fmtUsd(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

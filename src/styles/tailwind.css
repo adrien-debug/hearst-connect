@@ -31,3 +31,57 @@
 [data-rk] > div:not(.hub-font-scope) {
   z-index: 2147483647;
 }
+
+/*
+ * ─── CONNECT SCOPE — Design System Lock ───────────────────────────────────────
+ * Isole l'app Connect des tokens marketing (dark, Satoshi, radius arrondis).
+ * Source de vérité : design-system.html + src/components/connect/constants.ts
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
+.connect-scope {
+  /* Couleurs — noir/blanc/accent pur, pas le dark #0A0A0A du site */
+  --dashboard-page:           #FFFFFF;
+  --dashboard-surface:        #F8F9FA;
+  --dashboard-card:           #F1F3F5;
+  --dashboard-text-primary:   #000000;
+  --dashboard-text-secondary: #495057;
+  --dashboard-text-muted:     #ADB5BD;
+  --dashboard-text-ghost:     #ADB5BD;
+  --dashboard-border:         #000000;
+  --dashboard-border-mid:     #000000;
+  --dashboard-border-strong:  #000000;
+
+  /* Accent — identique site marketing, mais usage chirurgical dans l'app */
+  --dashboard-accent:         #a7fb90;
+  --dashboard-accent-hover:   #a7fb90;
+
+  /* Radius — zéro absolu, pas de pill, pas de card molle */
+  --dashboard-radius-box:     0px;
+  --dashboard-radius-card:    0px;
+  --dashboard-radius-input:   0px;
+  --dashboard-radius-sm:      0px;
+  --dashboard-radius-button:  0px;
+  --dashboard-radius-badge:   0px;
+
+  /* Typographie — Inter body, IBM Plex Mono pour les données */
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: #FFFFFF;
+  color: #000000;
+  -webkit-font-smoothing: antialiased;
+}
+
+.connect-scope,
+.connect-scope * {
+  font-family: 'Inter', -apple-system, sans-serif;
+  border-radius: 0 !important;
+}
+
+/* Mono pour les éléments de données — appliqué via inline styles dans les composants */
+.connect-scope button {
+  outline: none;
+  border-radius: 0;
+}
+.connect-scope button:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
