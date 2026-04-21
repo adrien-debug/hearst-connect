@@ -1,6 +1,6 @@
 'use client'
 
-import { FONT, MONO, COLORS, fmtUsd } from './constants'
+import { TOKENS, fmtUsd } from './constants'
 import type { VaultLine, Aggregate } from './data'
 
 interface SidebarProps {
@@ -23,22 +23,22 @@ export function Sidebar({ vaults, selectedId, onSelect, agg, selected }: Sidebar
   return (
     <aside className="flex flex-col shrink-0" style={{ 
       width: '320px', 
-      padding: '32px', 
+      padding: TOKENS.spacing[8], 
       overflowY: 'auto',
-      background: COLORS.sidebar,
-      borderRight: 'none',
+      background: TOKENS.colors.bgSidebar,
+      borderRight: TOKENS.borders.none,
       height: '100vh'
     }}>
 
       {/* Big Number */}
-      <div style={{ marginBottom: '40px' }}>
-        <div style={{ fontFamily: MONO, fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.textGhost, marginBottom: '16px' }}>
+      <div style={{ marginBottom: TOKENS.spacing[12] }}>
+        <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', color: TOKENS.colors.sidebarTextGhost, marginBottom: TOKENS.spacing[4] }}>
           {selected ? selected.name : 'Portfolio Value'}
         </div>
         {selected?.type === 'available' ? (
-          <div style={{ fontFamily: FONT, fontWeight: 400, fontSize: 'clamp(2.5rem, 4vw, 3rem)', letterSpacing: '-0.03em', lineHeight: 1, color: COLORS.accent }}>
+          <div style={{ fontFamily: TOKENS.fonts.sans, fontWeight: TOKENS.fontWeights.regular, fontSize: 'clamp(2.5rem, 4vw, 3rem)', letterSpacing: TOKENS.letterSpacing.tight, lineHeight: 1, color: TOKENS.colors.accent }}>
             <span>{selected.apr.toFixed(1)}</span>
-            <span style={{ fontSize: '1.2rem', color: COLORS.textGhost, marginLeft: '4px' }}>% APY</span>
+            <span style={{ fontSize: '1.2rem', color: TOKENS.colors.sidebarTextGhost, marginLeft: TOKENS.spacing[2] }}>% APY</span>
           </div>
         ) : (
           <BigNum value={portfolioValue} />
@@ -46,7 +46,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg, selected }: Sidebar
       </div>
 
       {/* Contextual Metrics */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '32px', borderBottom: `1px solid ${COLORS.borderSubtle}` }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4], paddingBottom: TOKENS.spacing[8], borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.sidebarTextGhost}` }}>
         {selected?.type === 'available' ? (<>
           <MetricRow label="Min Deposit" value={fmtUsd(selected.minDeposit || 0)} />
           <MetricRow label="Lock Period" value={selected.lockPeriod || ''} />
@@ -65,12 +65,12 @@ export function Sidebar({ vaults, selectedId, onSelect, agg, selected }: Sidebar
       </div>
 
       {/* MY VAULTS */}
-      <div style={{ marginTop: '32px' }}>
+      <div style={{ marginTop: TOKENS.spacing[8] }}>
         <VaultGroup label="My Vaults" vaults={activeVaults} selectedId={selectedId} onSelect={onSelect} />
       </div>
 
       {/* AVAILABLE VAULTS */}
-      <div style={{ marginTop: '48px', opacity: 0.4 }}>
+      <div style={{ marginTop: TOKENS.spacing[12], opacity: 0.5 }}>
         <VaultGroup label="Institutional Opportunities" vaults={availableVaults} selectedId={selectedId} onSelect={onSelect} available />
       </div>
     </aside>
@@ -88,8 +88,8 @@ function VaultGroup({ label, vaults, selectedId, onSelect, available = false }: 
 }) {
   return (
     <div>
-      <div style={{ fontFamily: MONO, fontSize: '10px', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: COLORS.textGhost, marginBottom: '16px' }}>{label}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', color: TOKENS.colors.sidebarTextGhost, marginBottom: TOKENS.spacing[4] }}>{label}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2] }}>
         {vaults.map(v => {
           const isSelected = selectedId === v.id
           return (
@@ -101,32 +101,32 @@ function VaultGroup({ label, vaults, selectedId, onSelect, available = false }: 
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 width: '100%',
-                padding: '16px',
-                background: isSelected ? COLORS.surfaceActive : 'transparent',
-                border: 'none',
+                padding: TOKENS.spacing[4],
+                background: isSelected ? 'rgba(255,255,255,0.1)' : 'transparent',
+                border: TOKENS.borders.none,
                 borderRadius: '2px',
                 textAlign: 'left',
                 cursor: 'pointer',
                 transition: 'background 150ms ease-out',
                 position: 'relative',
               }}
-              onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = COLORS.surfaceHover }}
+              onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
               onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}
             >
               {isSelected && (
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px', background: COLORS.accent }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px', background: TOKENS.colors.accent }} />
               )}
               <div>
-                <div style={{ fontFamily: FONT, fontSize: '14px', fontWeight: 500, color: isSelected ? COLORS.accent : COLORS.textPrimary, letterSpacing: '-0.01em' }}>{v.name}</div>
-                <div style={{ fontFamily: MONO, fontSize: '10px', color: COLORS.textGhost, marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 }}>{v.strategy}</div>
+                <div style={{ fontFamily: TOKENS.fonts.sans, fontSize: TOKENS.fontSizes.md, fontWeight: TOKENS.fontWeights.medium, color: isSelected ? TOKENS.colors.accent : TOKENS.colors.sidebarTextPrimary, letterSpacing: TOKENS.letterSpacing.tight }}>{v.name}</div>
+                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.sidebarTextGhost, marginTop: TOKENS.spacing[2], letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', fontWeight: TOKENS.fontWeights.medium }}>{v.strategy}</div>
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '16px' }}>
+              <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: TOKENS.spacing[4] }}>
                 {available ? (<>
-                  <div style={{ fontFamily: MONO, fontSize: '13px', color: COLORS.textPrimary, fontWeight: 400 }}>{v.apr}%</div>
-                  <div style={{ fontFamily: MONO, fontSize: '10px', color: COLORS.textGhost, marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 }}>EST. APY</div>
+                  <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.sidebarTextPrimary, fontWeight: TOKENS.fontWeights.regular }}>{v.apr}%</div>
+                  <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.sidebarTextGhost, marginTop: TOKENS.spacing[2], letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', fontWeight: TOKENS.fontWeights.medium }}>EST. APY</div>
                 </>) : (<>
-                  <div style={{ fontFamily: MONO, fontSize: '13px', color: COLORS.textPrimary, fontWeight: 400 }}>{fmtUsd(v.deposited || 0)}</div>
-                  <div style={{ fontFamily: MONO, fontSize: '10px', color: COLORS.textGhost, marginTop: '4px', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 500 }}>{v.apr}% APR</div>
+                  <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.sidebarTextPrimary, fontWeight: TOKENS.fontWeights.regular }}>{fmtUsd(v.deposited || 0)}</div>
+                  <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.sidebarTextGhost, marginTop: TOKENS.spacing[2], letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', fontWeight: TOKENS.fontWeights.medium }}>{v.apr}% APR</div>
                 </>)}
               </div>
             </button>
@@ -140,9 +140,9 @@ function VaultGroup({ label, vaults, selectedId, onSelect, available = false }: 
 function BigNum({ value }: { value: number }) {
   const [whole, dec] = value.toFixed(2).split('.')
   return (
-    <div style={{ fontFamily: FONT, fontWeight: 400, letterSpacing: '-0.03em', lineHeight: 1, color: COLORS.accent }}>
+    <div style={{ fontFamily: TOKENS.fonts.sans, fontWeight: TOKENS.fontWeights.regular, letterSpacing: TOKENS.letterSpacing.tight, lineHeight: 1, color: TOKENS.colors.accent }}>
       <span style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)' }}>${Number(whole).toLocaleString('en-US')}</span>
-      <span style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', color: COLORS.textGhost }}>.{dec}</span>
+      <span style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', color: TOKENS.colors.sidebarTextGhost }}>.{dec}</span>
     </div>
   )
 }
@@ -150,8 +150,8 @@ function BigNum({ value }: { value: number }) {
 function MetricRow({ label, value, accent = false, small = false }: { label: string; value: string; accent?: boolean; small?: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-      <span style={{ fontFamily: MONO, fontSize: small ? '10px' : '11px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: COLORS.textGhost }}>{label}</span>
-      <span style={{ fontFamily: MONO, fontSize: small ? '11px' : '13px', color: accent ? COLORS.textPrimary : COLORS.textPrimary, fontWeight: 400, textAlign: 'right', maxWidth: '60%' }}>{value}</span>
+      <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: small ? TOKENS.fontSizes.xs : TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.medium, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.wide, color: TOKENS.colors.sidebarTextGhost }}>{label}</span>
+      <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: small ? TOKENS.fontSizes.xs : TOKENS.fontSizes.sm, color: accent ? TOKENS.colors.accent : TOKENS.colors.sidebarTextPrimary, fontWeight: TOKENS.fontWeights.regular, textAlign: 'right', maxWidth: '60%' }}>{value}</span>
     </div>
   )
 }

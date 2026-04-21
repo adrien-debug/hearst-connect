@@ -1,7 +1,7 @@
 'use client'
 
 import { useMonthProgress } from '@/hooks/useMonthProgress'
-import { MONO, COLORS, FONT, fmtUsd } from './constants'
+import { TOKENS, fmtUsd } from './constants'
 import { computeMonthlyYield } from './data'
 
 interface MonthlyGaugeProps {
@@ -19,13 +19,13 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
   return (
     <div>
       <div style={{
-        fontFamily: MONO,
-        fontSize: '11px',
-        fontWeight: 500,
-        letterSpacing: '0.2em',
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.xs,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
-        color: COLORS.textGhost,
-        marginBottom: '24px',
+        color: TOKENS.colors.textGhost,
+        marginBottom: TOKENS.spacing[6],
       }}>
         {label ?? monthName} · {apr.toFixed(2)}% APR
       </div>
@@ -34,17 +34,17 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
       <div style={{
         position: 'relative',
         height: '80px',
-        marginBottom: '24px',
-        borderBottom: `1px solid ${COLORS.borderSubtle}`,
+        marginBottom: TOKENS.spacing[6],
+        borderBottom: `${TOKENS.borders.heavy} solid ${TOKENS.colors.borderMain}`,
       }}>
         {/* Fill - Minimalist line instead of box */}
         <div style={{
           position: 'absolute',
-          bottom: '-1px',
+          bottom: '-6px',
           left: 0,
           width: `${nowPct}%`,
-          height: '2px',
-          background: COLORS.accent,
+          height: '6px',
+          background: TOKENS.colors.accent,
           zIndex: 4,
           transition: 'width 1s ease',
         }} />
@@ -53,14 +53,14 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         <div style={{
           position: 'absolute',
           left: 0,
-          bottom: '16px',
-          fontFamily: FONT,
+          bottom: TOKENS.spacing[4],
+          fontFamily: TOKENS.fonts.sans,
           fontSize: 'clamp(3rem, 7vw, 4.5rem)',
-          fontWeight: 400,
-          color: COLORS.accent,
+          fontWeight: TOKENS.fontWeights.black,
+          color: TOKENS.colors.textPrimary,
           zIndex: 3,
           whiteSpace: 'nowrap',
-          letterSpacing: '-0.03em',
+          letterSpacing: TOKENS.letterSpacing.tight,
           lineHeight: 1,
         }}>
           {fmtUsd(produced)}
@@ -71,13 +71,14 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           <div style={{
             position: 'absolute',
             right: 0,
-            bottom: '16px',
-            fontFamily: MONO,
-            fontSize: '12px',
-            color: COLORS.textGhost,
+            bottom: TOKENS.spacing[4],
+            fontFamily: TOKENS.fonts.mono,
+            fontSize: TOKENS.fontSizes.sm,
+            color: TOKENS.colors.textGhost,
             zIndex: 3,
             whiteSpace: 'nowrap',
-            letterSpacing: '0.1em',
+            letterSpacing: TOKENS.letterSpacing.wide,
+            fontWeight: TOKENS.fontWeights.bold,
           }}>
             EST. {fmtUsd(remaining)} REMAINING
           </div>
@@ -86,22 +87,22 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
 
       {/* Day markers */}
       <div style={{ position: 'relative', height: '14px' }}>
-        <span style={{ position: 'absolute', left: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', color: COLORS.textGhost }}>
+        <span style={{ position: 'absolute', left: 0, fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, letterSpacing: TOKENS.letterSpacing.wide, color: TOKENS.colors.textGhost, fontWeight: TOKENS.fontWeights.bold }}>
           DAY 01
         </span>
         <span style={{
           position: 'absolute',
           left: `${nowPct}%`,
           transform: 'translateX(-50%)',
-          fontFamily: MONO,
-          fontSize: '10px',
-          fontWeight: 500,
-          letterSpacing: '0.1em',
-          color: COLORS.textPrimary,
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.xs,
+          fontWeight: TOKENS.fontWeights.bold,
+          letterSpacing: TOKENS.letterSpacing.wide,
+          color: TOKENS.colors.textPrimary,
         }}>
           DAY {dayOfMonth < 10 ? `0${dayOfMonth}` : dayOfMonth}
         </span>
-        <span style={{ position: 'absolute', right: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', color: COLORS.textGhost }}>
+        <span style={{ position: 'absolute', right: 0, fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, letterSpacing: TOKENS.letterSpacing.wide, color: TOKENS.colors.textGhost, fontWeight: TOKENS.fontWeights.bold }}>
           DAY {daysInMonth}
         </span>
       </div>

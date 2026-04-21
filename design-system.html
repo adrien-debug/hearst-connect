@@ -6,26 +6,80 @@
     <title>Hearst Connect - Design System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Palette Hearst Connect - Logo Reference */
-            --bg-page: #FFFFFF;
-            --bg-sidebar: #000000;
-            --bg-surface: #F3F4F6;
-            --bg-hover: #F9FAFB;
-            --bg-active: #000000;
+            /* 
+               HEARST CONNECT - DESIGN TOKENS 
+               Institutional & High-Contrast Fintech Identity
+            */
+
+            /* --- Colors --- */
+            --color-white: #FFFFFF;
+            --color-black: #000000;
+            --color-gray-50:  #F8F9FA;
+            --color-gray-100: #F1F3F5;
+            --color-gray-200: #E9ECEF;
+            --color-gray-500: #ADB5BD;
+            --color-gray-700: #495057;
+
+            /* Brand & Semantic */
+            --color-accent: #a7fb90; /* Exact Logo Green */
             
-            --text-primary: #000000;
-            --text-secondary: #374151;
-            --text-ghost: #6B7280;
+            --color-bg-page: var(--color-white);
+            --color-bg-sidebar: var(--color-black);
+            --color-bg-surface: var(--color-gray-50);
             
-            --accent-logo: #a7fb90; /* Couleur exacte du logo (#a7fb90) */
-            --border-subtle: #E5E7EB;
+            --color-text-primary: var(--color-black);
+            --color-text-secondary: var(--color-gray-700);
+            --color-text-ghost: var(--color-gray-500);
+            --color-text-on-dark: var(--color-white);
             
-            /* Typography */
+            --color-border-main: var(--color-black);
+            --color-border-subtle: var(--color-gray-200);
+
+            /* --- Typography --- */
             --font-sans: 'Inter', -apple-system, sans-serif;
             --font-mono: 'IBM Plex Mono', monospace;
+
+            /* Font Sizes */
+            --fs-xs: 11px;
+            --fs-sm: 13px;
+            --fs-md: 14px;
+            --fs-lg: 18px;
+            --fs-xl: 20px;
+            --fs-3xl: 48px;
+            --fs-display: clamp(48px, 5vw, 64px);
+
+            /* Font Weights */
+            --fw-medium: 500;
+            --fw-semibold: 600;
+            --fw-bold: 700;
+            --fw-black: 800;
+
+            /* Letter Spacing */
+            --ls-tight: -0.04em;
+            --ls-wide: 0.1em;
+            --ls-display: 0.2em;
+
+            /* --- Spacing --- */
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-12: 48px;
+            --space-16: 64px;
+            --space-20: 80px;
+
+            /* --- Borders --- */
+            --border-width-thin: 1px;
+            --border-width-thick: 2px;
+            --border-width-heavy: 6px;
+            
+            /* --- Layout --- */
+            --sidebar-width: 280px;
+            --container-max-width: 1600px;
         }
 
         * {
@@ -34,8 +88,8 @@
         }
 
         body {
-            background-color: var(--bg-page);
-            color: var(--text-primary);
+            background-color: var(--color-bg-page);
+            color: var(--color-text-primary);
             font-family: var(--font-sans);
             margin: 0;
             padding: 0;
@@ -45,18 +99,19 @@
 
         /* --- Sidebar --- */
         .sidebar {
-            width: 280px;
-            background: var(--bg-sidebar);
-            padding: 32px;
+            width: var(--sidebar-width);
+            background: var(--color-bg-sidebar);
+            padding: var(--space-12) var(--space-8);
             display: flex;
             flex-direction: column;
-            gap: 40px;
+            border-right: var(--border-width-thin) solid var(--color-border-main);
+            position: sticky;
+            top: 0;
+            height: 100vh;
         }
 
         .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            margin-bottom: var(--space-16);
         }
 
         .logo-svg {
@@ -64,173 +119,212 @@
             height: auto;
         }
 
-        .nav-item {
-            color: #9CA3AF;
-            text-decoration: none;
-            font-size: 14px;
-            padding: 8px 0;
-            display: block;
-            transition: color 0.2s;
-            font-weight: 500;
+        .nav-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
         }
 
-        .nav-item:hover, .nav-item.active {
-            color: #FFFFFF;
+        .nav-item {
+            color: var(--color-gray-500);
+            text-decoration: none;
+            font-size: var(--fs-md);
+            padding: var(--space-3) 0;
+            display: flex;
+            align-items: center;
+            transition: 120ms ease-out;
+            font-weight: var(--fw-medium);
+            border-bottom: var(--border-width-thin) solid transparent;
+        }
+
+        .nav-item:hover {
+            color: var(--color-accent);
+            border-bottom: var(--border-width-thin) solid var(--color-accent);
+        }
+
+        .nav-item.active {
+            color: var(--color-text-on-dark);
+            border-bottom: var(--border-width-thin) solid var(--color-text-on-dark);
         }
 
         /* --- Main Content --- */
         .main {
             flex: 1;
-            padding: 60px;
-            max-width: 1200px;
+            padding: var(--space-20) 120px;
+            max-width: var(--container-max-width);
         }
 
         .section {
-            margin-bottom: 80px;
+            margin-bottom: 100px;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .label {
             font-family: var(--font-mono);
-            font-size: 10px;
+            font-size: var(--fs-xs);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-ghost);
-            margin-bottom: 16px;
+            letter-spacing: var(--ls-display);
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-6);
             display: block;
-            font-weight: 600;
+            font-weight: var(--fw-bold);
+            border-left: 3px solid var(--color-accent);
+            padding-left: var(--space-3);
+        }
+
+        /* --- Typography --- */
+        h1 {
+            font-size: var(--fs-display);
+            font-weight: var(--fw-black);
+            letter-spacing: var(--ls-tight);
+            margin: 0 0 var(--space-12) 0;
+            line-height: 1;
+            color: var(--color-black);
+            text-transform: uppercase;
         }
 
         /* --- Components --- */
-
-        h1 {
-            font-size: clamp(2.5rem, 4vw, 3.5rem);
-            font-weight: 700;
-            letter-spacing: -0.05em;
-            margin: 0 0 40px 0;
-            line-height: 1;
-            color: #000000;
-        }
-
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 32px;
-            margin-top: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: var(--border-width-thin);
+            background: var(--color-border-main);
+            border: var(--border-width-thin) solid var(--color-border-main);
+            margin-top: var(--space-8);
         }
 
-        /* Cards */
         .card {
-            background: #FFF;
-            border: 1px solid #000000;
-            padding: 32px;
-            border-radius: 0px;
+            background: var(--color-white);
+            padding: var(--space-12);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: var(--space-6);
+            transition: 120ms ease-out;
+        }
+
+        .card:hover {
+            background: var(--color-bg-surface);
         }
 
         .value-large {
             font-family: var(--font-mono);
-            font-size: 32px;
-            color: #000000;
-            letter-spacing: -0.02em;
-            font-weight: 600;
+            font-size: var(--fs-3xl);
+            color: var(--color-black);
+            letter-spacing: var(--ls-tight);
+            font-weight: var(--fw-semibold);
+            line-height: 1;
         }
 
         /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: var(--space-6);
+            align-items: center;
+        }
+
         .btn {
-            padding: 14px 28px;
-            border-radius: 0px;
-            font-size: 13px;
-            font-weight: 600;
+            padding: 18px 40px;
+            font-size: var(--fs-sm);
+            font-weight: var(--fw-black);
             cursor: pointer;
-            transition: all 0.1s;
-            border: none;
+            transition: 120ms ease-out;
+            border: var(--border-width-thick) solid var(--color-border-main);
             font-family: var(--font-mono);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.15em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-primary {
-            background-color: #000000;
-            color: var(--accent-logo);
+            background-color: var(--color-black);
+            color: var(--color-white);
         }
 
         .btn-primary:hover {
-            background-color: #222;
+            background-color: var(--color-accent);
+            color: var(--color-black);
+            border-color: var(--color-accent);
         }
 
         .btn-outline {
-            background: #FFF;
-            border: 1px solid #000;
-            color: #000;
+            background: transparent;
+            color: var(--color-black);
         }
 
         .btn-outline:hover {
-            background: #000;
-            color: #FFF;
+            background: var(--color-black);
+            color: var(--color-white);
         }
 
         /* Table */
         .table-container {
-            margin-top: 24px;
+            margin-top: var(--space-12);
         }
 
         .table-header {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            padding: 12px 0;
-            border-bottom: 4px solid #000;
+            grid-template-columns: 2.5fr 1.2fr 1fr 1fr;
+            padding: var(--space-4) 0;
+            border-bottom: var(--border-width-heavy) solid var(--color-black);
         }
 
         .table-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr;
-            padding: 24px 0;
-            border-bottom: 1px solid #000;
+            grid-template-columns: 2.5fr 1.2fr 1fr 1fr;
+            padding: var(--space-8) 0;
+            border-bottom: var(--border-width-thin) solid var(--color-border-main);
             cursor: pointer;
-            transition: background 0.1s;
+            transition: 120ms ease-out;
             align-items: center;
         }
 
         .table-row:hover {
-            background: var(--accent-logo);
+            background: var(--color-accent);
         }
 
         .strategy-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #000;
+            font-size: var(--fs-xl);
+            font-weight: var(--fw-black);
+            color: var(--color-black);
+            text-transform: uppercase;
         }
 
         .strategy-type {
             font-family: var(--font-mono);
-            font-size: 10px;
-            color: #000;
+            font-size: var(--fs-xs);
+            color: var(--color-black);
             text-transform: uppercase;
-            margin-top: 4px;
-            font-weight: 600;
+            margin-top: var(--space-2);
+            font-weight: var(--fw-bold);
+            letter-spacing: var(--ls-wide);
         }
 
         .mono-value {
             font-family: var(--font-mono);
-            font-size: 14px;
-            font-weight: 600;
+            font-size: var(--fs-lg);
+            font-weight: var(--fw-bold);
         }
 
-        /* Progress Bar */
+        /* Progress */
         .progress-container {
-            height: 8px;
-            background: #EEE;
+            height: 12px;
+            background: var(--color-black);
             width: 100%;
             position: relative;
-            margin-top: 8px;
+            margin-top: var(--space-3);
         }
 
         .progress-bar {
             position: absolute;
             height: 100%;
-            background: #000;
+            background: var(--color-accent);
             left: 0;
             top: 0;
         }
@@ -239,28 +333,28 @@
         .badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 0px;
-            background: #000;
+            padding: var(--space-2) var(--space-4);
+            background: var(--color-black);
             font-family: var(--font-mono);
-            font-size: 10px;
-            color: #FFF;
-            font-weight: 600;
+            font-size: var(--fs-xs);
+            color: var(--color-white);
+            font-weight: var(--fw-black);
+            letter-spacing: var(--ls-wide);
+            text-transform: uppercase;
         }
 
         .badge-accent {
-            background: var(--accent-logo);
-            color: #000;
+            background: var(--color-accent);
+            color: var(--color-black);
         }
 
-        .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 0%;
-            background: var(--accent-logo);
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            margin-right: var(--space-3);
+            display: inline-block;
         }
-
     </style>
 </head>
 <body>
@@ -270,7 +364,7 @@
             <svg id="Calque_1" class="logo-svg" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1920 1080">
                 <style>
                   .st0 { fill: #fff; }
-                  .st1 { fill: var(--accent-logo); }
+                  .st1 { fill: var(--color-accent); }
                 </style>
                 <g>
                   <path class="st0" d="M751.5,546.1v47.4h79.4l-7.4,16.3h-100.4v-142.3h119l-9.4,15.7h-81.2v47.4h43l-7.6,15.5h-35.4,0Z"/>
@@ -283,7 +377,7 @@
                 </g>
             </svg>
         </div>
-        <nav>
+        <nav class="nav-group">
             <a href="#" class="nav-item active">Portfolio</a>
             <a href="#" class="nav-item">Strategies</a>
             <a href="#" class="nav-item">History</a>
@@ -296,9 +390,9 @@
         <section class="section">
             <span class="label">System Overview</span>
             <h1>Design System</h1>
-            <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.6;">
-                Un langage visuel minimaliste conçu pour la clarté financière. 
-                Utilisation du Noir Profond, Gris Anthracite et l'accent signature Hearst Citrus.
+            <p style="color: var(--color-text-secondary); max-width: 600px; line-height: 1.6;">
+                Un langage visuel institutionnel conçu pour la clarté financière. 
+                Utilisation du Noir Profond, Blanc Pur et l'accent signature Hearst Connect.
             </p>
         </section>
 
@@ -306,19 +400,19 @@
             <span class="label">Color Palette</span>
             <div style="display: flex; gap: 16px;">
                 <div style="text-align: center;">
-                    <div style="width: 80px; height: 80px; background: var(--accent-citrus); border-radius: 4px; margin-bottom: 8px;"></div>
-                    <span class="label">Citrus</span>
+                    <div style="width: 80px; height: 80px; background: var(--color-accent); border-radius: 4px; margin-bottom: 8px;"></div>
+                    <span class="label">Accent</span>
                 </div>
                 <div style="text-align: center;">
-                    <div style="width: 80px; height: 80px; background: var(--bg-page); border: 1px solid var(--border-subtle); border-radius: 4px; margin-bottom: 8px;"></div>
+                    <div style="width: 80px; height: 80px; background: var(--color-bg-page); border: 1px solid var(--color-border-subtle); border-radius: 4px; margin-bottom: 8px;"></div>
                     <span class="label">Page</span>
                 </div>
                 <div style="text-align: center;">
-                    <div style="width: 80px; height: 80px; background: var(--bg-sidebar); border: 1px solid var(--border-subtle); border-radius: 4px; margin-bottom: 8px;"></div>
-                    <span class="label">Surface</span>
+                    <div style="width: 80px; height: 80px; background: var(--color-bg-sidebar); border-radius: 4px; margin-bottom: 8px;"></div>
+                    <span class="label">Sidebar</span>
                 </div>
                 <div style="text-align: center;">
-                    <div style="width: 80px; height: 80px; background: var(--text-ghost); border-radius: 4px; margin-bottom: 8px;"></div>
+                    <div style="width: 80px; height: 80px; background: var(--color-text-ghost); border-radius: 4px; margin-bottom: 8px;"></div>
                     <span class="label">Ghost</span>
                 </div>
             </div>
@@ -336,15 +430,15 @@
                 </div>
                 <div class="card">
                     <span class="label">Average Performance</span>
-                    <div class="value-large" style="color: var(--accent-citrus);">14.2% <span style="font-size: 14px; color: var(--text-ghost);">APR</span></div>
-                    <div class="badge"><div class="dot"></div> LIVE PERFORMANCE</div>
+                    <div class="value-large" style="color: var(--color-black);">14.2% <span style="font-size: 14px; color: var(--color-text-ghost);">APR</span></div>
+                    <div class="badge badge-accent">LIVE PERFORMANCE</div>
                 </div>
             </div>
         </section>
 
         <section class="section">
             <span class="label">Interactive Elements</span>
-            <div style="display: flex; gap: 16px; align-items: center;">
+            <div class="btn-group">
                 <button class="btn btn-primary">New Deposit</button>
                 <button class="btn btn-outline">Withdraw</button>
                 <span class="badge">ACTIVE</span>
@@ -366,8 +460,8 @@
                         <div class="strategy-type">Market Neutral</div>
                     </div>
                     <div class="mono-value">$450,000.00</div>
-                    <div class="mono-value" style="color: var(--accent-citrus);">12.5%</div>
-                    <div><span class="badge">RUNNING</span></div>
+                    <div class="mono-value" style="color: var(--color-black);">12.5%</div>
+                    <div><span class="badge badge-accent">RUNNING</span></div>
                 </div>
                 <div class="table-row">
                     <div>
@@ -375,8 +469,8 @@
                         <div class="strategy-type">Low Volatility</div>
                     </div>
                     <div class="mono-value">$970,000.00</div>
-                    <div class="mono-value" style="color: var(--accent-citrus);">15.8%</div>
-                    <div><span class="badge">RUNNING</span></div>
+                    <div class="mono-value" style="color: var(--color-black);">15.8%</div>
+                    <div><span class="badge badge-accent">RUNNING</span></div>
                 </div>
             </div>
         </section>
