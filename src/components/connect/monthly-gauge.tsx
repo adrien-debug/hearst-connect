@@ -35,7 +35,7 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         position: 'relative',
         height: '80px',
         marginBottom: '24px',
-        borderBottom: `1px solid ${COLORS.border}`,
+        borderBottom: `1px solid ${COLORS.borderSubtle}`,
       }}>
         {/* Fill - Minimalist line instead of box */}
         <div style={{
@@ -44,7 +44,7 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           left: 0,
           width: `${nowPct}%`,
           height: '2px',
-          background: COLORS.textPrimary,
+          background: COLORS.accent,
           zIndex: 4,
           transition: 'width 1s ease',
         }} />
@@ -56,11 +56,11 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           bottom: '16px',
           fontFamily: FONT,
           fontSize: 'clamp(3rem, 7vw, 4.5rem)',
-          fontWeight: 500,
-          color: COLORS.textPrimary,
+          fontWeight: 400,
+          color: COLORS.accent,
           zIndex: 3,
           whiteSpace: 'nowrap',
-          letterSpacing: '-0.05em',
+          letterSpacing: '-0.03em',
           lineHeight: 1,
         }}>
           {fmtUsd(produced)}
@@ -86,7 +86,7 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
 
       {/* Day markers */}
       <div style={{ position: 'relative', height: '14px' }}>
-        <span style={{ position: 'absolute', left: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.15em', color: COLORS.textGhost }}>
+        <span style={{ position: 'absolute', left: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', color: COLORS.textGhost }}>
           DAY 01
         </span>
         <span style={{
@@ -95,13 +95,13 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           transform: 'translateX(-50%)',
           fontFamily: MONO,
           fontSize: '10px',
-          fontWeight: 600,
-          letterSpacing: '0.15em',
+          fontWeight: 500,
+          letterSpacing: '0.1em',
           color: COLORS.textPrimary,
         }}>
           DAY {dayOfMonth < 10 ? `0${dayOfMonth}` : dayOfMonth}
         </span>
-        <span style={{ position: 'absolute', right: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.15em', color: COLORS.textGhost }}>
+        <span style={{ position: 'absolute', right: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.1em', color: COLORS.textGhost }}>
           DAY {daysInMonth}
         </span>
       </div>
