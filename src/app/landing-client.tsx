@@ -320,7 +320,7 @@ export default function HubPageClient() {
 
         <div className="icons">
           <div className="icons-track" aria-hidden="false">
-            {[...ICONS, ...ICONS, ...ICONS].map((icon, i) => (
+            {ICONS.map((icon, i) => (
               <div key={`${icon.name}-${i}`} className="icon">
                 <img
                   src={icon.src}
@@ -376,7 +376,7 @@ export default function HubPageClient() {
           lang="en"
           aria-label="Vault strategies"
         >
-          {[...INVESTMENT_STRATEGY_SLIDES, ...INVESTMENT_STRATEGY_SLIDES].map((slide, i) => (
+          {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
             <article key={`${slide.title}-${i}`} className="hub-strategy-slide">
               <figure>
                 <img src={slide.img} alt="" draggable={false} />

@@ -48,6 +48,11 @@ const nextConfig = {
         destination: '/app',
         permanent: true,
       },
+      {
+        source: '/vault',
+        destination: '/app',
+        permanent: true,
+      },
     ];
   },
   webpack(config) {

@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
+import { gsap } from 'gsap'
+import { CustomEase } from 'gsap/CustomEase'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { useVaultData } from '@/hooks/useVaultData'
@@ -9,9 +11,96 @@ import { useRewards } from '@/hooks/useRewards'
 import { useEpoch } from '@/hooks/useEpoch'
 import { useDeposit } from '@/hooks/useDeposit'
 import { useWithdraw } from '@/hooks/useWithdraw'
+import { FONT, MONO, VAULT_LINE_SPACING, MIN_VAULT_LINE_OPACITY, DASH_PATTERN, fmtUsd } from './constants'
 
-const FONT = "var(--font-sans, 'Satoshi Variable', Inter, -apple-system, sans-serif)"
-const MONO = "var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace)"
+gsap.registerPlugin(CustomEase)
+
+let _claimTransferTl: gsap.core.Timeline | null = null
+
+function animateClaimTransfer(
+  claimableTimelineRef: RefObject<HTMLElement | null>,
+  currentValueWholeRef: RefObject<HTMLElement | null>,
+  claimableLedgerRef: RefObject<HTMLElement | null>,
+) {
+  if (_claimTransferTl && _claimTransferTl.isActive()) {
+    _claimTransferTl.progress(1).kill()
+  }
+
+  const src = claimableTimelineRef.current
+  const tgt = currentValueWholeRef.current
+  if (!src || !tgt) return
+
+  const ledger = claimableLedgerRef.current
+  const ledgerOpacityBefore = ledger
+    ? parseFloat(window.getComputedStyle(ledger).opacity)
+    : 1
+
+  const sr = src.getBoundingClientRect()
+  const clone = src.cloneNode(true) as HTMLElement
+  clone.style.position = 'fixed'
+  clone.style.left = `${sr.left}px`
+  clone.style.top = `${sr.top}px`
+  clone.style.margin = '0'
+  clone.style.padding = '0'
+  clone.style.pointerEvents = 'none'
+  clone.style.zIndex = '2147483646'
+  clone.style.whiteSpace = 'nowrap'
+  clone.style.transformOrigin = 'center center'
+  document.body.appendChild(clone)
+
+  const tr = tgt.getBoundingClientRect()
+  const sx = sr.left + sr.width / 2
+  const sy = sr.top + sr.height / 2
+  const tx = tr.left + tr.width / 2
+  const ty = tr.top + tr.height / 2
+  const dx = tx - sx
+  const dy = ty - sy
+
+  gsap.set(clone, { x: 0, y: 0, scale: 1, opacity: 0.8 })
+
+  const claimEase = CustomEase.create('claim-transfer', 'M0,0 C0.16, 1, 0.3, 1, 1, 1')
+  const tl = gsap.timeline({
+    defaults: { duration: 0.45, ease: claimEase },
+    onComplete: () => {
+      clone.remove()
+      _claimTransferTl = null
+      if (ledger) gsap.set(ledger, { opacity: ledgerOpacityBefore })
+      const el = currentValueWholeRef.current
+      if (el) {
+        gsap.set(el, { display: 'inline-block', transformOrigin: 'center center' })
+        gsap.fromTo(
+          el,
+          { scale: 1 },
+          {
+            scale: 1.012,
+            duration: 0.12,
+            ease: 'power2.out',
+            yoyo: true,
+            repeat: 1,
+            onComplete: () => {
+              gsap.set(el, { clearProps: 'scale,transform' })
+            },
+          },
+        )
+      }
+    },
+  })
+
+  _claimTransferTl = tl
+
+  tl.to(
+    clone,
+    { x: dx, y: dy, scale: 0.985, opacity: 0 },
+    0,
+  )
+  if (ledger) {
+    tl.to(
+      ledger,
+      { opacity: Math.min(ledgerOpacityBefore, 0.65), duration: 0.45, ease: claimEase },
+      0,
+    )
+  }
+}
 
 // ─── Multi-vault types ───────────────────────────────────────────────────
 
@@ -25,25 +114,34 @@ interface VaultLine {
   canWithdraw: boolean
 }
 
-function useVaults(): VaultLine[] {
+function useVaults(): {
+  vaults: VaultLine[]
+  claimConfirmed: boolean
+  claimTxHash: `0x${string}` | undefined
+} {
   const { depositAmount, lockEnd, canWithdraw } = useUserPosition()
-  const { pending } = useRewards()
+  const { pending, isConfirmed, txHash } = useRewards()
   const { annualAPR } = useVaultData()
 
   const deposited = parseFloat(depositAmount) || 0
   const claimable = parseFloat(pending) || 0
 
-  if (deposited <= 0) return []
+  if (deposited <= 0)
+    return { vaults: [], claimConfirmed: isConfirmed, claimTxHash: txHash }
 
-  return [{
-    id: 'epoch-v1',
-    name: 'Epoch Vault',
-    deposited,
-    claimable,
-    lockedUntil: lockEnd,
-    apr: annualAPR,
-    canWithdraw,
-  }]
+  return {
+    vaults: [{
+      id: 'epoch-v1',
+      name: 'Epoch Vault',
+      deposited,
+      claimable,
+      lockedUntil: lockEnd,
+      apr: annualAPR,
+      canWithdraw,
+    }],
+    claimConfirmed: isConfirmed,
+    claimTxHash: txHash,
+  }
 }
 
 function aggregateVaults(vaults: VaultLine[]) {
@@ -61,9 +159,14 @@ function aggregateVaults(vaults: VaultLine[]) {
 
 export function Canvas() {
   const { isConnected } = useAccount()
-  const vaults = useVaults()
+  const { vaults, claimConfirmed, claimTxHash } = useVaults()
   const hasPosition = isConnected && vaults.length > 0
   const [selectedVaultId, setSelectedVaultId] = useState<string | null>(null)
+
+  const claimableTimelineRef = useRef<HTMLDivElement>(null)
+  const currentValueWholeRef = useRef<HTMLSpanElement>(null)
+  const claimableLedgerRef = useRef<HTMLSpanElement>(null)
+  const lastAnimatedClaimTx = useRef<string | null>(null)
 
   const selectedVault = selectedVaultId
     ? vaults.find(v => v.id === selectedVaultId) ?? null
@@ -71,6 +174,13 @@ export function Canvas() {
 
   const activeVault = selectedVault ?? (vaults.length === 1 ? vaults[0] : null)
   const agg = aggregateVaults(vaults)
+
+  useEffect(() => {
+    if (!claimConfirmed || !claimTxHash) return
+    if (lastAnimatedClaimTx.current === claimTxHash) return
+    lastAnimatedClaimTx.current = claimTxHash
+    animateClaimTransfer(claimableTimelineRef, currentValueWholeRef, claimableLedgerRef)
+  }, [claimConfirmed, claimTxHash])
 
   return (
     <div
@@ -89,6 +199,8 @@ export function Canvas() {
           isConnected={isConnected}
           selectedVault={selectedVault}
           aggregate={agg}
+          claimableLedgerRef={claimableLedgerRef}
+          currentValueWholeRef={currentValueWholeRef}
         />
         <div style={{ width: '1px', background: 'var(--dashboard-border)', flexShrink: 0 }} />
         <TemporalFlow
@@ -99,6 +211,7 @@ export function Canvas() {
           onSelectVault={setSelectedVaultId}
           activeVault={activeVault}
           aggregate={agg}
+          claimableTimelineRef={claimableTimelineRef}
         />
       </main>
     </div>
@@ -130,7 +243,7 @@ function Header() {
         Connect
       </span>
 
-      <nav className="flex items-center" style={{ gap: '2rem' }}>
+      <nav className="flex items-center">
         <span
           style={{
             fontFamily: FONT,
@@ -138,27 +251,12 @@ function Header() {
             fontWeight: 500,
             letterSpacing: '0.06em',
             textTransform: 'uppercase' as const,
-            color: 'var(--dashboard-text-primary)',
+            color: 'var(--dashboard-text-ghost)',
+            cursor: 'default',
           }}
         >
-          Dashboard
+          Vaults
         </span>
-        {(['Products', 'Vaults'] as const).map((item) => (
-          <span
-            key={item}
-            style={{
-              fontFamily: FONT,
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase' as const,
-              color: 'var(--dashboard-text-ghost)',
-              cursor: 'default',
-            }}
-          >
-            {item}
-          </span>
-        ))}
       </nav>
 
       <ConnectButton.Custom>
@@ -222,11 +320,15 @@ function Ledger({
   isConnected,
   selectedVault,
   aggregate,
+  claimableLedgerRef,
+  currentValueWholeRef,
 }: {
   hasPosition: boolean
   isConnected: boolean
   selectedVault: VaultLine | null
   aggregate: ReturnType<typeof aggregateVaults>
+  claimableLedgerRef: RefObject<HTMLSpanElement | null>
+  currentValueWholeRef: RefObject<HTMLSpanElement | null>
 }) {
   return (
     <aside
@@ -238,7 +340,14 @@ function Ledger({
       }}
     >
       {hasPosition
-        ? <LedgerActive selectedVault={selectedVault} aggregate={aggregate} />
+        ? (
+          <LedgerActive
+            selectedVault={selectedVault}
+            aggregate={aggregate}
+            claimableLedgerRef={claimableLedgerRef}
+            currentValueWholeRef={currentValueWholeRef}
+          />
+        )
         : <LedgerZero isConnected={isConnected} />}
     </aside>
   )
@@ -286,9 +395,13 @@ function LedgerZero({ isConnected }: { isConnected: boolean }) {
 function LedgerActive({
   selectedVault,
   aggregate,
+  claimableLedgerRef,
+  currentValueWholeRef,
 }: {
   selectedVault: VaultLine | null
   aggregate: ReturnType<typeof aggregateVaults>
+  claimableLedgerRef: RefObject<HTMLSpanElement | null>
+  currentValueWholeRef: RefObject<HTMLSpanElement | null>
 }) {
   const { claim, isClaiming } = useRewards()
   const { totalDeposits } = useVaultData()
@@ -309,7 +422,7 @@ function LedgerActive({
     <>
       <div>
         <Label>{selectedVault ? selectedVault.name : 'All Vaults'}</Label>
-        <BigNumber value={currentValue} />
+        <BigNumber value={currentValue} wholeRef={currentValueWholeRef} />
 
         <div style={{ marginTop: '28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <Row label="Deposited" value={fmtUsd(deposited)} />
@@ -318,7 +431,10 @@ function LedgerActive({
               Claimable
             </span>
             <span style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-              <span style={{ fontFamily: MONO, fontSize: '13px', fontWeight: 500, color: 'var(--dashboard-accent)', letterSpacing: '0.02em' }}>
+              <span
+                ref={claimableLedgerRef}
+                style={{ fontFamily: MONO, fontSize: '13px', fontWeight: 500, color: 'var(--dashboard-accent)', letterSpacing: '0.02em' }}
+              >
                 {fmtUsd(claimableNum)}
               </span>
               {claimableNum > 0 && (
@@ -360,12 +476,6 @@ function LedgerActive({
 
 // ─── Right Temporal Flow (horizontal) ────────────────────────────────────
 
-/** Vertical gap between stacked vault timelines (readability on dark UI). */
-const VAULT_LINE_SPACING = 20
-/** Never dim non-selected vault lines below this (avoids “invisible” multi-vault). */
-const MIN_VAULT_LINE_OPACITY = 0.3
-const DASH_PATTERN =
-  'repeating-linear-gradient(to right, var(--dashboard-text-muted) 0, var(--dashboard-text-muted) 6px, transparent 6px, transparent 14px)'
 
 function FlowLine({
   vault,
@@ -469,6 +579,7 @@ function TemporalFlow({
   onSelectVault,
   activeVault,
   aggregate,
+  claimableTimelineRef,
 }: {
   hasPosition: boolean
   isConnected: boolean
@@ -477,6 +588,7 @@ function TemporalFlow({
   onSelectVault: (id: string | null) => void
   activeVault: VaultLine | null
   aggregate: ReturnType<typeof aggregateVaults>
+  claimableTimelineRef: RefObject<HTMLDivElement | null>
 }) {
   const { epoch, progress, countdownFormatted } = useEpoch()
   const { claim, isClaiming } = useRewards()
@@ -501,9 +613,11 @@ function TemporalFlow({
   const activeApr = activeVault ? activeVault.apr : (annualAPR || aggregate.avgApr)
   const canWithdraw = activeVault ? activeVault.canWithdraw : !aggregate.anyLocked
 
-  const projectedMonthly = depositedNum > 0 && activeApr > 0
-    ? (depositedNum * activeApr) / 100 / 12
-    : 0
+  const projectedMonthly = 
+    !isNaN(depositedNum) && depositedNum > 0 && 
+    !isNaN(activeApr) && activeApr > 0
+      ? (depositedNum * activeApr) / 100 / 12
+      : 0
 
   const [localDepositAmt, setLocalDepositAmt] = useState('')
 
@@ -586,7 +700,7 @@ function TemporalFlow({
         {/* Past region overlay */}
         <div
           className="absolute inset-y-0 left-0 z-1"
-          style={{ width: `${nowPct}%`, background: 'var(--dashboard-overlay-02)' }}
+          style={{ width: `${nowPct}%`, background: 'var(--dashboard-overlay-02)', pointerEvents: 'none' }}
         />
 
         {/* Vault flow lines — multi-line rendering */}
@@ -638,6 +752,7 @@ function TemporalFlow({
             left: `${nowPct}%`,
             top: `calc(50% + ${vaultStackOffsetPx}px)`,
             transform: 'translate(-50%, -100%)',
+            pointerEvents: 'none',
           }}
         >
           <div style={{ textAlign: 'center', paddingBottom: '18px' }}>
@@ -677,6 +792,7 @@ function TemporalFlow({
             textAlign: 'center',
             maxWidth: '320px',
             overflow: 'hidden',
+            pointerEvents: 'none',
           }}
         >
           <span
@@ -704,6 +820,7 @@ function TemporalFlow({
               top: `calc(50% + ${vaultStackOffsetPx}px)`,
               transform: 'translate(-50%, 56px)',
               textAlign: 'center',
+              pointerEvents: 'none',
             }}
           >
             <span
@@ -761,6 +878,7 @@ function TemporalFlow({
             top: `calc(50% + ${vaultStackOffsetPx}px)`,
             transform: 'translateY(-50%)',
             textAlign: 'right',
+            pointerEvents: 'none',
           }}
         >
           <div
@@ -776,6 +894,7 @@ function TemporalFlow({
             Accumulated
           </div>
           <div
+            ref={claimableTimelineRef}
             style={{
               fontFamily: MONO,
               fontSize: '14px',
@@ -795,6 +914,7 @@ function TemporalFlow({
             top: `calc(50% + ${vaultStackOffsetPx}px)`,
             transform: 'translateY(-50%)',
             textAlign: 'left',
+            pointerEvents: 'none',
           }}
         >
           <div
@@ -1108,13 +1228,26 @@ function Label({ children }: { children: React.ReactNode }) {
   )
 }
 
-function BigNumber({ value }: { value: number }) {
+function BigNumber({
+  value,
+  wholeRef,
+}: {
+  value: number
+  wholeRef?: RefObject<HTMLSpanElement | null>
+}) {
   const [whole, decimal] = value.toFixed(2).split('.')
   const formatted = Number(whole).toLocaleString('en-US')
 
   return (
     <div style={{ fontFamily: FONT, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1 }}>
-      <span style={{ fontSize: 'clamp(2rem, 4vw, 2.65rem)', color: 'var(--dashboard-text-primary)' }}>
+      <span
+        ref={wholeRef}
+        style={{
+          fontSize: 'clamp(2rem, 4vw, 2.65rem)',
+          color: 'var(--dashboard-text-primary)',
+          display: 'inline-block',
+        }}
+      >
         ${formatted}
       </span>
       <span style={{ fontSize: 'clamp(1.2rem, 2.4vw, 1.5rem)', color: 'var(--dashboard-text-ghost)' }}>
@@ -1154,8 +1287,4 @@ function Row({ label, value, accent = false }: { label: string; value: string; a
 
 function Sep() {
   return <div style={{ height: '1px', background: 'var(--dashboard-border)', margin: '2px 0' }} />
-}
-
-function fmtUsd(n: number): string {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }

@@ -1,15 +1,18 @@
 import { type Address } from 'viem'
 import { base } from 'wagmi/chains'
 
-if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_VAULT_ADDRESS) {
-  console.warn('[hearst] NEXT_PUBLIC_VAULT_ADDRESS is not set — vault reads will fail')
+const VAULT_ADDRESS_RAW = process.env.NEXT_PUBLIC_VAULT_ADDRESS
+const USDC_ADDRESS_RAW = process.env.NEXT_PUBLIC_USDC_ADDRESS
+
+if (!VAULT_ADDRESS_RAW) {
+  console.error('[hearst] NEXT_PUBLIC_VAULT_ADDRESS missing — vault operations disabled')
 }
-if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_USDC_ADDRESS) {
-  console.warn('[hearst] NEXT_PUBLIC_USDC_ADDRESS is not set — USDC reads will fail')
+if (!USDC_ADDRESS_RAW) {
+  console.error('[hearst] NEXT_PUBLIC_USDC_ADDRESS missing — USDC operations disabled')
 }
 
-export const VAULT_ADDRESS = (process.env.NEXT_PUBLIC_VAULT_ADDRESS ?? '') as Address
-export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS ?? '') as Address
+export const VAULT_ADDRESS = (VAULT_ADDRESS_RAW ?? '0x0000000000000000000000000000000000000000') as Address
+export const USDC_ADDRESS = (USDC_ADDRESS_RAW ?? '0x0000000000000000000000000000000000000000') as Address
 
 export const TARGET_CHAIN = base
 
