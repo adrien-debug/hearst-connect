@@ -1,47 +1,32 @@
 'use client'
 
-import { EPOCH_VAULT_ABI } from '@/config/abi/epoch-vault'
-import { VAULT_ADDRESS } from '@/config/contracts'
-import { useReadContracts } from 'wagmi'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-const contract = { address: VAULT_ADDRESS, abi: EPOCH_VAULT_ABI } as const
+// MOCK stable SSR/CSR values, then live-update on mount.
+const MOCK_EPOCH = 42
+const MOCK_DURATION = 30 * 86400
+const MOCK_START = Math.floor(new Date('2026-04-09T00:00:00Z').getTime() / 1000)
+const INITIAL_ELAPSED = 12 * 86400
+const INITIAL_COUNTDOWN = MOCK_DURATION - INITIAL_ELAPSED
 
 export function useEpoch() {
-  const { data, isLoading } = useReadContracts({
-    contracts: [
-      { ...contract, functionName: 'getCurrentEpochInfo' },
-      { ...contract, functionName: 'EPOCH_DURATION' },
-    ],
-    query: { refetchInterval: 30_000 },
-  })
-
-  const epochInfo = data?.[0]?.result as
-    | [bigint, bigint, bigint, bigint, boolean]
-    | undefined
-  const durationRaw = data?.[1]?.result as bigint | undefined
-
-  const epoch = epochInfo ? Number(epochInfo[0]) : 0
-  const startTime = epochInfo ? Number(epochInfo[1]) : 0
-  const duration = durationRaw ? Number(durationRaw) : 0
-  const elapsed = epochInfo ? Number(epochInfo[3]) : 0
-  const shouldAdvance = epochInfo ? epochInfo[4] : false
-
-  const [countdown, setCountdown] = useState(0)
-
-  const computeCountdown = useCallback(() => {
-    if (!startTime || !duration) return 0
-    const now = Math.floor(Date.now() / 1000)
-    return Math.max(0, startTime + duration - now)
-  }, [startTime, duration])
+  const [elapsed, setElapsed] = useState(INITIAL_ELAPSED)
+  const [countdown, setCountdown] = useState(INITIAL_COUNTDOWN)
 
   useEffect(() => {
-    setCountdown(computeCountdown())
-    const id = setInterval(() => setCountdown(computeCountdown()), 1_000)
+    const tick = () => {
+      const now = Math.floor(Date.now() / 1000)
+      setElapsed(Math.max(0, now - MOCK_START))
+      setCountdown(Math.max(0, MOCK_START + MOCK_DURATION - now))
+    }
+    tick()
+    const id = setInterval(() => {
+      tick()
+    }, 1_000)
     return () => clearInterval(id)
-  }, [computeCountdown])
+  }, [])
 
-  const progress = duration > 0 ? Math.min(1, elapsed / duration) : 0
+  const progress = Math.min(1, elapsed / MOCK_DURATION)
 
   const formatRemaining = (s: number) => {
     const d = Math.floor(s / 86400)
@@ -53,14 +38,14 @@ export function useEpoch() {
   }
 
   return {
-    epoch,
-    startTime,
-    duration,
+    epoch: MOCK_EPOCH,
+    startTime: MOCK_START,
+    duration: MOCK_DURATION,
     elapsed,
-    shouldAdvance,
+    shouldAdvance: false,
     progress,
     countdown,
     countdownFormatted: formatRemaining(countdown),
-    isLoading,
+    isLoading: false,
   }
 }
