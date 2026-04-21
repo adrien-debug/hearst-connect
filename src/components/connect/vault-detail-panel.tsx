@@ -19,7 +19,6 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
           { k: 'Matures', v: vault.maturity },
         ] as const).map(item => (
           <div key={item.k}>
-            {/* DS label — mono, xs, display spacing, accent left-border */}
             <div style={{
               fontFamily: TOKENS.fonts.mono,
               fontSize: TOKENS.fontSizes.xs,
@@ -56,7 +55,6 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
           }}>Cumulative Target Progress</span>
           <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textGhost }}>{vault.progress}% of {vault.target}</span>
         </div>
-        {/* Progress bar DS — h:12px, track:black, fill:accent */}
         <div style={{ height: '12px', background: TOKENS.colors.black, overflow: 'hidden', marginBottom: TOKENS.spacing[2] }}>
           <div style={{ height: '100%', width: `${vault.progress}%`, background: TOKENS.colors.accent, transition: 'width 1s ease' }} />
         </div>
@@ -70,9 +68,8 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         <MonthlyGauge deposited={vault.deposited} apr={vault.apr} />
       </div>
 
-      {/* PERFORMANCE CHART - Yield Curve */}
+      {/* PERFORMANCE CHART */}
       <div style={{ marginBottom: TOKENS.spacing[8] }}>
-        {/* DS label */}
         <div style={{
           fontFamily: TOKENS.fonts.mono,
           fontSize: TOKENS.fontSizes.xs,
@@ -86,41 +83,39 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         }}>
           Yield Performance (30D)
         </div>
-        <div style={{ 
-          height: '120px', 
-          width: '100%', 
-          background: TOKENS.colors.gray50, 
+        <div style={{
+          height: '120px',
+          width: '100%',
+          background: TOKENS.colors.gray50,
           position: 'relative',
           display: 'flex',
           alignItems: 'flex-end',
-          gap: '2px',
-          padding: '0 4px'
+          gap: 0,
         }}>
-          {/* Simulation d'une courbe de yield ascendante */}
           {Array.from({ length: 30 }).map((_, i) => {
             const height = 20 + (i * 2.5) + (Math.sin(i * 0.5) * 5)
-            const isToday = i === 21 // Simulation jour 21
+            const isToday = i === 21
             return (
               <div key={i} style={{
                 flex: 1,
                 height: `${height}%`,
                 background: isToday ? TOKENS.colors.accent : i < 21 ? TOKENS.colors.black : TOKENS.colors.gray200,
                 opacity: i < 21 ? 1 : 0.3,
-                transition: 'height 0.3s ease'
               }} />
             )
           })}
+          {/* NOW badge */}
           <div style={{
             position: 'absolute',
-            left: '70%', // Jour 21 sur 30
+            left: '70%',
             top: '20%',
             fontFamily: TOKENS.fonts.mono,
-            fontSize: '9px',
-            fontWeight: 700,
+            fontSize: TOKENS.fontSizes.xs,          // 11px — interdit 9px
+            fontWeight: TOKENS.fontWeights.bold,
             background: TOKENS.colors.black,
-            color: TOKENS.colors.white,
-            padding: '2px 6px',
-            transform: 'translateX(-50%)'
+            color: TOKENS.colors.textOnDark,         // via token
+            padding: `${TOKENS.spacing[0]} ${TOKENS.spacing[2]}`, // 0 8px
+            transform: 'translateX(-50%)',
           }}>
             NOW
           </div>
@@ -158,22 +153,44 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
             paddingLeft: TOKENS.spacing[3],
           }}>Strategy · Asset Allocation</div>
           <div style={{ fontFamily: TOKENS.fonts.sans, fontSize: TOKENS.fontSizes.sm, marginBottom: TOKENS.spacing[3], color: TOKENS.colors.black, fontWeight: TOKENS.fontWeights.medium }}>{vault.strategy}</div>
-          
-          <div style={{ display: 'flex', gap: '1px', height: '40px', marginBottom: '12px' }}>
-            <div style={{ width: '40%', background: TOKENS.colors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, fontFamily: TOKENS.fonts.mono }}>40%</div>
-            <div style={{ width: '30%', background: TOKENS.colors.black, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, fontFamily: TOKENS.fonts.mono }}>30%</div>
-            <div style={{ width: '30%', background: TOKENS.colors.gray200, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, fontFamily: TOKENS.fonts.mono }}>30%</div>
-          </div>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+
+          {/* Stacked allocation bar — segments flush (marginLeft 1px as separator) */}
+          <div style={{ display: 'flex', height: '40px', marginBottom: TOKENS.spacing[3] }}>
             {[
-              { label: 'RWA', color: TOKENS.colors.accent },
+              { w: '40%', bg: TOKENS.colors.accent,  fg: TOKENS.colors.black,      label: '40%' },
+              { w: '30%', bg: TOKENS.colors.black,   fg: TOKENS.colors.textOnDark, label: '30%' },
+              { w: '30%', bg: TOKENS.colors.gray200, fg: TOKENS.colors.black,      label: '30%' },
+            ].map((s, idx) => (
+              <div key={idx} style={{
+                width: s.w,
+                background: s.bg,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: TOKENS.fontSizes.xs,       // 11px — interdit 9px
+                fontWeight: TOKENS.fontWeights.bold,
+                fontFamily: TOKENS.fonts.mono,
+                color: s.fg,
+                marginLeft: idx > 0 ? TOKENS.borders.thin : 0,
+              }}>{s.label}</div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: TOKENS.spacing[3] }}>
+            {[
+              { label: 'RWA',  color: TOKENS.colors.accent },
               { label: 'USDC', color: TOKENS.colors.black },
-              { label: 'BTC', color: TOKENS.colors.gray200 },
+              { label: 'BTC',  color: TOKENS.colors.gray200 },
             ].map(asset => (
-              <div key={asset.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '6px', height: '6px', background: asset.color }} />
-                <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: '9px', fontWeight: 700, color: TOKENS.colors.textGhost }}>{asset.label}</span>
+              <div key={asset.label} style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2] }}>
+                <div style={{ width: TOKENS.spacing[2], height: TOKENS.spacing[2], background: asset.color }} />
+                <span style={{
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.xs,     // 11px — interdit 9px
+                  fontWeight: TOKENS.fontWeights.bold,
+                  color: TOKENS.colors.textGhost,
+                }}>{asset.label}</span>
               </div>
             ))}
           </div>

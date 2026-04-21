@@ -19,7 +19,7 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
     <div className="flex-1" style={{ overflowY: 'auto', padding: `${TOKENS.spacing[20]} ${TOKENS.spacing[12]}`, background: TOKENS.colors.bgPage }}>
 
       {/* KPIs — grille séparée par border main */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1px', background: TOKENS.colors.borderMain, marginBottom: TOKENS.spacing[8] }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: TOKENS.borders.thin, background: TOKENS.colors.borderMain, marginBottom: TOKENS.spacing[8] }}>
         {[
           { k: 'Target APY', v: vault.apr + '%', accent: true },
           { k: 'Lock Period', v: vault.lockPeriod },
@@ -27,7 +27,6 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
           { k: 'Risk Profile', v: vault.risk },
         ].map(item => (
           <div key={item.k} style={{ background: TOKENS.colors.bgPage, padding: TOKENS.spacing[6] }}>
-            {/* DS label */}
             <div style={{
               fontFamily: TOKENS.fonts.mono,
               fontSize: TOKENS.fontSizes.xs,
@@ -53,7 +52,6 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
 
       {/* Amount input */}
       <div style={{ marginBottom: TOKENS.spacing[8] }}>
-        {/* DS label */}
         <div style={{
           fontFamily: TOKENS.fonts.mono,
           fontSize: TOKENS.fontSizes.xs,
@@ -83,6 +81,7 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
               background: 'transparent',
               border: 'none',
               outline: 'none',
+              borderRadius: 0,
               color: TOKENS.colors.textPrimary,
               fontSize: TOKENS.fontSizes.xxxl,
               fontFamily: TOKENS.fonts.mono,
@@ -127,8 +126,17 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
 
       {/* Agree + CTA */}
       <label style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2], cursor: 'pointer', marginBottom: TOKENS.spacing[3] }}>
-        <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} style={{ accentColor: TOKENS.colors.accent, width: '14px', height: '14px' }} />
-        <span style={{ fontFamily: TOKENS.fonts.sans, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textSecondary }}>I have read and accept the term sheet.</span>
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={e => setAgreed(e.target.checked)}
+          style={{ accentColor: TOKENS.colors.accent, width: TOKENS.spacing[4], height: TOKENS.spacing[4] }}
+        />
+        <span style={{
+          fontFamily: TOKENS.fonts.sans,
+          fontSize: TOKENS.fontSizes.sm,             // sm (13px) — pas xs
+          color: TOKENS.colors.textSecondary,
+        }}>I have read and accept the term sheet.</span>
       </label>
 
       {/* CTA — DS btn-primary */}
@@ -136,14 +144,15 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
         disabled={!isReady}
         style={{
           width: '100%',
-          padding: `18px 40px`,
+          padding: `18px ${TOKENS.spacing[10]}`,    // 18px 40px — spec DS
           background: isReady ? TOKENS.colors.black : 'transparent',
-          color: isReady ? TOKENS.colors.white : TOKENS.colors.textGhost,
+          color: isReady ? TOKENS.colors.textOnDark : TOKENS.colors.textGhost,
           border: `${TOKENS.borders.thick} solid ${isReady ? TOKENS.colors.black : TOKENS.colors.borderSubtle}`,
+          borderRadius: 0,                           // explicite DS
           fontFamily: TOKENS.fonts.mono,
           fontSize: TOKENS.fontSizes.sm,
           fontWeight: TOKENS.fontWeights.black,
-          letterSpacing: '0.15em',
+          letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase' as const,
           cursor: isReady ? 'pointer' : 'not-allowed',
           transition: '120ms ease-out',
@@ -157,9 +166,23 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
 
 function Row({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${TOKENS.spacing[2]} 0`, borderBottom: `1px solid ${TOKENS.colors.borderSubtle}` }}>
-      <span style={{ fontFamily: TOKENS.fonts.sans, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textSecondary }}>{label}</span>
-      <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary }}>{value}</span>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      padding: `${TOKENS.spacing[2]} 0`,
+      borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+    }}>
+      <span style={{
+        fontFamily: TOKENS.fonts.sans,
+        fontSize: TOKENS.fontSizes.sm,              // sm (13px) — pas xs pour labels Row
+        color: TOKENS.colors.textSecondary,
+      }}>{label}</span>
+      <span style={{
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.xs,
+        fontWeight: TOKENS.fontWeights.bold,
+        color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+      }}>{value}</span>
     </div>
   )
 }
