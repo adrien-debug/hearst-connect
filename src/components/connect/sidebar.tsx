@@ -61,7 +61,9 @@ export function Sidebar({ vaults, selectedId, onSelect, agg, selected }: Sidebar
       <VaultGroup label="My Vaults" vaults={activeVaults} selectedId={selectedId} onSelect={onSelect} />
 
       {/* AVAILABLE VAULTS */}
-      <VaultGroup label="Available Vaults" vaults={availableVaults} selectedId={selectedId} onSelect={onSelect} available />
+      <div style={{ opacity: 0.3 }}>
+        <VaultGroup label="Available Vaults" vaults={availableVaults} selectedId={selectedId} onSelect={onSelect} available />
+      </div>
     </aside>
   )
 }
@@ -129,9 +131,9 @@ function VaultGroup({ label, vaults, selectedId, onSelect, available = false }: 
 function BigNum({ value }: { value: number }) {
   const [whole, dec] = value.toFixed(2).split('.')
   return (
-    <div style={{ fontFamily: FONT, fontWeight: 300, letterSpacing: '-0.03em', lineHeight: 1 }}>
-      <span style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)' }}>${Number(whole).toLocaleString('en-US')}</span>
-      <span style={{ fontSize: 'clamp(1.2rem, 2.4vw, 1.5rem)', color: 'var(--dashboard-text-ghost)' }}>.{dec}</span>
+    <div style={{ fontFamily: FONT, fontWeight: 300, letterSpacing: '-0.04em', lineHeight: 1 }}>
+      <span style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)' }}>${Number(whole).toLocaleString('en-US')}</span>
+      <span style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: 'var(--dashboard-text-ghost)' }}>.{dec}</span>
     </div>
   )
 }

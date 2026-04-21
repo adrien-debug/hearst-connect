@@ -1,7 +1,7 @@
 'use client'
 
 import { useMonthProgress } from '@/hooks/useMonthProgress'
-import { MONO, fmtUsd } from './constants'
+import { MONO, COLORS, FONT, fmtUsd } from './constants'
 import { computeMonthlyYield } from './data'
 
 interface MonthlyGaugeProps {
@@ -20,58 +20,48 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
     <div>
       <div style={{
         fontFamily: MONO,
-        fontSize: '9px',
-        letterSpacing: '0.12em',
+        fontSize: '11px',
+        fontWeight: 500,
+        letterSpacing: '0.2em',
         textTransform: 'uppercase',
-        color: 'var(--dashboard-text-ghost)',
-        marginBottom: '10px',
+        color: COLORS.textGhost,
+        marginBottom: '24px',
       }}>
-        {label ?? monthName} · {apr.toFixed(1)}% APR
+        {label ?? monthName} · {apr.toFixed(2)}% APR
       </div>
 
-      {/* Gauge bar */}
+      {/* Gauge bar — Ultra-minimalist */}
       <div style={{
         position: 'relative',
-        height: '220px',
-        border: '1px solid var(--dashboard-border)',
-        background: 'var(--dashboard-surface)',
-        overflow: 'hidden',
-        marginBottom: '6px',
+        height: '80px',
+        marginBottom: '24px',
+        borderBottom: `1px solid ${COLORS.border}`,
       }}>
-        {/* Fill */}
+        {/* Fill - Minimalist line instead of box */}
         <div style={{
           position: 'absolute',
-          inset: 0,
+          bottom: '-1px',
+          left: 0,
           width: `${nowPct}%`,
-          background: 'linear-gradient(90deg, var(--dashboard-accent-dim), var(--dashboard-accent-muted))',
+          height: '2px',
+          background: COLORS.textPrimary,
+          zIndex: 4,
           transition: 'width 1s ease',
         }} />
 
-        {/* NOW marker */}
+        {/* Produced (left) - Large, clean typography */}
         <div style={{
           position: 'absolute',
-          top: 0,
-          bottom: 0,
-          left: `${nowPct}%`,
-          width: '2px',
-          background: 'var(--dashboard-accent)',
-          boxShadow: '0 0 8px var(--dashboard-accent-shadow)',
-          zIndex: 2,
-        }} />
-
-        {/* Produced (left) */}
-        <div style={{
-          position: 'absolute',
-          left: '24px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontFamily: MONO,
-          fontSize: '28px',
-          fontWeight: 700,
-          color: 'var(--dashboard-accent)',
+          left: 0,
+          bottom: '16px',
+          fontFamily: FONT,
+          fontSize: 'clamp(3rem, 7vw, 4.5rem)',
+          fontWeight: 500,
+          color: COLORS.textPrimary,
           zIndex: 3,
           whiteSpace: 'nowrap',
-          letterSpacing: '-0.02em',
+          letterSpacing: '-0.05em',
+          lineHeight: 1,
         }}>
           {fmtUsd(produced)}
         </div>
@@ -80,39 +70,39 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         {remaining > 0 && nowPct < 85 && (
           <div style={{
             position: 'absolute',
-            right: '24px',
-            top: '50%',
-            transform: 'translateY(-50%)',
+            right: 0,
+            bottom: '16px',
             fontFamily: MONO,
-            fontSize: '14px',
-            color: 'var(--dashboard-text-ghost)',
+            fontSize: '12px',
+            color: COLORS.textGhost,
             zIndex: 3,
             whiteSpace: 'nowrap',
-            opacity: 0.6,
+            letterSpacing: '0.1em',
           }}>
-            ~{fmtUsd(remaining)}
+            EST. {fmtUsd(remaining)} REMAINING
           </div>
         )}
       </div>
 
       {/* Day markers */}
       <div style={{ position: 'relative', height: '14px' }}>
-        <span style={{ position: 'absolute', left: 0, fontFamily: MONO, fontSize: '8px', letterSpacing: '0.08em', color: 'var(--dashboard-text-ghost)' }}>
-          Day 1
+        <span style={{ position: 'absolute', left: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.15em', color: COLORS.textGhost }}>
+          DAY 01
         </span>
         <span style={{
           position: 'absolute',
           left: `${nowPct}%`,
           transform: 'translateX(-50%)',
           fontFamily: MONO,
-          fontSize: '8px',
-          letterSpacing: '0.08em',
-          color: 'var(--dashboard-accent)',
+          fontSize: '10px',
+          fontWeight: 600,
+          letterSpacing: '0.15em',
+          color: COLORS.textPrimary,
         }}>
-          Day {dayOfMonth}
+          DAY {dayOfMonth < 10 ? `0${dayOfMonth}` : dayOfMonth}
         </span>
-        <span style={{ position: 'absolute', right: 0, fontFamily: MONO, fontSize: '8px', letterSpacing: '0.08em', color: 'var(--dashboard-text-ghost)' }}>
-          Day {daysInMonth}
+        <span style={{ position: 'absolute', right: 0, fontFamily: MONO, fontSize: '10px', letterSpacing: '0.15em', color: COLORS.textGhost }}>
+          DAY {daysInMonth}
         </span>
       </div>
     </div>
