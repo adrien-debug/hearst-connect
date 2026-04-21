@@ -6,7 +6,15 @@
     <title>Hearst Connect - Design System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'Satoshi Variable';
+        src: url('/fonts/Satoshi-Variable.woff2') format('woff2');
+        font-weight: 300 900;
+        font-display: swap;
+      }
+    </style>
     <style>
         :root {
             /* 
@@ -39,16 +47,17 @@
             --color-border-subtle: var(--color-gray-200);
 
             /* --- Typography --- */
-            --font-sans: 'Inter', -apple-system, sans-serif;
+            --font-sans: 'Satoshi Variable', Inter, -apple-system, sans-serif;
             --font-mono: 'IBM Plex Mono', monospace;
 
-            /* Font Sizes */
-            --fs-xs: 11px;
-            --fs-sm: 13px;
-            --fs-md: 14px;
-            --fs-lg: 18px;
-            --fs-xl: 20px;
-            --fs-3xl: 48px;
+            /* Font Sizes — aligned with marketing dashboard-vars */
+            --fs-xs: 12px;
+            --fs-sm: 14px;
+            --fs-md: 16px;
+            --fs-lg: 20px;
+            --fs-xl: 24px;
+            --fs-2xl: 40px;
+            --fs-3xl: 56px;
             --fs-display: clamp(48px, 5vw, 64px);
 
             /* Font Weights */
@@ -213,7 +222,7 @@
 
         .value-large {
             font-family: var(--font-mono);
-            font-size: var(--fs-3xl);
+            font-size: var(--fs-2xl);
             color: var(--color-black);
             letter-spacing: var(--ls-tight);
             font-weight: var(--fw-semibold);

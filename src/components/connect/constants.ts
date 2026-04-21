@@ -26,17 +26,17 @@ export const TOKENS = {
     danger: '#EF4444',
   },
   fonts: {
-    sans: "'Inter', -apple-system, sans-serif",
+    sans: "'Satoshi Variable', Inter, -apple-system, sans-serif",
     mono: "'IBM Plex Mono', monospace",
   },
   fontSizes: {
-    xs: '11px',
-    sm: '13px',
-    md: '14px',
-    lg: '18px',
-    xl: '20px',
-    xxl: '24px',
-    xxxl: '48px',
+    xs: '12px',           // marketing --dashboard-text-xs
+    sm: '14px',           // marketing --dashboard-text-sm
+    md: '16px',           // marketing --dashboard-text-base
+    lg: '20px',           // marketing --dashboard-text-lg
+    xl: '24px',           // marketing --dashboard-text-xl
+    xxl: '40px',          // marketing --dashboard-text-2xl
+    xxxl: '56px',         // marketing --dashboard-text-3xl
     display: 'clamp(48px, 5vw, 64px)',
   },
   fontWeights: {

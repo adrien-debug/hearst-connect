@@ -10,10 +10,10 @@ interface SidebarProps {
   agg: Aggregate
 }
 
-// Couleurs on-dark sans équivalent token pour la sidebar noire
 const SIDEBAR_BORDER_INACTIVE = 'rgba(255,255,255,0.08)'
-const SIDEBAR_ACTIVE_BG       = 'rgba(167,251,144,0.04)' // accent faint
+const SIDEBAR_ACTIVE_BG       = 'rgba(167,251,144,0.04)'
 const SIDEBAR_TEXT_MUTED      = 'rgba(255,255,255,0.5)'
+const SIDEBAR_DIVIDER         = 'rgba(255,255,255,0.06)'
 
 export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
   const activeVaults = vaults
@@ -21,6 +21,10 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
     .sort((a, b) => (b.deposited + b.claimable) - (a.deposited + a.claimable))
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
   const isOverview = selectedId === null
+  const totalValue = agg.totalDeposited + agg.totalClaimable
+  const gainPct = agg.totalDeposited > 0
+    ? ((agg.totalClaimable / agg.totalDeposited) * 100).toFixed(2)
+    : '0.00'
 
   return (
     <aside
@@ -39,12 +43,10 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
         overflow: 'hidden',
       }}
     >
-      {/* ── TOP FIXED: brand + total portfolio ── */}
-      <div style={{ padding: `${TOKENS.spacing[12]} ${TOKENS.spacing[8]} 0`, flexShrink: 0 }}>
-
-        {/* Logo — 180px DS spec */}
-        <div style={{ marginBottom: TOKENS.spacing[6], cursor: 'pointer' }} onClick={() => onSelect(null)}>
-          <svg style={{ width: '180px', height: 'auto' }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+      {/* ── BRAND ── */}
+      <div style={{ padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[8]} 0`, flexShrink: 0 }}>
+        <div style={{ marginBottom: TOKENS.spacing[4], cursor: 'pointer' }} onClick={() => onSelect(null)}>
+          <svg style={{ width: '160px', height: 'auto' }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
             <g>
               <path style={{ fill: TOKENS.colors.white }} d="M751.5,546.1v47.4h79.4l-7.4,16.3h-100.4v-142.3h119l-9.4,15.7h-81.2v47.4h43l-7.6,15.5h-35.4,0Z"/>
               <path style={{ fill: TOKENS.colors.white }} d="M1227.2,473.1h135.1l-19.2,18.8h-34v117.9h-28.7v-117.9h-34.9l-18.3-18.8h0Z"/>
@@ -57,7 +59,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
           </svg>
         </div>
 
-        {/* Total Portfolio — bloc financier dense */}
+        {/* ── PORTFOLIO TOTAL ── */}
         <button
           type="button"
           onClick={() => onSelect(null)}
@@ -69,7 +71,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
             border: 'none',
             borderLeft: `3px solid ${isOverview ? TOKENS.colors.accent : SIDEBAR_BORDER_INACTIVE}`,
             padding: `${TOKENS.spacing[2]} 0 ${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-            marginBottom: TOKENS.spacing[4],
+            marginBottom: TOKENS.spacing[3],
             cursor: 'pointer',
             transition: '120ms ease-out',
           }}
@@ -81,47 +83,89 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
             letterSpacing: TOKENS.letterSpacing.display,
             textTransform: 'uppercase' as const,
             color: TOKENS.colors.gray500,
-            marginBottom: TOKENS.spacing[2],
+            marginBottom: '4px',
           }}>
             Total Portfolio
           </div>
           <div style={{
             fontFamily: TOKENS.fonts.mono,
             fontSize: TOKENS.fontSizes.xxl,
-            fontWeight: TOKENS.fontWeights.semibold,
+            fontWeight: TOKENS.fontWeights.black,
             letterSpacing: TOKENS.letterSpacing.tight,
             lineHeight: 1,
             color: TOKENS.colors.textOnDark,
             whiteSpace: 'nowrap' as const,
           }}>
-            {fmtUsd(agg.totalDeposited + agg.totalClaimable)}
+            {fmtUsd(totalValue)}
           </div>
           <div style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.bold,
-            color: TOKENS.colors.accent,
-            marginTop: TOKENS.spacing[2],
-            letterSpacing: TOKENS.letterSpacing.wide,
+            display: 'flex',
+            gap: TOKENS.spacing[4],
+            marginTop: '6px',
           }}>
-            +{fmtUsd(agg.totalClaimable)} earned
+            <span style={{
+              fontFamily: TOKENS.fonts.mono,
+              fontSize: TOKENS.fontSizes.xs,
+              fontWeight: TOKENS.fontWeights.bold,
+              color: TOKENS.colors.accent,
+              letterSpacing: TOKENS.letterSpacing.wide,
+            }}>+{fmtUsd(agg.totalClaimable)} yield</span>
+            <span style={{
+              fontFamily: TOKENS.fonts.mono,
+              fontSize: TOKENS.fontSizes.xs,
+              fontWeight: TOKENS.fontWeights.bold,
+              color: TOKENS.colors.accent,
+            }}>+{gainPct}%</span>
           </div>
         </button>
 
-        {/* Portfolio Overview nav item */}
+        {/* ── STATS STRIP ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: TOKENS.borders.thin,
+          background: SIDEBAR_DIVIDER,
+          marginBottom: TOKENS.spacing[3],
+        }}>
+          {[
+            { label: 'Deposited', value: fmtUsd(agg.totalDeposited) },
+            { label: 'Avg APR', value: `${agg.avgApr.toFixed(1)}%`, accent: true },
+            { label: 'Positions', value: String(activeVaults.length) },
+            { label: 'Next Dist', value: 'Tomorrow' },
+          ].map(s => (
+            <div key={s.label} style={{ background: 'rgba(255,255,255,0.02)', padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}` }}>
+              <div style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: '10px',
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase' as const,
+                color: TOKENS.colors.gray500,
+                marginBottom: '3px',
+              }}>{s.label}</div>
+              <div style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                color: s.accent ? TOKENS.colors.accent : TOKENS.colors.textOnDark,
+              }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── NAV: Portfolio Overview ── */}
         <NavItem label="Portfolio Overview" active={isOverview} onClick={() => onSelect(null)} />
 
-        <div style={{ borderBottom: `${TOKENS.borders.thin} solid ${SIDEBAR_BORDER_INACTIVE}`, margin: `${TOKENS.spacing[4]} 0` }} />
-
+        <div style={{ borderBottom: `${TOKENS.borders.thin} solid ${SIDEBAR_BORDER_INACTIVE}`, margin: `${TOKENS.spacing[3]} 0 ${TOKENS.spacing[2]}` }} />
         <SectionLabel>Active Positions</SectionLabel>
       </div>
 
-      {/* ── MIDDLE SCROLLABLE: active vaults ── */}
+      {/* ── SCROLLABLE: active vaults ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: `0 ${TOKENS.spacing[8]}`, minHeight: 0 }}>
         {activeVaults.map(v => {
           const isSel = selectedId === v.id
           const currentValue = v.deposited + v.claimable
-          const gainPct = ((v.claimable / v.deposited) * 100).toFixed(1)
+          const gainPct = v.deposited > 0 ? ((v.claimable / v.deposited) * 100).toFixed(1) : '0.0'
           return (
             <button
               key={v.id}
@@ -140,37 +184,55 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                 transition: '120ms ease-out',
               }}
             >
-              <div style={{
-                fontFamily: TOKENS.fonts.sans,
-                fontSize: TOKENS.fontSizes.sm,
-                fontWeight: isSel ? TOKENS.fontWeights.bold : TOKENS.fontWeights.medium,
-                color: isSel ? TOKENS.colors.textOnDark : TOKENS.colors.gray500,
-                textTransform: 'uppercase' as const,
-                letterSpacing: TOKENS.letterSpacing.normal,
-                marginBottom: TOKENS.spacing[2],
-              }}>{v.name}</div>
+              {/* Name + APR */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <div style={{
+                  fontFamily: TOKENS.fonts.sans,
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: isSel ? TOKENS.fontWeights.bold : TOKENS.fontWeights.medium,
+                  color: isSel ? TOKENS.colors.textOnDark : TOKENS.colors.gray500,
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: TOKENS.letterSpacing.normal,
+                }}>{v.name}</div>
+                <div style={{
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  color: TOKENS.colors.accent,
+                }}>{v.apr}%</div>
+              </div>
+
+              {/* Value */}
               <div style={{
                 fontFamily: TOKENS.fonts.mono,
-                fontSize: TOKENS.fontSizes.md,
+                fontSize: TOKENS.fontSizes.sm,
                 fontWeight: TOKENS.fontWeights.semibold,
                 color: isSel ? TOKENS.colors.textOnDark : SIDEBAR_TEXT_MUTED,
                 lineHeight: 1,
-                marginBottom: TOKENS.spacing[0],
+                marginBottom: '4px',
               }}>{fmtUsd(currentValue)}</div>
-              <div style={{
-                fontFamily: TOKENS.fonts.mono,
-                fontSize: TOKENS.fontSizes.xs,
-                fontWeight: TOKENS.fontWeights.bold,
-                color: TOKENS.colors.accent,
-              }}>+{fmtUsd(v.claimable)} · {gainPct}%</div>
+
+              {/* Yield + progress bar */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2] }}>
+                <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${v.progress}%`, background: TOKENS.colors.accent }} />
+                </div>
+                <span style={{
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  color: TOKENS.colors.accent,
+                  flexShrink: 0,
+                }}>+{fmtUsd(v.claimable)} · {gainPct}%</span>
+              </div>
             </button>
           )
         })}
       </div>
 
-      {/* ── BOTTOM FIXED: available vaults ── */}
+      {/* ── BOTTOM: available vaults ── */}
       <div style={{
-        padding: `${TOKENS.spacing[4]} ${TOKENS.spacing[8]} ${TOKENS.spacing[6]}`,
+        padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[8]} ${TOKENS.spacing[4]}`,
         borderTop: `${TOKENS.borders.thin} solid ${SIDEBAR_BORDER_INACTIVE}`,
         flexShrink: 0,
       }}>
@@ -190,14 +252,14 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                 background: 'transparent',
                 border: 'none',
                 borderLeft: `3px solid ${isSel ? TOKENS.colors.accent : 'transparent'}`,
-                padding: `${TOKENS.spacing[3]} 0 ${TOKENS.spacing[3]} ${TOKENS.spacing[3]}`,
+                padding: `${TOKENS.spacing[2]} 0 ${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
                 cursor: 'pointer',
                 transition: '120ms ease-out',
               }}
             >
               <span style={{
                 fontFamily: TOKENS.fonts.sans,
-                fontSize: TOKENS.fontSizes.sm,
+                fontSize: TOKENS.fontSizes.xs,
                 fontWeight: isSel ? TOKENS.fontWeights.bold : TOKENS.fontWeights.medium,
                 color: isSel ? TOKENS.colors.textOnDark : TOKENS.colors.gray500,
               }}>{v.name}</span>
@@ -228,10 +290,10 @@ function NavItem({ label, active, onClick }: { label: string; active: boolean; o
         textAlign: 'left',
         background: 'transparent',
         border: 'none',
-        padding: `${TOKENS.spacing[3]} 0`,
+        padding: `${TOKENS.spacing[2]} 0`,
         cursor: 'pointer',
         fontFamily: TOKENS.fonts.sans,
-        fontSize: TOKENS.fontSizes.sm,
+        fontSize: TOKENS.fontSizes.xs,
         fontWeight: active ? TOKENS.fontWeights.bold : TOKENS.fontWeights.medium,
         color: active ? TOKENS.colors.textOnDark : TOKENS.colors.gray500,
         borderBottom: `${TOKENS.borders.thin} solid ${active ? TOKENS.colors.textOnDark : 'transparent'}`,
@@ -253,8 +315,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       letterSpacing: TOKENS.letterSpacing.display,
       textTransform: 'uppercase' as const,
       color: TOKENS.colors.gray500,
-      borderLeft: `3px solid ${TOKENS.colors.accent}`,
-      paddingLeft: TOKENS.spacing[3],
       marginBottom: TOKENS.spacing[2],
     }}>
       {children}

@@ -35,8 +35,6 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
               letterSpacing: TOKENS.letterSpacing.display,
               color: TOKENS.colors.textPrimary,
               marginBottom: TOKENS.spacing[2],
-              borderLeft: `3px solid ${TOKENS.colors.accent}`,
-              paddingLeft: TOKENS.spacing[3],
             }}>{item.k}</div>
             <div style={{
               fontFamily: TOKENS.fonts.mono,
@@ -60,8 +58,6 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
           textTransform: 'uppercase' as const,
           color: TOKENS.colors.textPrimary,
           marginBottom: TOKENS.spacing[2],
-          borderLeft: `3px solid ${TOKENS.colors.accent}`,
-          paddingLeft: TOKENS.spacing[3],
         }}>
           Amount (USDC)
         </div>

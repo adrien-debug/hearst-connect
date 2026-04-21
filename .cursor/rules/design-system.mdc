@@ -33,7 +33,7 @@ TOKENS.colors.danger      // #EF4444  (erreurs uniquement)
 ### Typographie
 ```ts
 // Corps / titres
-fontFamily: TOKENS.fonts.sans    // Inter
+fontFamily: TOKENS.fonts.sans    // 'Satoshi Variable', Inter, sans-serif
 fontWeight: TOKENS.fontWeights.black  // 800 — titres principaux
 
 // Données chiffrées, labels, indicateurs
@@ -48,7 +48,7 @@ fontWeight: TOKENS.fontWeights.bold   // 700
 // ✅ Pattern obligatoire
 {
   fontFamily: TOKENS.fonts.mono,
-  fontSize: TOKENS.fontSizes.xs,        // 11px
+  fontSize: TOKENS.fontSizes.xs,        // 12px
   fontWeight: TOKENS.fontWeights.bold,  // 700
   letterSpacing: TOKENS.letterSpacing.display, // 0.2em
   textTransform: 'uppercase',
@@ -84,11 +84,11 @@ fontWeight: TOKENS.fontWeights.bold   // 700
 ### Sizing contextuel — fontSizes
 ```ts
 // Sidebar : valeurs compactes
-TOKENS.fontSizes.xxl   // 24px — chiffres sidebar (Total Deposited)
-TOKENS.fontSizes.lg    // 18px — mono-values tableaux
+TOKENS.fontSizes.xxl   // 40px — chiffres sidebar (Total Deposited)
+TOKENS.fontSizes.lg    // 20px — mono-values tableaux
 
 // Main panel : grande hiérarchie
-TOKENS.fontSizes.xxxl   // 48px — KPI hero cards
+TOKENS.fontSizes.xxxl   // 56px — KPI hero cards
 TOKENS.fontSizes.display // clamp(48,5vw,64px) — display H1
 
 // ❌ INTERDIT en sidebar : xxxl, display (trop large, déborde la width 360px)

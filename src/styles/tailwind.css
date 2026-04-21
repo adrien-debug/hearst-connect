@@ -2,7 +2,7 @@
 @import '../generated/dashboard-vars.css';
 
 @theme {
-  --font-sans: var(--font-sans, 'Inter', sans-serif);
+  --font-sans: 'Satoshi Variable', Inter, -apple-system, sans-serif;
 }
 
 /* Click ripple animation */
@@ -63,8 +63,8 @@
   --dashboard-radius-button:  0px;
   --dashboard-radius-badge:   0px;
 
-  /* Typographie — Inter body, IBM Plex Mono pour les données */
-  font-family: 'Inter', -apple-system, sans-serif;
+  /* Typographie — Satoshi Variable (identique marketing), IBM Plex Mono pour les données */
+  font-family: 'Satoshi Variable', Inter, -apple-system, sans-serif;
   background-color: #FFFFFF;
   color: #000000;
   -webkit-font-smoothing: antialiased;
@@ -72,7 +72,7 @@
 
 .connect-scope,
 .connect-scope * {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Satoshi Variable', Inter, -apple-system, sans-serif;
   border-radius: 0 !important;
 }
 

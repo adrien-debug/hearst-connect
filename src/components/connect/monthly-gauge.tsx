@@ -12,31 +12,45 @@ interface MonthlyGaugeProps {
 
 export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
   const { dayOfMonth, daysInMonth, progress } = useMonthProgress()
-  const { produced, remaining } = computeMonthlyYield(deposited, apr, dayOfMonth, daysInMonth)
+  const { monthlyYield, produced, remaining } = computeMonthlyYield(deposited, apr, dayOfMonth, daysInMonth)
   const nowPct = Math.max(2, Math.min(97, progress * 100))
-  const monthName = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
+
+  // Static month label to avoid SSR mismatch — month resolved client-side via useMonthProgress
+  const monthLabel = label ?? `Monthly Yield · ${apr.toFixed(1)}% APR`
 
   return (
     <div>
-      {/* Label DS */}
+      {/* Header row: label + monthly total */}
       <div style={{
-        fontFamily: TOKENS.fonts.mono,
-        fontSize: TOKENS.fontSizes.xs,
-        fontWeight: TOKENS.fontWeights.bold,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase' as const,
-        color: TOKENS.colors.textPrimary,
-        marginBottom: TOKENS.spacing[2],             // 8px via token
-        borderLeft: `3px solid ${TOKENS.colors.accent}`,
-        paddingLeft: TOKENS.spacing[3],
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+        marginBottom: TOKENS.spacing[2],
       }}>
-        {label ?? monthName} · {apr.toFixed(1)}% APR
+        <div style={{
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.xs,
+          fontWeight: TOKENS.fontWeights.bold,
+          letterSpacing: TOKENS.letterSpacing.display,
+          textTransform: 'uppercase' as const,
+          color: TOKENS.colors.textPrimary,
+        }}>
+          {monthLabel}
+        </div>
+        <div style={{
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.xs,
+          fontWeight: TOKENS.fontWeights.bold,
+          color: TOKENS.colors.textGhost,
+          letterSpacing: TOKENS.letterSpacing.wide,
+        }}>
+          {fmtUsd(monthlyYield)} / month
+        </div>
       </div>
 
-      {/* Bar structure — elapsed | now marker | remaining */}
+      {/* Gauge track */}
       <div style={{ position: 'relative', marginBottom: TOKENS.spacing[2] }}>
-
-        {/* DAY XX badge above marker */}
+        {/* DAY badge above marker */}
         <div style={{
           position: 'absolute',
           left: `${nowPct}%`,
@@ -44,12 +58,12 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           transform: 'translateX(-50%)',
           marginBottom: TOKENS.spacing[2],
           fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.xs,              // 11px — interdit 9px
+          fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.bold,
-          letterSpacing: TOKENS.letterSpacing.wide,   // 0.1em
+          letterSpacing: TOKENS.letterSpacing.wide,
           color: TOKENS.colors.textOnDark,
           background: TOKENS.colors.black,
-          padding: `${TOKENS.borders.thin} ${TOKENS.spacing[2]}`, // 1px 8px
+          padding: `2px ${TOKENS.spacing[2]}`,
           whiteSpace: 'nowrap' as const,
           zIndex: 3,
         }}>
@@ -57,87 +71,66 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         </div>
 
         {/* Track */}
-        <div style={{
-          position: 'relative',
-          height: '12px',
-          background: TOKENS.colors.black,
-          overflow: 'visible',
-        }}>
+        <div style={{ position: 'relative', height: '12px', background: TOKENS.colors.gray200, overflow: 'visible' }}>
           {/* Elapsed — accent fill */}
           <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: `${nowPct}%`,
-            height: '100%',
+            position: 'absolute', top: 0, left: 0,
+            width: `${nowPct}%`, height: '100%',
             background: TOKENS.colors.accent,
             zIndex: 1,
           }} />
-
-          {/* NOW tick — white vertical line, extends above/below track */}
+          {/* NOW tick */}
           <div style={{
             position: 'absolute',
             left: `${nowPct}%`,
             top: '-3px',
             height: '18px',
-            width: TOKENS.borders.thick,             // 2px via token
-            background: TOKENS.colors.white,
+            width: TOKENS.borders.thick,
+            background: TOKENS.colors.black,
             zIndex: 4,
             transform: 'translateX(-1px)',
           }} />
         </div>
       </div>
 
-      {/* Day markers + produced / remaining */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginTop: TOKENS.spacing[2],                // 8px
-      }}>
-        <div style={{ display: 'flex', gap: TOKENS.spacing[3], alignItems: 'baseline' }}>
-          <span style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,           // 11px
-            fontWeight: TOKENS.fontWeights.medium,
-            color: TOKENS.colors.textGhost,
-          }}>01</span>
-          <span style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,           // 11px
-            fontWeight: TOKENS.fontWeights.bold,
-            color: TOKENS.colors.accent,
-          }}>+{fmtUsd(produced)} produced</span>
-        </div>
-        <div style={{ display: 'flex', gap: TOKENS.spacing[3], alignItems: 'baseline' }}>
-          {nowPct > 85 ? (
-            <span style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.xs,
-              fontWeight: TOKENS.fontWeights.bold,
-              color: TOKENS.colors.black,
-              letterSpacing: TOKENS.letterSpacing.wide, // 0.1em
-            }}>
-              DISTRIBUTION IMMINENT
-            </span>
-          ) : (
-            <span style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.xs,           // 11px — interdit 9px
-              fontWeight: TOKENS.fontWeights.bold,
-              color: TOKENS.colors.textGhost,
-            }}>
-              {fmtUsd(remaining)} remaining
-            </span>
-          )}
-          <span style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,             // 11px — interdit 9px
-            fontWeight: TOKENS.fontWeights.medium,
-            color: TOKENS.colors.textGhost,
-          }}>{daysInMonth}</span>
-        </div>
+      {/* Metrics row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+        <MetricCell label="01" value={`+${fmtUsd(produced)}`} accent />
+        <MetricCell label="Today" value={`Day ${dayOfMonth}/${daysInMonth}`} center />
+        {nowPct > 85
+          ? <MetricCell label={String(daysInMonth)} value="Dist. imminent" right />
+          : <MetricCell label={String(daysInMonth)} value={`${fmtUsd(remaining)} left`} right />
+        }
       </div>
+    </div>
+  )
+}
+
+function MetricCell({
+  label, value, accent, center, right,
+}: {
+  label: string
+  value: string
+  accent?: boolean
+  center?: boolean
+  right?: boolean
+}) {
+  return (
+    <div style={{ textAlign: right ? 'right' : center ? 'center' : 'left' }}>
+      <div style={{
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.xs,
+        fontWeight: TOKENS.fontWeights.bold,
+        color: TOKENS.colors.textGhost,
+        letterSpacing: TOKENS.letterSpacing.wide,
+        marginBottom: '2px',
+      }}>{label}</div>
+      <div style={{
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.xs,
+        fontWeight: TOKENS.fontWeights.bold,
+        color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+      }}>{value}</div>
     </div>
   )
 }

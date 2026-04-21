@@ -57,9 +57,8 @@ export function Canvas() {
   const selected = selectedId ? VAULTS.find(v => v.id === selectedId) ?? null : null
 
   const totalValue = agg.totalDeposited + agg.totalClaimable
-  const nextDist = new Date()
-  nextDist.setDate(nextDist.getDate() + 1)
-  const nextDistStr = nextDist.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+  // Static label — avoids SSR/client mismatch (real date injected server-side if needed)
+  const nextDistStr = 'TOMORROW'
 
   return (
     <div
