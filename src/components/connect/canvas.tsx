@@ -272,13 +272,14 @@ function Header() {
                 style={{
                   fontFamily: MONO,
                   fontSize: '11px',
-                  letterSpacing: '0.06em',
+                  letterSpacing: '0.04em',
                   color: 'var(--dashboard-text-secondary)',
                   background: 'none',
                   border: '1px solid var(--dashboard-border)',
-                  padding: '5px 14px',
+                  borderRadius: '4px',
+                  padding: '6px 12px',
                   cursor: 'pointer',
-                  transition: 'border-color 0.15s, color 0.15s',
+                  transition: 'all 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = 'var(--dashboard-accent)'
@@ -300,11 +301,21 @@ function Header() {
                 fontFamily: MONO,
                 fontSize: '11px',
                 letterSpacing: '0.04em',
-                color: 'var(--dashboard-text-ghost)',
+                color: 'var(--dashboard-text-secondary)',
                 background: 'none',
-                border: 'none',
-                padding: 0,
+                border: '1px solid var(--dashboard-border)',
+                borderRadius: '4px',
+                padding: '6px 12px',
                 cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--dashboard-accent)'
+                e.currentTarget.style.color = 'var(--dashboard-text-primary)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--dashboard-border)'
+                e.currentTarget.style.color = 'var(--dashboard-text-secondary)'
               }}
             >
               {account.displayName}
