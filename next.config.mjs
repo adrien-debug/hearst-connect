@@ -36,9 +36,13 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
+  async redirects() {
     return [
-      { source: '/', destination: '/hub' },
+      {
+        source: '/hub',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
   webpack(config) {

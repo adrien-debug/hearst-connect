@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import HubPageClient from './hub-client';
+import LandingClient from './landing-client';
 
 export const metadata: Metadata = {
   title: 'Hearst Connect | Real yield from Bitcoin mining',
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description:
       'Onchain access to industrial Bitcoin mining cash flows—USDC vaults on Base, institutional controls, transparent reporting.',
     siteName: 'Hearst',
-    url: '/hub',
+    url: '/',
     images: [
       {
         url: '/platform-screenshot.png',
@@ -29,6 +29,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HubPage() {
-  return <HubPageClient />;
+export default function HomePage() {
+  return <LandingClient />;
 }

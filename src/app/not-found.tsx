@@ -17,11 +17,11 @@ export default function NotFound() {
           Page not found.
         </p>
         <Link
-          href="/hub"
+          href="/"
           className="rounded-xl px-4 py-2 text-sm font-bold"
           style={{ background: 'var(--dashboard-accent)', color: 'var(--dashboard-page)' }}
         >
-          Back to Hub
+          Back to Home
         </Link>
       </div>
     </div>

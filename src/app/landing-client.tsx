@@ -130,6 +130,115 @@ function useHubCarouselWheelScroll(trackRef: RefObject<HTMLElement | null>): voi
   }, [trackRef]);
 }
 
+/** Auto-scroll carousel every ~5s, pausing on hover / touch / focus. */
+function useHubCarouselAutoScroll(trackRef: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let paused = false;
+    const pause = () => { paused = true; };
+    const resume = () => { paused = false; };
+
+    const iv = window.setInterval(() => {
+      if (paused || el.scrollWidth <= el.clientWidth) return;
+      const items = el.querySelectorAll<HTMLElement>('.developer');
+      if (!items.length) return;
+      const itemW = items[0].offsetWidth + parseFloat(getComputedStyle(el).gap || '0');
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      const next = el.scrollLeft + itemW;
+      el.scrollTo({ left: next > maxScroll ? 0 : next, behavior: 'smooth' });
+    }, 5000);
+
+    el.addEventListener('pointerenter', pause);
+    el.addEventListener('pointerleave', resume);
+    el.addEventListener('focusin', pause);
+    el.addEventListener('focusout', resume);
+
+    return () => {
+      clearInterval(iv);
+      el.removeEventListener('pointerenter', pause);
+      el.removeEventListener('pointerleave', resume);
+      el.removeEventListener('focusin', pause);
+      el.removeEventListener('focusout', resume);
+    };
+  }, [trackRef]);
+}
+
+/** Drag-to-scroll with momentum (mouse + touch). */
+function useHubCarouselDrag(trackRef: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollStart = 0;
+    let velX = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let momentumRaf = 0;
+
+    const onDown = (e: PointerEvent) => {
+      isDown = true;
+      startX = e.clientX;
+      scrollStart = el.scrollLeft;
+      velX = 0;
+      lastX = e.clientX;
+      lastT = Date.now();
+      cancelAnimationFrame(momentumRaf);
+      el.setPointerCapture(e.pointerId);
+      el.style.cursor = 'grabbing';
+      el.style.scrollSnapType = 'none';
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      el.scrollLeft = scrollStart - dx;
+      const now = Date.now();
+      const dt = now - lastT;
+      if (dt > 0) {
+        velX = (e.clientX - lastX) / dt;
+        lastX = e.clientX;
+        lastT = now;
+      }
+    };
+
+    const onUp = () => {
+      if (!isDown) return;
+      isDown = false;
+      el.style.cursor = '';
+
+      const decay = 0.95;
+      const applyMomentum = () => {
+        if (Math.abs(velX) < 0.01) {
+          el.style.scrollSnapType = '';
+          return;
+        }
+        el.scrollLeft -= velX * 16;
+        velX *= decay;
+        momentumRaf = requestAnimationFrame(applyMomentum);
+      };
+      momentumRaf = requestAnimationFrame(applyMomentum);
+    };
+
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+      cancelAnimationFrame(momentumRaf);
+    };
+  }, [trackRef]);
+}
+
 const FEATURE_PILLARS = [
   {
     id: 'feature-unified',
@@ -174,6 +283,8 @@ export default function HubPageClient() {
   const hubCarouselTrackRef = useRef<HTMLDivElement>(null);
   useHubCarouselHoverScroll(hubCarouselWrapRef, hubCarouselTrackRef);
   useHubCarouselWheelScroll(hubCarouselTrackRef);
+  useHubCarouselAutoScroll(hubCarouselTrackRef);
+  useHubCarouselDrag(hubCarouselTrackRef);
 
   useEffect(() => {
     const nav = document.getElementById('hub-site-nav');
@@ -310,8 +421,8 @@ export default function HubPageClient() {
             </ul>
           </nav>
 
-          <Link href={HUB_LOGIN_HREF} className="login-btn" prefetch>
-            <span>Connexion</span>
+          <Link href="/launch-app" className="login-btn" prefetch>
+            <span>Launch App</span>
           </Link>
         </header>
       </div>
@@ -320,15 +431,31 @@ export default function HubPageClient() {
       <section id="welcome" className="center" lang="en">
         <img src="/logos/hearst-connect.svg" alt="Hearst Connect" className="welcome-logo" />
         <h1 className="welcome-title hub-chapter">
-          Onchain access to industrial Bitcoin
+          Turn Bitcoin Mining
           <br />
-          mining cash flows
+          Into Structured Yield
           <br />
-          <span className="text-accent">USDC vaults, Base, transparent reporting</span>
+          <span className="text-accent">
+            Access institutional-grade yield from real mining infrastructure,
+            packaged into transparent onchain vaults.
+          </span>
         </h1>
-        <a href="#beforeyougo" className="welcome-btn hub-chapter">
-          View offering
-        </a>
+        <div
+          style={{
+            display: 'flex',
+            gap: 'var(--hub-space-md)',
+            marginTop: 'var(--hub-space-md)',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Link href="/launch-app" className="welcome-btn hub-chapter">
+            Launch App
+          </Link>
+          <a href="#beforeyougo" className="hub-cta-secondary hub-chapter">
+            View offering
+          </a>
+        </div>
       </section>
 
       {/* Intro */}
@@ -344,19 +471,21 @@ export default function HubPageClient() {
         </div>
 
         <div className="icons">
-          {ICONS.map(icon => (
-            <div key={icon.name} className="icon">
-              <img
-                src={icon.src}
-                alt={icon.name}
-                className="icon-img"
-                width={40}
-                height={40}
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          ))}
+          <div className="icons-track" aria-hidden="false">
+            {[...ICONS, ...ICONS, ...ICONS].map((icon, i) => (
+              <div key={`${icon.name}-${i}`} className="icon">
+                <img
+                  src={icon.src}
+                  alt={i < ICONS.length ? icon.name : ''}
+                  className="icon-img"
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -403,21 +532,21 @@ export default function HubPageClient() {
             {[
               {
                 img: '/platform-screenshot.svg',
-                caption: 'Flagship, medium high risk',
+                caption: 'Flagship — stable income',
                 title: 'Hearst Prime Yield',
-                desc: 'Target near 12%. $250K min, monthly distributions, 3Y lock. Diversified mining income with volatility protection.',
+                desc: 'Target ~12% annual yield. $250K min, monthly USDC distributions, 3-year lock. Diversified mining income with volatility hedging for predictable returns.',
               },
               {
                 img: '/platform-screenshot.svg',
-                caption: 'Advanced, medium high risk',
+                caption: 'Growth — BTC upside',
                 title: 'Hearst Growth',
-                desc: 'Target 16% to 22%. $250K min, monthly, 3Y lock. BTC forward mining plus spot upside with USDC buffer.',
+                desc: 'Target 16–22% annual yield. $250K min, monthly distributions, 3-year lock. Forward BTC mining exposure plus spot price upside with USDC buffer.',
               },
               {
                 img: '/platform-screenshot.svg',
                 caption: 'Yield mechanics',
                 title: 'How yield is generated',
-                desc: 'USDC deployed into industrial mining; BTC rewards converted via OTC; net yield monthly. Auditable end to end.',
+                desc: 'USDC is deployed into industrial mining operations. BTC rewards are converted via OTC desks. Net yield is distributed monthly, auditable end to end.',
               },
             ].map(dev => (
               <div key={dev.title} className="developer">
@@ -453,7 +582,7 @@ export default function HubPageClient() {
             <span>Due diligence, reporting, and custody aligned to your mandate</span>
           </h3>
           <a href={HUB_MAILTO_SALES} className="hub-cta-secondary">
-            Contact
+            Contact Sales
           </a>
         </div>
       </section>
@@ -466,11 +595,11 @@ export default function HubPageClient() {
               <span className="typewriter">Ready to allocate?</span>
             </p>
             <div className="buttons">
-              <a href="#beforeyougo" className="hub-cta-primary">
-                View offering
-              </a>
+              <Link href="/launch-app" className="hub-cta-primary">
+                Launch App
+              </Link>
               <a href={HUB_MAILTO_SALES} className="hub-cta-secondary">
-                Contact
+                Contact Sales
               </a>
             </div>
           </div>

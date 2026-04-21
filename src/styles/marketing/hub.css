@@ -443,10 +443,13 @@
 			background: var(--dashboard-accent);
 			color: var(--dashboard-page);
 			border: 0px;
+			font-weight: 700;
+			box-shadow: 0 4px 14px rgba(167,251,144,0.2);
 
 			&:hover,
 			&:focus-visible {
 				background: var(--dashboard-accent-hover);
+				box-shadow: 0 6px 20px rgba(167,251,144,0.3);
 			}
 		}
 
@@ -693,20 +696,41 @@
 		.icons {
 			height: max(24em, 40vmin);
 			height: max(24em, 40vb);
+			width: 100%;
 
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			overflow: hidden;
+			position: relative;
+		}
+
+		.icons-track {
 			display: flex;
 			flex-direction: row;
 			gap: 0.5rem;
 			align-items: center;
+			width: max-content;
+			animation: hub-marquee 30s linear infinite;
+		}
 
-			overflow-x: clip;
-
-			.icon {
-				flex: 0 0 clamp(3.5rem, 7.25vw, 5rem);
-				aspect-ratio: 1;
-				display: grid;
-				place-content: center;
+		@media (prefers-reduced-motion: reduce) {
+			.icons-track {
+				animation: none;
 			}
+		}
+
+		@keyframes hub-marquee {
+			0% { transform: translateX(0); }
+			100% { transform: translateX(-33.333%); }
+		}
+
+		.icons-track .icon {
+			flex: 0 0 clamp(3.5rem, 7.25vw, 5rem);
+			aspect-ratio: 1;
+			display: grid;
+			place-content: center;
 		}
 
 	}
@@ -1302,9 +1326,10 @@
   border: none;
   padding: 0.75rem 2rem;
   border-radius: var(--dashboard-radius-button, 9999px);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(167,251,144,0.2);
 }
 
 a.welcome-btn {
@@ -1319,6 +1344,7 @@ a.welcome-btn {
 a.welcome-btn:hover,
 a.welcome-btn:focus-visible {
   background: var(--dashboard-accent-hover);
+  box-shadow: 0 6px 20px rgba(167,251,144,0.3);
 }
 
 .icon-img {
@@ -1333,18 +1359,20 @@ a.welcome-btn:focus-visible {
   border: none;
   padding: 0.5rem 1.5rem;
   border-radius: 9999px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(167,251,144,0.2);
 }
 
 .login-btn:hover {
   background: var(--dashboard-accent-hover);
+  box-shadow: 0 6px 20px rgba(167,251,144,0.3);
 }
 
 /*
