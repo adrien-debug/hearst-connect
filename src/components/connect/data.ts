@@ -1,7 +1,7 @@
 export interface VaultLine {
   id: string
   name: string
-  type: 'active' | 'available'
+  type: 'active' | 'available' | 'matured'
   apr: number
   deposited?: number
   claimable?: number

@@ -19,6 +19,10 @@ export const TOKENS = {
     borderSubtle: '#E9ECEF',
     sidebarTextPrimary: '#FFFFFF',
     sidebarTextGhost: '#ADB5BD',
+    /** Row hover (light panels / tables) */
+    surfaceHover: '#F1F3F5',
+    /** Progress track / inactive bar */
+    surfaceActive: '#E9ECEF',
   },
   fonts: {
     sans: "'Inter', -apple-system, sans-serif",
@@ -32,7 +36,7 @@ export const TOKENS = {
     xl: '16px',
     xxl: '18px',
     xxxl: '24px',
-    display: 'clamp(28px, 3vw, 40px)',
+    display: 'clamp(32px, 4vw, 48px)',
   },
   fontWeights: {
     regular: 400,
@@ -65,6 +69,11 @@ export const TOKENS = {
     heavy: '4px',
   }
 }
+
+/** Align with `hub-font-scope` / layout (CSS vars from dashboard tokens) */
+export const FONT =
+  "var(--font-sans, 'Satoshi Variable', Inter, -apple-system, sans-serif)"
+export const MONO = "var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace)"
 
 export function fmtUsd(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

@@ -30,9 +30,9 @@ export function PortfolioSummary({ vaults, agg }: PortfolioSummaryProps) {
       {/* HEADER SECTION */}
       <div style={{ flexShrink: 0, marginBottom: TOKENS.spacing[12], display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <SectionLabel>Portfolio Overview</SectionLabel>
+          <SectionLabel>Yield Earned To Date</SectionLabel>
           <h1 style={{ fontSize: TOKENS.fontSizes.display, fontWeight: TOKENS.fontWeights.black, letterSpacing: TOKENS.letterSpacing.tight, margin: TOKENS.spacing[0], lineHeight: 1, color: TOKENS.colors.textPrimary, textTransform: 'uppercase' }}>
-            {fmtUsd(agg.totalDeposited)}
+            {fmtUsd(agg.totalClaimable)}
           </h1>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -72,19 +72,16 @@ export function PortfolioSummary({ vaults, agg }: PortfolioSummaryProps) {
       <div style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', paddingBottom: TOKENS.spacing[0] }}>
         <SectionLabel>Active Positions</SectionLabel>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <VaultList vaults={activeVaults} onSelect={setSelectedVault} />
+          <VaultList vaults={activeVaults} />
         </div>
       </div>
-
-      {/* SLIDE-OVER PANEL */}
-      <VaultDetailPanel vault={selectedVault} onClose={() => setSelectedVault(null)} />
     </div>
   )
 }
 
 // ─── VaultList (Active Positions Table) ──────────────────────────────────
 
-function VaultList({ vaults, onSelect }: { vaults: VaultLine[], onSelect: (v: VaultLine) => void }) {
+function VaultList({ vaults }: { vaults: VaultLine[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{
@@ -102,30 +99,28 @@ function VaultList({ vaults, onSelect }: { vaults: VaultLine[], onSelect: (v: Va
 
       <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
         {vaults.map((v) => (
-          <VaultRow key={v.id} vault={v} onClick={() => onSelect(v)} />
+          <VaultRow key={v.id} vault={v} />
         ))}
       </div>
     </div>
   )
 }
 
-function VaultRow({ vault: v, onClick }: { vault: VaultLine, onClick: () => void }) {
+function VaultRow({ vault: v }: { vault: VaultLine }) {
   const currentValue = (v.deposited || 0) + (v.claimable || 0)
   const gainPct = (((v.claimable || 0) / (v.deposited || 1)) * 100).toFixed(1)
 
   return (
     <div 
-      onClick={onClick}
       style={{
         display: 'grid',
         gridTemplateColumns: '2.5fr 1.2fr 1fr 1fr 1.5fr',
         padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[0]}`,
         borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
         alignItems: 'center',
-        cursor: 'pointer',
         transition: 'background 120ms ease-out',
       }} 
-      onMouseEnter={(e) => e.currentTarget.style.background = TOKENS.colors.accent}
+      onMouseEnter={(e) => e.currentTarget.style.background = TOKENS.colors.surfaceHover}
       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >
       <div style={{ paddingLeft: TOKENS.spacing[3] }}>
@@ -144,94 +139,6 @@ function VaultRow({ vault: v, onClick }: { vault: VaultLine, onClick: () => void
           <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${v.progress || 0}%`, background: TOKENS.colors.accent }} />
         </div>
       </div>
-    </div>
-  )
-}
-
-// ─── Slide-Over Panel ────────────────────────────────────────────────────
-
-function VaultDetailPanel({ vault, onClose }: { vault: VaultLine | null, onClose: () => void }) {
-  return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      bottom: 0,
-      width: '500px',
-      maxWidth: '100%',
-      background: TOKENS.colors.white,
-      borderLeft: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderMain}`,
-      zIndex: 50,
-      transform: vault ? 'translateX(0)' : 'translateX(100%)',
-      transition: 'transform 150ms ease-out',
-      display: 'flex',
-      flexDirection: 'column',
-      boxShadow: '-20px 0 40px rgba(0,0,0,0.1)',
-    }}>
-      {vault && (
-        <>
-          {/* Header */}
-          <div style={{ flex: '0 0 auto', padding: TOKENS.spacing[8], borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: TOKENS.colors.bgSurface }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', padding: `${TOKENS.spacing[0]} ${TOKENS.spacing[2]}`, background: TOKENS.colors.borderMain, color: TOKENS.colors.white, fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', marginBottom: TOKENS.spacing[3] }}>
-                <div style={{ width: '6px', height: '6px', background: TOKENS.colors.accent, marginRight: TOKENS.spacing[2] }} /> LIVE
-              </div>
-              <h2 style={{ fontSize: TOKENS.fontSizes.xxxl, fontWeight: TOKENS.fontWeights.black, margin: `0 0 ${TOKENS.spacing[2]} 0`, color: TOKENS.colors.textPrimary, textTransform: 'uppercase' }}>{vault.name}</h2>
-              <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textGhost, letterSpacing: TOKENS.letterSpacing.wide, textTransform: 'uppercase', fontWeight: TOKENS.fontWeights.bold }}>{vault.strategy}</div>
-            </div>
-            <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: TOKENS.colors.textGhost, cursor: 'pointer', fontSize: TOKENS.fontSizes.xxxl, lineHeight: 1, padding: TOKENS.spacing[0], fontWeight: TOKENS.fontWeights.regular }} onMouseEnter={e => e.currentTarget.style.color = TOKENS.colors.textPrimary} onMouseLeave={e => e.currentTarget.style.color = TOKENS.colors.textGhost}>
-              ×
-            </button>
-          </div>
-
-          {/* Scrollable Content */}
-          <div style={{ flex: '1 1 auto', overflowY: 'auto', padding: TOKENS.spacing[8] }}>
-            
-            {/* KPIs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TOKENS.spacing[6], marginBottom: TOKENS.spacing[8] }}>
-              <div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textGhost, marginBottom: TOKENS.spacing[2], fontWeight: TOKENS.fontWeights.bold }}>Deposited</div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textPrimary }}>{fmtUsd(vault.deposited || 0)}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textGhost, marginBottom: TOKENS.spacing[2], fontWeight: TOKENS.fontWeights.bold }}>Current Value</div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textPrimary }}>{fmtUsd((vault.deposited || 0) + (vault.claimable || 0))}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textGhost, marginBottom: TOKENS.spacing[2], fontWeight: TOKENS.fontWeights.bold }}>APR</div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textPrimary }}>{vault.apr}%</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textGhost, marginBottom: TOKENS.spacing[2], fontWeight: TOKENS.fontWeights.bold }}>Matures</div>
-                <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.lg, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textPrimary }}>{vault.maturity}</div>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div style={{ marginBottom: TOKENS.spacing[8] }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: TOKENS.spacing[3] }}>
-                <strong style={{ fontSize: TOKENS.fontSizes.md, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.textPrimary, textTransform: 'uppercase' }}>Cumulative target progress</strong>
-                <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textGhost, fontWeight: TOKENS.fontWeights.bold }}>{vault.progress}% of {vault.target}</span>
-              </div>
-              <div style={{ height: '8px', background: TOKENS.colors.borderMain, position: 'relative', marginBottom: TOKENS.spacing[3] }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${vault.progress || 0}%`, background: TOKENS.colors.accent }} />
-              </div>
-              <p style={{ fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textGhost, lineHeight: 1.5, margin: TOKENS.spacing[0] }}>
-                Your invested capital unlocks for withdrawal when the cumulative target is reached or at maturity, whichever comes first. Yield is distributed daily.
-              </p>
-            </div>
-
-            {/* Placeholders for Strategy & Transactions */}
-            <div style={{ padding: TOKENS.spacing[4], marginBottom: TOKENS.spacing[3], cursor: 'pointer', background: TOKENS.colors.bgSurface, border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`, transition: 'background 120ms ease-out' }} onMouseEnter={e => e.currentTarget.style.background = TOKENS.colors.accent} onMouseLeave={e => e.currentTarget.style.background = TOKENS.colors.bgSurface}>
-              <strong style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.textPrimary, textTransform: 'uppercase' }}>Strategy details ↓</strong>
-            </div>
-            <div style={{ padding: TOKENS.spacing[4], cursor: 'pointer', background: TOKENS.colors.bgSurface, border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`, transition: 'background 120ms ease-out' }} onMouseEnter={e => e.currentTarget.style.background = TOKENS.colors.accent} onMouseLeave={e => e.currentTarget.style.background = TOKENS.colors.bgSurface}>
-              <strong style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.textPrimary, textTransform: 'uppercase' }}>Transactions ↓</strong>
-            </div>
-
-          </div>
-        </>
-      )}
     </div>
   )
 }
