@@ -25,7 +25,7 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         color: TOKENS.colors.textGhost,
-        marginBottom: TOKENS.spacing[6],
+        marginBottom: TOKENS.spacing[4],
       }}>
         {label ?? monthName} · {apr.toFixed(2)}% APR
       </div>
@@ -33,17 +33,17 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
       {/* Gauge bar — Ultra-minimalist */}
       <div style={{
         position: 'relative',
-        height: '80px',
-        marginBottom: TOKENS.spacing[6],
+        height: '48px',
+        marginBottom: TOKENS.spacing[4],
         borderBottom: `${TOKENS.borders.heavy} solid ${TOKENS.colors.borderMain}`,
       }}>
         {/* Fill - Minimalist line instead of box */}
         <div style={{
           position: 'absolute',
-          bottom: '-6px',
+          bottom: '-4px',
           left: 0,
           width: `${nowPct}%`,
-          height: '6px',
+          height: '4px',
           background: TOKENS.colors.accent,
           zIndex: 4,
           transition: 'width 1s ease',
@@ -53,9 +53,9 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
         <div style={{
           position: 'absolute',
           left: 0,
-          bottom: TOKENS.spacing[4],
+          bottom: TOKENS.spacing[3],
           fontFamily: TOKENS.fonts.sans,
-          fontSize: 'clamp(3rem, 7vw, 4.5rem)',
+          fontSize: 'clamp(24px, 3vw, 32px)',
           fontWeight: TOKENS.fontWeights.black,
           color: TOKENS.colors.textPrimary,
           zIndex: 3,
@@ -71,7 +71,7 @@ export function MonthlyGauge({ deposited, apr, label }: MonthlyGaugeProps) {
           <div style={{
             position: 'absolute',
             right: 0,
-            bottom: TOKENS.spacing[4],
+            bottom: TOKENS.spacing[3],
             fontFamily: TOKENS.fonts.mono,
             fontSize: TOKENS.fontSizes.sm,
             color: TOKENS.colors.textGhost,
