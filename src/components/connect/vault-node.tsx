@@ -31,7 +31,7 @@ export function VaultNode({
           : 'transparent',
         border: 'none',
         borderLeft: selected ? `2px solid ${TOKENS.colors.accent}` : '2px solid transparent',
-        borderRadius: '0 6px 6px 0',
+        borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
         padding: '10px 12px',
         cursor: 'pointer',
         transition: 'all 120ms ease-out',

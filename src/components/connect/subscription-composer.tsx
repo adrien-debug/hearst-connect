@@ -163,7 +163,7 @@ export function SubscriptionComposer({
           gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
         }}
       >
-        <SpecItem mode={mode} label="Lock" value={vault.lockPeriod} />
+        <SpecItem mode={mode} label="Unlock Timeline" value={vault.lockPeriod} />
         <SpecItem mode={mode} label="Risk" value={vault.risk} />
         <SpecItem mode={mode} label="Fees" value={vault.fees} />
       </div>

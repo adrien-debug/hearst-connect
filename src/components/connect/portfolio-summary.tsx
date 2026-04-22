@@ -369,7 +369,7 @@ function CockpitGauge({
 
 /** AllocationDonut — Circular portfolio allocation chart */
 function AllocationDonut({ vaults, total, mode }: { vaults: ActiveVault[]; total: number; mode: SmartFitMode }) {
-  const palette = [TOKENS.colors.accent, '#FFFFFF', '#7A7A7A', '#5A5A5A', '#4A4A4A']
+  const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0.25)']
   const size = fitValue(mode, {
     normal: 200,
     tight: 160,
@@ -554,7 +554,7 @@ function SparklineLabels({ portfolioValue, data }: { portfolioValue: number; dat
       color: TOKENS.colors.textGhost,
     }}>
       <span>30d ago</span>
-      <span style={{ color: isPositive ? TOKENS.colors.accent : '#FFFFFF' }}>
+      <span style={{ color: isPositive ? TOKENS.colors.accent : TOKENS.colors.white }}>
         {isPositive ? '+' : ''}{change.toFixed(1)}%
       </span>
       <span>Today</span>
@@ -612,14 +612,14 @@ function SparklineChart({ data, mode, accent = false }: { data: number[]; mode: 
   
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%' }}>
-      <path d={line} fill="none" stroke={accent ? TOKENS.colors.accent : '#FFFFFF'} strokeWidth="1.5" />
+      <path d={line} fill="none" stroke={accent ? TOKENS.colors.accent : TOKENS.colors.white} strokeWidth="1.5" />
     </svg>
   )
 }
 
 /** MaturityTimeline — Clean minimal timeline */
 function MaturityTimeline({ vaults, mode }: { vaults: ActiveVault[]; mode: SmartFitMode }) {
-  const palette = [TOKENS.colors.accent, '#FFFFFF', '#9A9A9A', '#6A6A6A']
+  const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.35)']
   const today = Date.now()
   
   const items = vaults
@@ -630,12 +630,12 @@ function MaturityTimeline({ vaults, mode }: { vaults: ActiveVault[]; mode: Smart
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {/* Timeline bar */}
-      <div style={{ position: 'relative', height: '2px', background: '#333', margin: '16px 0' }}>
+      <div style={{ position: 'relative', height: '2px', background: 'var(--color-bg-tertiary)', margin: '16px 0' }}>
         {items.map((v, i) => {
           const pos = Math.min(100, (v.days / 365) * 100)
           return (
             <div key={v.id} style={{ position: 'absolute', left: `${pos}%`, top: '-5px', transform: 'translateX(-50%)' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: palette[i % 4], border: '2px solid #000' }} />
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: palette[i % 4], border: '2px solid var(--color-black)' }} />
             </div>
           )
         })}
@@ -644,12 +644,12 @@ function MaturityTimeline({ vaults, mode }: { vaults: ActiveVault[]; mode: Smart
       {/* Vault list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {items.map((v, i) => (
-          <div key={v.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#0A0A0A', borderRadius: '6px' }}>
+          <div key={v.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--color-bg-tertiary)', borderRadius: 'var(--radius-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: palette[i % 4] }} />
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>{v.name.replace('HashVault ', '')}</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-text-primary)' }}>{v.name.replace('HashVault ', '')}</span>
             </div>
-            <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: '11px', color: v.days < 30 ? TOKENS.colors.accent : '#9A9A9A' }}>{v.days}d</span>
+            <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: '11px', color: v.days < 30 ? TOKENS.colors.accent : 'var(--color-text-secondary)' }}>{v.days}d</span>
           </div>
         ))}
       </div>
@@ -658,7 +658,7 @@ function MaturityTimeline({ vaults, mode }: { vaults: ActiveVault[]; mode: Smart
 }
 
 function PortfolioStackBar({ vaults, total, mode }: { vaults: ActiveVault[]; total: number; mode: SmartFitMode }) {
-  const palette = [TOKENS.colors.accent, '#FFFFFF', '#6A6A6A']
+  const palette = [TOKENS.colors.accent, TOKENS.colors.white, TOKENS.colors.gray500]
   const height = fitValue(mode, { normal: 24, tight: 20, limit: 16 })
 
   return (
@@ -702,7 +702,7 @@ function PortfolioStackBar({ vaults, total, mode }: { vaults: ActiveVault[]; tot
               <div style={{
                 width: '8px',
                 height: '8px',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 background: palette[index % palette.length],
               }} />
               <span style={{
@@ -722,7 +722,7 @@ function PortfolioStackBar({ vaults, total, mode }: { vaults: ActiveVault[]; tot
 
 /** Single vault card — enriched with Design System data */
 function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: number; total: number; mode: SmartFitMode }) {
-  const palette = [TOKENS.colors.accent, '#FFFFFF', '#7A7A7A']
+  const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)']
   const allocationPct = total > 0 ? (vault.deposited / total) * 100 : 0
   const color = palette[index % palette.length]
   
@@ -744,7 +744,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Top accent line */}
+        {/* Top accent line */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -752,6 +752,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
         right: 0,
         height: '3px',
         background: color,
+        borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
       }} />
       
       {/* Header: Name + Badges + Value */}
@@ -846,7 +847,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
         borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
         marginBottom: TOKENS.spacing[3],
       }}>
-        {/* Pending Rewards */}
+        {/* Accrued Yield */}
         <div>
           <div style={{
             fontSize: TOKENS.fontSizes.micro,
@@ -856,7 +857,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
             color: TOKENS.colors.textGhost,
             marginBottom: TOKENS.spacing[2],
           }}>
-            Pending
+            Accrued Yield
           </div>
           <div style={{
             fontSize: TOKENS.fontSizes.md,
@@ -909,7 +910,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
           </div>
         </div>
         
-        {/* Maturity / Lock Status */}
+        {/* Exit status / unlock timeline */}
         <div style={{ textAlign: 'right' }}>
           <div style={{
             fontSize: TOKENS.fontSizes.micro,
@@ -919,7 +920,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
             color: TOKENS.colors.textGhost,
             marginBottom: TOKENS.spacing[2],
           }}>
-            {canWithdraw ? 'Available' : 'Locked'}
+            {canWithdraw ? 'Status' : 'Unlock Timeline'}
           </div>
           <div style={{
             fontSize: TOKENS.fontSizes.sm,
@@ -933,7 +934,7 @@ function VaultCard({ vault, index, total, mode }: { vault: ActiveVault; index: n
             color: TOKENS.colors.textGhost,
             marginTop: TOKENS.spacing[2],
           }}>
-            {vault.maturity}
+            {canWithdraw ? 'Position ready for exit' : vault.maturity}
           </div>
         </div>
       </div>

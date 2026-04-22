@@ -37,6 +37,22 @@
   background-image: var(--hc-stage-shoulder), var(--hc-stage-carbon), var(--hc-stage-veil);
 }
 
+.connect-scope .connect-panel-stage {
+  animation: connect-panel-enter var(--transition-slow) both;
+}
+
+@keyframes connect-panel-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(16px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 @media (max-width: 1279px) {
   .connect-scope {
     --hc-sidebar-w: 272px;

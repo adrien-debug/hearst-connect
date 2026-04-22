@@ -132,7 +132,7 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
         }}>
           <StatCard label="Minimum" value={fmtUsdCompact(vault.minDeposit)} subtext="Entry threshold" mode={mode} />
           <StatCard label="Target" value={vault.target} subtext="Cumulative yield" mode={mode} accent />
-          <StatCard label="Lock period" value={vault.lockPeriod} subtext="Duration" mode={mode} />
+          <StatCard label="Unlock Timeline" value={vault.lockPeriod} subtext="Duration" mode={mode} />
           <StatCard label="Risk" value={vault.risk} subtext="Profile" mode={mode} />
         </div>
 

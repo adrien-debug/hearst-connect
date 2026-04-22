@@ -204,22 +204,24 @@ export function SimulationPanel() {
             }}
             aria-label="Projected value curves"
           >
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              {[20, 40, 60, 80].map((y) => (
-                <line
-                  key={`chart-gridline-y-${y}`}
-                  x1="0"
-                  y1={y}
-                  x2="100"
-                  y2={y}
-                  stroke="rgba(255,255,255,0.06)"
-                  strokeWidth="0.3"
-                />
-              ))}
-              <polyline points={series.bear} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.4" />
-              <polyline points={series.base} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.45" />
-              <polyline points={series.bull} fill="none" stroke={TOKENS.colors.accent} strokeWidth="0.5" />
-            </svg>
+            <div key={`${scenario}-${btcPrice}-${months}`} className="connect-panel-stage h-full">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                {[20, 40, 60, 80].map((y) => (
+                  <line
+                    key={`chart-gridline-y-${y}`}
+                    x1="0"
+                    y1={y}
+                    x2="100"
+                    y2={y}
+                    stroke="rgba(255,255,255,0.06)"
+                    strokeWidth="0.3"
+                  />
+                ))}
+                <polyline points={series.bear} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.4" />
+                <polyline points={series.base} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.45" />
+                <polyline points={series.bull} fill="none" stroke={TOKENS.colors.accent} strokeWidth="0.5" />
+              </svg>
+            </div>
           </div>
 
           <div
@@ -306,7 +308,7 @@ export function SimulationPanel() {
                     border: isActive
                       ? `1px solid ${TOKENS.colors.accent}`
                       : `1px solid ${TOKENS.colors.borderSubtle}`,
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-md)',
                     padding: TOKENS.spacing[4],
                     cursor: 'pointer',
                     position: 'relative',
@@ -380,7 +382,7 @@ export function SimulationPanel() {
               style={{
                 background: 'var(--color-bg-tertiary)',
                 
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
                 padding: TOKENS.spacing[3],
               }}
             >
@@ -436,7 +438,7 @@ export function SimulationPanel() {
               style={{
                 background: 'var(--color-bg-tertiary)',
                 
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
                 padding: TOKENS.spacing[3],
               }}
             >

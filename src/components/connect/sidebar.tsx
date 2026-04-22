@@ -11,9 +11,14 @@ interface SidebarProps {
   vaults: VaultLine[]
   selectedId: string | null
   onSelect: (id: string | null) => void
+  mobile?: boolean
 }
 
-export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
+function formatVaultTitle(name: string) {
+  return name.replace('HashVault ', '')
+}
+
+export function Sidebar({ vaults, selectedId, onSelect, mobile = false }: SidebarProps) {
   const { mode } = useSmartFit({
     tightHeight: 760,
     limitHeight: 680,
@@ -25,23 +30,37 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
     .sort((a, b) => b.deposited - a.deposited)
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
-
-  // Check if we're in a specific vault view
-  const inVaultView = selectedId !== null && selectedId !== SIMULATION_VIEW_ID
+  const selectedVault = selectedId ? vaults.find((vault) => vault.id === selectedId) ?? null : null
   const inSimulation = selectedId === SIMULATION_VIEW_ID
+  const isPositionView = selectedVault?.type === 'active' || selectedVault?.type === 'matured'
+  const isSubscriptionView = selectedVault?.type === 'available'
+  const showBackButton = selectedId !== null
+  const contextLabel = inSimulation
+    ? 'Simulation'
+    : isPositionView
+      ? 'Position'
+      : isSubscriptionView
+        ? 'Subscription'
+        : 'Portfolio'
+  const contextTitle = inSimulation
+    ? 'Projection Model'
+    : selectedVault
+      ? formatVaultTitle(selectedVault.name)
+      : 'Overview'
 
   return (
     <aside
       id="connect-sidebar"
       className="flex h-full min-h-0 shrink-0 flex-col"
       style={{
-        width: sidebarW,
+        width: mobile ? 'min(320px, calc(100vw - 24px))' : sidebarW,
         maxWidth: '100%',
         background: TOKENS.colors.bgSidebar,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
         borderRight: `1px solid ${TOKENS.colors.borderSubtle}`,
+        boxShadow: mobile ? '24px 0 48px rgba(0,0,0,0.35)' : 'none',
       }}
     >
       {/* Logo Section — Always visible */}
@@ -77,21 +96,19 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
           background: TOKENS.colors.bgApp,
         }}
       >
-        {/* Context row - shows where we are */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: inVaultView ? TOKENS.spacing[2] : 0,
-        }}>
-          <div style={{ textAlign: 'center', width: '100%' }}>
-            <Label id="sidebar-title" tone="sidebar" variant="text">
-              {inVaultView ? 'Position' : inSimulation ? 'Simulation' : 'Portfolio'}
-            </Label>
-          </div>
-          
-          {/* Back button when in a vault */}
-          {inVaultView && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: TOKENS.spacing[3],
+            marginBottom: TOKENS.spacing[3],
+          }}
+        >
+          <Label id="sidebar-title" tone="sidebar" variant="text">
+            {contextLabel}
+          </Label>
+          {showBackButton && (
             <button
               type="button"
               onClick={() => onSelect(null)}
@@ -110,6 +127,7 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
                 textTransform: 'uppercase' as const,
                 color: TOKENS.colors.accent,
               }}
+              aria-label="Return to overview"
             >
               <span>←</span>
               <span>Back</span>
@@ -130,15 +148,10 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
             letterSpacing: VALUE_LETTER_SPACING,
             lineHeight: LINE_HEIGHT.tight,
             color: TOKENS.colors.textPrimary,
-            marginTop: TOKENS.spacing[2],
-            textAlign: 'center',
+            textAlign: 'left',
           }}
         >
-          {inVaultView && selectedId
-            ? activeVaults.find(v => v.id === selectedId)?.name.replace('HashVault ', '') || 'Position'
-            : inSimulation
-              ? 'Projection Model'
-              : 'Overview'}
+          {contextTitle}
         </div>
       </div>
 
@@ -176,7 +189,7 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
           style={{
             flexShrink: 0,
             borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
-            background: 'var(--color-bg-secondary)',
+            background: TOKENS.colors.bgSurface,
             padding: `${shellPadding}px`,
           }}
         >
@@ -396,7 +409,7 @@ function VaultCard({
               color: TOKENS.colors.accent,
               background: 'var(--color-accent-subtle)',
               padding: '2px 6px',
-              borderRadius: '4px',
+              borderRadius: 'var(--radius-sm)',
               lineHeight: 1,
             }}>
               Active
@@ -449,7 +462,7 @@ function VaultCard({
           fontWeight: TOKENS.fontWeights.black,
           color: selected
             ? TOKENS.colors.accent
-            : '#AAAAAA',
+            : TOKENS.colors.textSecondary,
           letterSpacing: VALUE_LETTER_SPACING,
           lineHeight: LINE_HEIGHT.tight,
         }}>
@@ -552,7 +565,7 @@ function AvailableVaultCard({
           fontWeight: TOKENS.fontWeights.black,
           color: selected
             ? TOKENS.colors.accent
-            : '#999999',
+            : TOKENS.colors.textGhost,
           letterSpacing: VALUE_LETTER_SPACING,
         }}>
           {vault.apr}%
