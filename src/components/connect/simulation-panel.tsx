@@ -3,9 +3,9 @@
 import type { CSSProperties } from 'react'
 import { useMemo, useState } from 'react'
 import { Label } from '@/components/ui/label'
-import { TOKENS, fmtUsd, VALUE_LETTER_SPACING } from './constants'
-import { useSmartFit, useShellPadding } from './smart-fit'
-import { ProjectionLens, MetricTilesRow, MetricTile } from './projection-lens'
+import { TOKENS, fmtUsd, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
+import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
+import { MetricTilesRow, MetricTile } from './projection-lens'
 import {
   type ScenarioKey,
   SCENARIOS,
@@ -19,72 +19,13 @@ const rangeStyle: CSSProperties = {
   cursor: 'pointer',
 }
 
-function RangeField({
-  id,
-  label,
-  valueDisplay,
-  minL,
-  maxL,
-  min,
-  max,
-  step,
-  val,
-  valueText,
-  onChange,
-}: {
-  id: string
-  label: string
-  valueDisplay: string
-  minL: string
-  maxL: string
-  min: number
-  max: number
-  step: number
-  val: number
-  valueText: string
-  onChange: (n: number) => void
-}) {
-  return (
-    <div
-      className="bg-gradient-to-b from-transparent to-white/[0.02] pb-3"
-      style={{ marginBottom: TOKENS.spacing[2] }}
-    >
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: TOKENS.spacing[3] }}>
-        <div id={`${id}-l`} style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: TOKENS.colors.textSecondary }}>
-          {label}
-        </div>
-        <div style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.lg, fontWeight: 700, color: TOKENS.colors.textPrimary }} aria-hidden>
-          {valueDisplay}
-        </div>
-      </div>
-      <input
-        id={`${id}-input`}
-        type="range"
-        role="slider"
-        aria-labelledby={`${id}-l`}
-        aria-valuemin={min}
-        aria-valuemax={max}
-        aria-valuenow={val}
-        aria-valuetext={valueText}
-        min={min}
-        max={max}
-        step={step}
-        value={val}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={rangeStyle}
-      />
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: TOKENS.spacing[2], color: TOKENS.colors.textSecondary, fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: 700, letterSpacing: '0.12em' }}>
-        <span>{minL}</span>
-        <span>{maxL}</span>
-      </div>
-    </div>
-  )
-}
-
 function formatCompactUsd(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 }).format(
-    value,
-  )
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
 function formatPercent(value: number) {
@@ -145,264 +86,410 @@ export function SimulationPanel() {
     return { steps, bear: line('bear'), base: line('base'), bull: line('bull') }
   }, [btcPrice, months])
 
-  const delta = ((btcPrice - PROJECTION_SIM_BASE_PRICE) / PROJECTION_SIM_BASE_PRICE) * 100
-  const { padding: pad } = useShellPadding(mode)
+  const { padding: pad, gap: shellGap } = useShellPadding(mode)
   const compact = isLimit || mode === 'tight'
 
   return (
     <div
       className="min-h-0 flex-1"
-      style={{ display: 'flex', flexDirection: 'column', background: 'transparent', color: TOKENS.colors.textPrimary, height: '100%', overflow: 'hidden' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'transparent',
+        color: TOKENS.colors.textPrimary,
+        height: '100%',
+        overflow: 'hidden',
+      }}
     >
-      {/* Main content area - 2 columns */}
+      {/* Header */}
       <div
-        className="min-h-0 flex flex-1"
         style={{
-          display: 'grid',
-          gridTemplateColumns: isLimit ? '1fr' : 'minmax(200px,260px) minmax(0,1fr)',
-          minHeight: 0,
+          padding: `${pad}px`,
+          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+          flexShrink: 0,
+          background: TOKENS.colors.bgApp,
         }}
       >
-        {/* Left panel - Controls only (no scenario selector) */}
-        <div
-          className="hide-scrollbar flex min-h-0 flex-col overflow-auto bg-[#050505] bg-gradient-to-b from-[#050505] to-[#060606]/40"
-          style={{
-            gap: TOKENS.spacing[4],
-            padding: pad,
-          }}
-        >
-          <RangeField
-            id="control-btc"
-            label="BTC price"
-            valueDisplay={fmtUsd(btcPrice)}
-            minL="$40K"
-            maxL="$220K"
-            min={40_000}
-            max={220_000}
-            step={1_000}
-            val={btcPrice}
-            valueText={`${fmtUsd(btcPrice)} per bitcoin`}
-            onChange={(n) => setBtcPrice(n)}
-          />
-          <RangeField
-            id="control-horizon"
-            label="Horizon"
-            valueDisplay={`${months} mo`}
-            minL="3M"
-            maxL="36M"
-            min={3}
-            max={36}
-            step={1}
-            val={months}
-            valueText={`${months} months`}
-            onChange={(n) => setMonths(n)}
-          />
-          <div style={{ paddingTop: TOKENS.spacing[2] }}>
-            <InfoRow l="Ticket" v="$500,000" />
-            <InfoRow l="Base BTC" v="$95,000" />
-            <InfoRow l="BTC delta" v={`${delta >= 0 ? '+' : ''}${formatPercent(delta)}`} />
-          </div>
+        <Label id="sim-title" tone="scene" variant="text">
+          Simulation
+        </Label>
+        <div style={{
+          fontSize: fitValue(mode, {
+            normal: TOKENS.fontSizes.xxxl,
+            tight: TOKENS.fontSizes.xxl,
+            limit: TOKENS.fontSizes.xl,
+          }),
+          fontWeight: TOKENS.fontWeights.black,
+          textTransform: 'uppercase',
+          letterSpacing: VALUE_LETTER_SPACING,
+          lineHeight: LINE_HEIGHT.tight,
+          color: TOKENS.colors.textPrimary,
+          marginTop: TOKENS.spacing[2],
+        }}>
+          Projection Model
         </div>
+      </div>
 
-        {/* Right panel - Projection display */}
+      {/* Main content - Single column layout */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          overflow: 'hidden',
+          padding: `${pad}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        {/* Top - Projection Chart */}
         <div
-          className="min-h-0 flex-1"
           style={{
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
             minHeight: 0,
+            background: 'rgba(0,0,0,0.2)',
+            boxShadow: `inset 0 0 0 1px ${TOKENS.colors.borderSubtle}`,
             padding: pad,
           }}
         >
-          <ProjectionLens
-            kicker="Model"
-            title="Projection"
-            compact={compact}
-            subtitle="Illustrative path — bear, base, and bull. Not investment advice."
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            marginBottom: TOKENS.spacing[3],
+          }}>
+            <div>
+              <div style={{
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                color: TOKENS.colors.textSecondary,
+              }}>
+                Projected Path
+              </div>
+              <div style={{
+                fontSize: fitValue(mode, {
+                  normal: TOKENS.fontSizes.lg,
+                  tight: TOKENS.fontSizes.md,
+                  limit: TOKENS.fontSizes.md,
+                }),
+                fontWeight: TOKENS.fontWeights.black,
+                letterSpacing: VALUE_LETTER_SPACING,
+                color: TOKENS.colors.textPrimary,
+                marginTop: TOKENS.spacing[2],
+              }}>
+                {formatPercent(active.annualApr * 100)} APR
+              </div>
+            </div>
+            <div style={{
+              fontFamily: TOKENS.fonts.mono,
+              fontSize: TOKENS.fontSizes.xs,
+              color: TOKENS.colors.textGhost,
+            }}>
+              {months} months · {fmtUsd(btcPrice)} BTC
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: isLimit ? 120 : 160,
+              background: TOKENS.colors.black,
+              boxShadow: `inset 0 0 0 1px ${TOKENS.colors.borderSubtle}`,
+              position: 'relative',
+            }}
+            aria-label="Projected value curves"
           >
-            <MetricTilesRow columns={2} compact={compact}>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              {[20, 40, 60, 80].map((y) => (
+                <line
+                  key={`chart-gridline-y-${y}`}
+                  x1="0"
+                  y1={y}
+                  x2="100"
+                  y2={y}
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeWidth="0.3"
+                />
+              ))}
+              <polyline points={series.bear} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.4" />
+              <polyline points={series.base} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.45" />
+              <polyline points={series.bull} fill="none" stroke={TOKENS.colors.accent} strokeWidth="0.5" />
+            </svg>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: TOKENS.spacing[2],
+              fontFamily: TOKENS.fonts.mono,
+              fontSize: TOKENS.fontSizes.micro,
+              color: TOKENS.colors.textSecondary,
+            }}
+          >
+            {series.steps.map((s) => (
+              <span key={s.id}>M{s.month}</span>
+            ))}
+          </div>
+
+          {/* Metrics row */}
+          <div style={{ marginTop: TOKENS.spacing[4] }}>
+            <MetricTilesRow columns={4} compact={compact}>
               <MetricTile
-                label="Scenario APR"
-                value={formatPercent(active.annualApr * 100)}
-                detail="Annualized yield (model)."
-                compact={compact}
-              />
-              <MetricTile
-                label="Cumulative yield"
+                label="Yield"
                 value={fmtUsd(active.cumulativeYield)}
-                detail="Over the selected window."
+                detail="Cumulative"
                 compact={compact}
               />
               <MetricTile
-                label="Total notional"
+                label="Total"
                 value={fmtUsd(active.totalValue)}
-                detail="Capital plus modeled yield."
+                detail="Capital + yield"
                 compact={compact}
               />
               <MetricTile
                 label="Implied BTC"
                 value={fmtUsd(active.expectedPrice)}
-                detail="Path sketch from regime."
+                detail="Target price"
                 accent
                 compact={compact}
               />
+              <MetricTile
+                label="Ticket"
+                value="$500K"
+                detail="Entry"
+                compact={compact}
+              />
             </MetricTilesRow>
-            <div
-              className="min-h-0 flex-1"
-              style={{
-                marginTop: pad,
-                minHeight: isLimit ? 100 : 140,
-                maxHeight: isLimit ? 160 : 200,
-                padding: 0,
-              }}
-            >
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'rgba(0,0,0,0.2)',
-                  boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                }}
-                aria-label="Projected value curves"
-              >
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                  {[20, 40, 60, 80].map((y) => (
-                    <line
-                      key={`chart-gridline-y-${y}`}
-                      x1="0"
-                      y1={y}
-                      x2="100"
-                      y2={y}
-                      stroke="rgba(255,255,255,0.06)"
-                      strokeWidth="0.3"
-                    />
-                  ))}
-                  <polyline points={series.bear} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.4" />
-                  <polyline points={series.base} fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.45" />
-                  <polyline points={series.bull} fill="none" stroke={TOKENS.colors.accent} strokeWidth="0.5" />
-                </svg>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginTop: TOKENS.spacing[2],
-                  fontFamily: TOKENS.fonts.mono,
-                  fontSize: TOKENS.fontSizes.micro,
-                  color: TOKENS.colors.textSecondary,
-                }}
-              >
-                {series.steps.map((s) => (
-                  <span key={s.id}>M{s.month}</span>
-                ))}
-              </div>
-            </div>
-          </ProjectionLens>
+          </div>
         </div>
-      </div>
 
-      {/* Bottom horizontal scenario selector */}
-      <div
-        style={{
-          flexShrink: 0,
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.3) 100%)',
-          padding: `${TOKENS.spacing[3]} ${pad}`,
-        }}
-      >
+        {/* Bottom - Cockpit Controls */}
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: TOKENS.spacing[2],
+            flexShrink: 0,
+            background: 'rgba(0,0,0,0.2)',
+            boxShadow: `inset 0 0 0 1px ${TOKENS.colors.borderSubtle}`,
+            padding: pad,
           }}
         >
-          {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
-            const isActive = scenario === key
-            const projection = projections[key]
-            return (
-              <button
-                key={`scenario-${key}`}
-                type="button"
-                onClick={() => setScenario(key)}
-                style={{
-                  flex: 1,
-                  maxWidth: '200px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: TOKENS.spacing[2],
-                  padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-                  background: isActive
-                    ? 'linear-gradient(180deg, rgba(167,251,144,0.08) 0%, rgba(167,251,144,0.02) 100%)'
-                    : 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: isActive
-                    ? `inset 0 0 0 1px ${TOKENS.colors.accent}, 0 2px 8px rgba(167,251,144,0.1)`
-                    : 'inset 0 0 0 1px rgba(255,255,255,0.06)',
-                  cursor: 'pointer',
-                  transition: 'all 150ms ease-out',
-                }}
-              >
-                <span
+          {/* Scenario Selector - Large gauge buttons */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: `${TOKENS.spacing[3]}px`,
+              marginBottom: TOKENS.spacing[4],
+            }}
+          >
+            {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => {
+              const isActive = scenario === key
+              const projection = projections[key]
+              const yieldPercent = maxYield > 0 ? (projection.cumulativeYield / maxYield) * 100 : 33
+
+              return (
+                <button
+                  key={`scenario-${key}`}
+                  type="button"
+                  onClick={() => setScenario(key)}
                   style={{
-                    fontFamily: TOKENS.fonts.mono,
-                    fontSize: TOKENS.fontSizes.xs,
-                    fontWeight: TOKENS.fontWeights.bold,
-                    letterSpacing: TOKENS.letterSpacing.display,
-                    textTransform: 'uppercase',
-                    color: isActive ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
-                  }}
-                >
-                  {SCENARIOS[key].label}
-                </span>
-                <span
-                  style={{
-                    fontFamily: TOKENS.fonts.sans,
-                    fontSize: TOKENS.fontSizes.md,
-                    fontWeight: TOKENS.fontWeights.black,
-                    letterSpacing: VALUE_LETTER_SPACING,
-                    color: isActive ? TOKENS.colors.textPrimary : 'rgba(255,255,255,0.6)',
-                  }}
-                >
-                  {formatPercent(projection.annualApr * 100)}
-                </span>
-                <span
-                  style={{
-                    fontFamily: TOKENS.fonts.mono,
-                    fontSize: TOKENS.fontSizes.micro,
-                    color: isActive ? TOKENS.colors.textSecondary : 'rgba(255,255,255,0.4)',
-                  }}
-                >
-                  {formatCompactUsd(projection.cumulativeYield)}
-                </span>
-                {/* Mini progress bar */}
-                <div
-                  style={{
-                    width: '100%',
-                    height: '3px',
-                    background: 'rgba(255,255,255,0.08)',
-                    borderRadius: '2px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: isActive
+                      ? 'rgba(167,251,144,0.08)'
+                      : 'rgba(0,0,0,0.3)',
+                    border: isActive
+                      ? `1px solid ${TOKENS.colors.accent}`
+                      : `1px solid ${TOKENS.colors.borderSubtle}`,
+                    borderRadius: '8px',
+                    padding: TOKENS.spacing[4],
+                    cursor: 'pointer',
+                    boxShadow: isActive
+                      ? `inset 0 0 0 1px ${TOKENS.colors.accent}`
+                      : 'none',
+                    position: 'relative',
                     overflow: 'hidden',
-                    marginTop: TOKENS.spacing[2],
                   }}
                 >
+                  {/* Background gauge */}
                   <div
                     style={{
-                      height: '100%',
-                      width: `${maxYield > 0 ? (projection.cumulativeYield / maxYield) * 100 : 0}%`,
-                      minWidth: '8%',
-                      background: isActive ? TOKENS.colors.accent : 'rgba(255,255,255,0.25)',
-                      borderRadius: '2px',
-                      transition: 'width 300ms ease',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: `${Math.max(15, yieldPercent)}%`,
+                      background: isActive
+                        ? 'rgba(167,251,144,0.15)'
+                        : 'rgba(255,255,255,0.05)',
+                      transition: 'height 300ms ease',
                     }}
                   />
-                </div>
-              </button>
-            )
-          })}
+
+                  {/* Content */}
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{
+                      fontFamily: TOKENS.fonts.mono,
+                      fontSize: TOKENS.fontSizes.xs,
+                      fontWeight: TOKENS.fontWeights.bold,
+                      letterSpacing: TOKENS.letterSpacing.display,
+                      textTransform: 'uppercase',
+                      color: isActive ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
+                      marginBottom: TOKENS.spacing[2],
+                    }}>
+                      {SCENARIOS[key].label}
+                    </div>
+                    <div style={{
+                      fontSize: fitValue(mode, {
+                        normal: TOKENS.fontSizes.xl,
+                        tight: TOKENS.fontSizes.lg,
+                        limit: TOKENS.fontSizes.md,
+                      }),
+                      fontWeight: TOKENS.fontWeights.black,
+                      letterSpacing: VALUE_LETTER_SPACING,
+                      color: isActive ? TOKENS.colors.textPrimary : 'rgba(255,255,255,0.7)',
+                    }}>
+                      {formatPercent(projection.annualApr * 100)}
+                    </div>
+                    <div style={{
+                      fontFamily: TOKENS.fonts.mono,
+                      fontSize: TOKENS.fontSizes.micro,
+                      color: isActive ? TOKENS.colors.textSecondary : 'rgba(255,255,255,0.4)',
+                      marginTop: TOKENS.spacing[2],
+                    }}>
+                      {formatCompactUsd(projection.cumulativeYield)}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Sliders - BTC & Horizon */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isLimit ? '1fr' : '1fr 1fr',
+              gap: `${TOKENS.spacing[3]}px`,
+            }}
+          >
+            {/* BTC Slider */}
+            <div
+              style={{
+                background: 'rgba(0,0,0,0.3)',
+                boxShadow: `inset 0 0 0 1px ${TOKENS.colors.borderSubtle}`,
+                borderRadius: '6px',
+                padding: TOKENS.spacing[3],
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: TOKENS.spacing[2],
+              }}>
+                <span style={{
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  textTransform: 'uppercase',
+                  color: TOKENS.colors.textSecondary,
+                }}>
+                  BTC Price
+                </span>
+                <span style={{
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.md,
+                  fontWeight: TOKENS.fontWeights.black,
+                  letterSpacing: VALUE_LETTER_SPACING,
+                  color: TOKENS.colors.textPrimary,
+                }}>
+                  {fmtUsd(btcPrice)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={40_000}
+                max={220_000}
+                step={1_000}
+                value={btcPrice}
+                onChange={(e) => setBtcPrice(Number(e.target.value))}
+                style={rangeStyle}
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: TOKENS.spacing[2],
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.micro,
+                color: TOKENS.colors.textGhost,
+              }}>
+                <span>$40K</span>
+                <span>$220K</span>
+              </div>
+            </div>
+
+            {/* Horizon Slider */}
+            <div
+              style={{
+                background: 'rgba(0,0,0,0.3)',
+                boxShadow: `inset 0 0 0 1px ${TOKENS.colors.borderSubtle}`,
+                borderRadius: '6px',
+                padding: TOKENS.spacing[3],
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: TOKENS.spacing[2],
+              }}>
+                <span style={{
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  textTransform: 'uppercase',
+                  color: TOKENS.colors.textSecondary,
+                }}>
+                  Horizon
+                </span>
+                <span style={{
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.md,
+                  fontWeight: TOKENS.fontWeights.black,
+                  letterSpacing: VALUE_LETTER_SPACING,
+                  color: TOKENS.colors.textPrimary,
+                }}>
+                  {months} mo
+                </span>
+              </div>
+              <input
+                type="range"
+                min={3}
+                max={36}
+                step={1}
+                value={months}
+                onChange={(e) => setMonths(Number(e.target.value))}
+                style={rangeStyle}
+              />
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: TOKENS.spacing[2],
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.micro,
+                color: TOKENS.colors.textGhost,
+              }}>
+                <span>3M</span>
+                <span>36M</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -411,9 +498,19 @@ export function SimulationPanel() {
 
 function InfoRow({ l, v }: { l: string; v: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: TOKENS.fontSizes.sm, padding: `${TOKENS.spacing[2]} 0` }}>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: TOKENS.fontSizes.sm,
+      padding: `${TOKENS.spacing[2]} 0`,
+      borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+    }}>
       <span style={{ color: TOKENS.colors.textSecondary }}>{l}</span>
-      <span style={{ fontFamily: TOKENS.fonts.mono, fontWeight: 700 }}>{v}</span>
+      <span style={{
+        fontFamily: TOKENS.fonts.mono,
+        fontWeight: TOKENS.fontWeights.bold,
+        color: TOKENS.colors.textPrimary,
+      }}>{v}</span>
     </div>
   )
 }

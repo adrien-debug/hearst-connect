@@ -299,7 +299,7 @@ function NarrativeBlock({ kicker, body, mode, isMono = false }: {
       </Label>
       <p
         style={{
-          margin: `${TOKENS.spacing[2]}px 0 0 0`,
+          margin: `${TOKENS.spacing[2]} 0 0 0`,
           fontSize: isMono ? TOKENS.fontSizes.xs : TOKENS.fontSizes.sm,
           lineHeight: LINE_HEIGHT.body,
           color: TOKENS.colors.textSecondary,

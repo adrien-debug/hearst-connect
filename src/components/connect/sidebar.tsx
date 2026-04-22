@@ -1,10 +1,10 @@
 'use client'
 
 import { Label } from '@/components/ui/label'
-import { TOKENS, fmtUsdCompact } from './constants'
+import { TOKENS, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
 import type { VaultLine, ActiveVault, AvailableVault } from './data'
-import { VaultNode } from './vault-node'
-import { getSidebarWidthPx, useSmartFit } from './smart-fit'
+import { getSidebarWidthPx, useSmartFit, useShellPadding, fitValue } from './smart-fit'
+import { SIMULATION_VIEW_ID } from './view-ids'
 
 interface SidebarProps {
   vaults: VaultLine[]
@@ -24,7 +24,7 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
     .sort((a, b) => b.deposited - a.deposited)
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
   const isOverview = selectedId === null
-  const sidePadH = TOKENS.spacing[4]
+  const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
 
   return (
     <aside
@@ -34,23 +34,53 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
         width: sidebarW,
         maxWidth: '100%',
         background: TOKENS.colors.bgSidebar,
-        display: 'grid',
-        gridTemplateRows: 'auto minmax(0, 1fr) auto',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
+        borderRight: `1px solid ${TOKENS.colors.borderSubtle}`,
       }}
     >
-      {/* Compact header — just back button when needed */}
+      {/* Logo Section — Centered */}
       <div
         style={{
-          padding: `${TOKENS.spacing[3]} ${sidePadH}`,
+          padding: `${shellPadding}px`,
+          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
+          background: TOKENS.colors.bgApp,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
-        {!isOverview && (
+        <img
+          src="/logos/hearst-connect-blackbg.svg"
+          alt="Hearst Connect"
+          style={{
+            height: fitValue(mode, { normal: '40px', tight: '36px', limit: '32px' }),
+            width: 'auto',
+            maxWidth: '160px',
+            objectFit: 'contain',
+          }}
+        />
+      </div>
+
+      {/* Header — Back button or Title */}
+      <div
+        style={{
+          padding: `${shellPadding}px`,
+          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+          flexShrink: 0,
+          background: TOKENS.colors.bgApp,
+        }}
+      >
+        {!isOverview ? (
           <button
             type="button"
             onClick={() => onSelect(null)}
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
               background: 'none',
               border: 'none',
               padding: 0,
@@ -62,44 +92,91 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
               textTransform: 'uppercase' as const,
               color: TOKENS.colors.accent,
             }}
-            aria-label="Back to portfolio overview"
           >
-            ← Back to overview
+            <span>←</span>
+            <span>Overview</span>
           </button>
+        ) : (
+          <div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+            }}>
+              <div>
+                <Label id="sidebar-title" tone="sidebar" variant="text">
+                  Portfolio
+                </Label>
+                <div
+                  style={{
+                    fontSize: fitValue(mode, {
+                      normal: TOKENS.fontSizes.lg,
+                      tight: TOKENS.fontSizes.md,
+                      limit: TOKENS.fontSizes.md,
+                    }),
+                    fontWeight: TOKENS.fontWeights.black,
+                    textTransform: 'uppercase',
+                    letterSpacing: VALUE_LETTER_SPACING,
+                    lineHeight: LINE_HEIGHT.tight,
+                    color: TOKENS.colors.textPrimary,
+                    marginTop: TOKENS.spacing[2],
+                  }}
+                >
+                  Positions
+                </div>
+              </div>
+              {/* Bouton Simulation */}
+              <button
+                type="button"
+                onClick={() => onSelect(SIMULATION_VIEW_ID)}
+                style={{
+                  background: selectedId === SIMULATION_VIEW_ID
+                    ? 'rgba(167,251,144,0.15)'
+                    : 'rgba(0,0,0,0.3)',
+                  border: selectedId === SIMULATION_VIEW_ID
+                    ? `1px solid ${TOKENS.colors.accent}`
+                    : `1px solid ${TOKENS.colors.borderSubtle}`,
+                  borderRadius: '6px',
+                  padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
+                  cursor: 'pointer',
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.micro,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  textTransform: 'uppercase' as const,
+                  color: selectedId === SIMULATION_VIEW_ID
+                    ? TOKENS.colors.accent
+                    : TOKENS.colors.textSecondary,
+                  lineHeight: 1,
+                }}
+              >
+                Sim
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Active vaults — ultra compact list */}
+      {/* Active Vaults — Container noir surfacé */}
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          padding: `0 ${sidePadH}`,
-          flexShrink: 0,
-          minHeight: 0,
+          flex: 1,
+          overflowY: 'auto',
+          padding: `${shellPadding}px`,
         }}
+        className="hide-scrollbar"
       >
-        <Label id="side-active" tone="sidebar" variant="text">
-          Active ({activeVaults.length})
-        </Label>
         <div
           style={{
-            marginTop: TOKENS.spacing[2],
             display: 'flex',
             flexDirection: 'column',
-            gap: '2px',
+            gap: `${shellGap}px`,
           }}
         >
-          {activeVaults.length === 0 && (
-            <p style={{ fontSize: TOKENS.fontSizes.micro, color: 'rgba(255,255,255,0.45)', margin: 0, lineHeight: 1.4 }}>
-              No active positions
-            </p>
-          )}
-          {activeVaults.map((v, i) => (
-            <VaultNode
+          {activeVaults.map((v) => (
+            <VaultRow
               key={v.id}
               vault={v}
-              vaultIndex={i}
               selected={selectedId === v.id}
               onClick={() => onSelect(v.id)}
               mode={mode}
@@ -108,105 +185,202 @@ export function Sidebar({ vaults, selectedId, onSelect }: SidebarProps) {
         </div>
       </div>
 
-      {/* Available section — subdued at bottom */}
+      {/* Available Section — Container distinct */}
       {availableVaults.length > 0 && (
-        <>
-          {/* Separator */}
+        <div
+          style={{
+            flexShrink: 0,
+            borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
+            background: 'rgba(0,0,0,0.2)',
+            padding: `${shellPadding}px`,
+          }}
+        >
+          <Label id="sidebar-available" tone="sidebar" variant="text">
+            Available ({availableVaults.length})
+          </Label>
           <div
             style={{
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-              margin: `${TOKENS.spacing[3]} ${sidePadH}`,
-            }}
-          />
-          <div
-            style={{
-              padding: `0 ${sidePadH} ${TOKENS.spacing[4]}`,
-              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: `${TOKENS.spacing[2]}px`,
+              marginTop: TOKENS.spacing[3],
             }}
           >
-            <Label id="side-deals" tone="sidebar" variant="text">
-              Available
-            </Label>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gap: TOKENS.spacing[2],
-                marginTop: TOKENS.spacing[2],
-              }}
-            >
-              {availableVaults.map((vault, i) => (
-                <AvailableVaultNode
-                  key={vault.id}
-                  vault={vault}
-                  vaultIndex={i}
-                  selected={selectedId === vault.id}
-                  onClick={() => onSelect(vault.id)}
-                />
-              ))}
-            </div>
+            {availableVaults.map((vault) => (
+              <button
+                key={vault.id}
+                type="button"
+                onClick={() => onSelect(vault.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: selectedId === vault.id
+                    ? 'rgba(167,251,144,0.08)'
+                    : 'rgba(0,0,0,0.2)',
+                  border: selectedId === vault.id
+                    ? `1px solid ${TOKENS.colors.accent}`
+                    : `1px solid ${TOKENS.colors.borderSubtle}`,
+                  borderRadius: '6px',
+                  padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
+                  cursor: 'pointer',
+                  boxShadow: selectedId === vault.id
+                    ? `inset 0 0 0 1px ${TOKENS.colors.accent}`
+                    : 'none',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: TOKENS.fontSizes.xs,
+                    fontWeight: TOKENS.fontWeights.black,
+                    textTransform: 'uppercase',
+                    letterSpacing: VALUE_LETTER_SPACING,
+                    color: selectedId === vault.id
+                      ? TOKENS.colors.textPrimary
+                      : 'rgba(255,255,255,0.6)',
+                  }}
+                >
+                  {vault.name.replace('HashVault ', '')}
+                </span>
+                <span
+                  style={{
+                    fontFamily: TOKENS.fonts.mono,
+                    fontSize: TOKENS.fontSizes.xs,
+                    fontWeight: TOKENS.fontWeights.bold,
+                    color: selectedId === vault.id
+                      ? TOKENS.colors.accent
+                      : 'rgba(167,251,144,0.5)',
+                  }}
+                >
+                  {vault.apr}%
+                </span>
+              </button>
+            ))}
           </div>
-        </>
+        </div>
       )}
     </aside>
   )
 }
 
-/** Subdued compact panel for available vaults */
-function AvailableVaultNode({
+function VaultRow({
   vault,
   selected,
   onClick,
+  mode,
 }: {
-  vault: AvailableVault
-  vaultIndex: number
+  vault: ActiveVault
   selected: boolean
   onClick: () => void
+  mode: 'normal' | 'tight' | 'limit'
 }) {
+  const currentValue = vault.deposited + vault.claimable
+
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={selected}
-      className="w-full text-left"
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         background: selected
-          ? `linear-gradient(90deg, rgba(167,251,144,0.05) 0%, transparent 100%)`
-          : 'transparent',
-        border: 'none',
-        borderLeft: selected ? `2px solid ${TOKENS.colors.accent}` : '2px solid transparent',
-        borderRadius: '0 6px 6px 0',
-        padding: '8px 12px',
+          ? 'rgba(167,251,144,0.08)'
+          : 'rgba(0,0,0,0.2)',
+        border: selected
+          ? `1px solid ${TOKENS.colors.accent}`
+          : `1px solid ${TOKENS.colors.borderSubtle}`,
+        borderRadius: '8px',
+        padding: `${fitValue(mode, {
+          normal: TOKENS.spacing[3],
+          tight: TOKENS.spacing[3],
+          limit: TOKENS.spacing[2],
+        })}`,
         cursor: 'pointer',
-        transition: 'all 120ms ease-out',
-        opacity: selected ? 1 : 0.6,
+        width: '100%',
+        boxShadow: selected
+          ? `inset 0 0 0 1px ${TOKENS.colors.accent}`
+          : 'none',
       }}
     >
-      <span
+      <div
         style={{
-          fontFamily: TOKENS.fonts.sans,
-          fontSize: TOKENS.fontSizes.xs,
-          fontWeight: TOKENS.fontWeights.black,
-          textTransform: 'uppercase',
-          color: selected ? TOKENS.colors.textPrimary : 'rgba(255,255,255,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: TOKENS.spacing[2],
+          minWidth: 0,
+          flex: 1,
         }}
       >
-        {vault.name.replace('HashVault ', '')}
-      </span>
-      <span
-        style={{
-          fontFamily: TOKENS.fonts.mono,
-          fontSize: '9px',
-          fontWeight: TOKENS.fontWeights.bold,
-          color: selected ? TOKENS.colors.accent : 'rgba(167,251,144,0.5)',
-        }}
-      >
-        {vault.apr}%
-      </span>
+        <span
+          style={{
+            fontSize: fitValue(mode, {
+              normal: TOKENS.fontSizes.sm,
+              tight: TOKENS.fontSizes.xs,
+              limit: TOKENS.fontSizes.xs,
+            }),
+            fontWeight: TOKENS.fontWeights.black,
+            textTransform: 'uppercase',
+            letterSpacing: VALUE_LETTER_SPACING,
+            color: selected
+              ? TOKENS.colors.textPrimary
+              : 'rgba(255,255,255,0.85)',
+            lineHeight: LINE_HEIGHT.tight,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {vault.name.replace('HashVault ', '')}
+        </span>
+        <span
+          style={{
+            fontSize: fitValue(mode, {
+              normal: TOKENS.fontSizes.md,
+              tight: TOKENS.fontSizes.md,
+              limit: TOKENS.fontSizes.sm,
+            }),
+            fontWeight: TOKENS.fontWeights.black,
+            letterSpacing: VALUE_LETTER_SPACING,
+            color: TOKENS.colors.textPrimary,
+            lineHeight: LINE_HEIGHT.tight,
+          }}
+        >
+          {fmtUsdCompact(currentValue)}
+        </span>
+      </div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <span
+          style={{
+            fontFamily: TOKENS.fonts.mono,
+            fontSize: fitValue(mode, {
+              normal: TOKENS.fontSizes.md,
+              tight: TOKENS.fontSizes.sm,
+              limit: TOKENS.fontSizes.sm,
+            }),
+            fontWeight: TOKENS.fontWeights.black,
+            color: selected
+              ? TOKENS.colors.accent
+              : 'rgba(167,251,144,0.7)',
+            letterSpacing: VALUE_LETTER_SPACING,
+            lineHeight: LINE_HEIGHT.tight,
+          }}
+        >
+          {vault.apr}%
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontSize: TOKENS.fontSizes.micro,
+            color: TOKENS.colors.textGhost,
+            marginTop: TOKENS.spacing[2],
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+          }}
+        >
+          APY
+        </span>
+      </div>
     </button>
   )
 }
