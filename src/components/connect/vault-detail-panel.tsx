@@ -13,7 +13,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
       className="flex-1"
       style={{
         overflowY: 'auto',
-        padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[8]}`,
+        padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[6]}`,
         background: TOKENS.colors.bgPage,
         display: 'flex',
         flexDirection: 'column',
@@ -23,19 +23,19 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        gap: TOKENS.spacing[8],
-        paddingBottom: TOKENS.spacing[6],
+        alignItems: 'flex-start',
+        gap: TOKENS.spacing[6],
+        paddingBottom: TOKENS.spacing[4],
         borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.gray200}`,
       }}>
         <div>
           <Label>Position Detail</Label>
           <div style={{
-            fontSize: TOKENS.fontSizes.figure,
+            fontSize: TOKENS.fontSizes.xxxl,
             fontWeight: TOKENS.fontWeights.black,
             letterSpacing: TOKENS.letterSpacing.tight,
             lineHeight: 0.95,
-            marginBottom: TOKENS.spacing[3],
+            marginBottom: TOKENS.spacing[2],
           }}>
             {vault.name}
           </div>
@@ -52,7 +52,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         <div style={{ textAlign: 'right' }}>
           <Label>Current Value</Label>
           <div style={{
-            fontSize: TOKENS.fontSizes.xxxl,
+            fontSize: TOKENS.fontSizes.xxl,
             fontWeight: TOKENS.fontWeights.black,
             letterSpacing: TOKENS.letterSpacing.tight,
             color: TOKENS.colors.black,
@@ -60,7 +60,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
             {fmtUsd(currentValue)}
           </div>
           <div style={{
-            marginTop: TOKENS.spacing[3],
+            marginTop: TOKENS.spacing[2],
             display: 'inline-flex',
             alignItems: 'center',
             padding: `4px ${TOKENS.spacing[3]}`,
@@ -79,7 +79,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-        gap: TOKENS.spacing[6],
+        gap: TOKENS.spacing[4],
       }}>
         <MetricCard label="Principal" value={fmtUsd(vault.deposited)} />
         <MetricCard label="Available Yield" value={fmtUsd(vault.claimable)} accent />
@@ -109,7 +109,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         <MonthlyGauge deposited={vault.deposited} apr={vault.apr} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TOKENS.spacing[6] }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: TOKENS.spacing[4] }}>
         <div style={{ borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.gray200}`, paddingTop: TOKENS.spacing[4] }}>
           <Label>Capital Protection</Label>
           <div style={{
@@ -128,7 +128,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
           <div style={{
             fontFamily: TOKENS.fonts.sans,
             fontSize: TOKENS.fontSizes.sm,
-            marginBottom: TOKENS.spacing[4],
+            marginBottom: TOKENS.spacing[3],
             color: TOKENS.colors.black,
             fontWeight: TOKENS.fontWeights.medium,
           }}>{vault.strategy}</div>
@@ -171,14 +171,14 @@ function MetricCard({
 }) {
   return (
     <div style={{
-      padding: compact ? TOKENS.spacing[4] : TOKENS.spacing[4],
+      padding: compact ? TOKENS.spacing[3] : TOKENS.spacing[4],
       border: `${TOKENS.borders.thin} solid ${TOKENS.colors.gray200}`,
       background: TOKENS.colors.bgPage,
     }}>
       <Label>{label}</Label>
       <div style={{
         fontFamily: TOKENS.fonts.sans,
-        fontSize: compact ? TOKENS.fontSizes.lg : TOKENS.fontSizes.xl,
+        fontSize: compact ? TOKENS.fontSizes.md : TOKENS.fontSizes.xl,
         fontWeight: TOKENS.fontWeights.black,
         letterSpacing: '-0.03em',
         color: accent ? TOKENS.colors.accent : TOKENS.colors.black,

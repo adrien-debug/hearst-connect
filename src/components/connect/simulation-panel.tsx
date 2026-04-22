@@ -117,7 +117,7 @@ export function SimulationPanel() {
     >
       <div
         style={{
-          padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[8]}`,
+          padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[8]}`,
           borderBottom: `${TOKENS.borders.heavy} solid ${TOKENS.colors.black}`,
           background: TOKENS.colors.bgSurface,
           flexShrink: 0,
@@ -162,8 +162,8 @@ export function SimulationPanel() {
             style={{
               background: TOKENS.colors.accent,
               color: TOKENS.colors.black,
-              padding: `${TOKENS.spacing[4]} ${TOKENS.spacing[6]}`,
-              minWidth: '240px',
+              padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
+              minWidth: '180px',
             }}
           >
             <div
@@ -194,7 +194,7 @@ export function SimulationPanel() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '360px 1fr',
+          gridTemplateColumns: '320px 1fr',
           minHeight: 0,
           flex: 1,
         }}
@@ -297,7 +297,7 @@ export function SimulationPanel() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
               gap: TOKENS.borders.thin,
               background: TOKENS.colors.black,
               border: `${TOKENS.borders.thin} solid ${TOKENS.colors.black}`,
@@ -335,7 +335,7 @@ export function SimulationPanel() {
           >
             <div
               style={{
-                padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[8]} ${TOKENS.spacing[6]}`,
+                padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[6]} ${TOKENS.spacing[4]}`,
                 borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.black}`,
               }}
             >
@@ -363,7 +363,7 @@ export function SimulationPanel() {
               </div>
             </div>
 
-            <div style={{ padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[8]}` }}>
+            <div style={{ padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[6]}` }}>
               <div
                 style={{
                   width: '100%',
@@ -631,12 +631,11 @@ function ProjectionCard({
       style={{
         background: accent ? TOKENS.colors.accent : TOKENS.colors.white,
         color: TOKENS.colors.black,
-        padding: TOKENS.spacing[8],
-        minHeight: '192px',
+        padding: TOKENS.spacing[6],
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        gap: TOKENS.spacing[6],
+        gap: TOKENS.spacing[4],
       }}
     >
       <div>

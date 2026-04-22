@@ -27,8 +27,8 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
         width: '360px',
         background: TOKENS.colors.black,
         borderRight: `${TOKENS.borders.thin} solid rgba(255,255,255,0.12)`,
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'grid',
+        gridTemplateRows: 'auto minmax(0, 1fr) auto',
         overflow: 'hidden',
       }}
     >
@@ -71,14 +71,15 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
       </div>
 
       <div style={{
-        flex: 1,
-        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
         padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[8]}`,
         minHeight: 0,
         borderBottom: `1px solid rgba(255,255,255,0.12)`,
       }}>
         <SectionLabel>Active Positions</SectionLabel>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[6] }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px' }} className="hide-scrollbar">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
           {activeVaults.map((v, index) => {
             const isSel = selectedId === v.id
             return (
@@ -92,7 +93,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                   textAlign: 'left',
                   background: isSel ? 'rgba(255,255,255,0.08)' : 'transparent',
                   border: `${TOKENS.borders.thin} solid ${isSel ? TOKENS.colors.accent : 'rgba(255,255,255,0.12)'}`,
-                  padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
+                  padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[3]}`,
                   cursor: 'pointer',
                   transition: '120ms ease-out',
                   boxShadow: isSel ? `inset 0 0 0 1px ${TOKENS.colors.accent}` : 'none',
@@ -140,11 +141,12 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
               </button>
             )
           })}
+          </div>
         </div>
       </div>
 
       <div style={{
-        padding: `${TOKENS.spacing[6]} ${TOKENS.spacing[8]} ${TOKENS.spacing[6]}`,
+        padding: `${TOKENS.spacing[4]} ${TOKENS.spacing[6]} ${TOKENS.spacing[4]}`,
         borderTop: `1px solid rgba(255,255,255,0.12)`,
         background: `linear-gradient(180deg, rgba(255,255,255,0) 0%, ${TOKENS.colors.accentDim} 100%)`,
         flexShrink: 0,
@@ -157,15 +159,15 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
             width: '100%',
             background: TOKENS.colors.accent,
             border: `${TOKENS.borders.thin} solid ${isSimulation ? TOKENS.colors.white : TOKENS.colors.accent}`,
-            padding: TOKENS.spacing[4],
+            padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
             cursor: 'pointer',
             textAlign: 'left',
             color: TOKENS.colors.black,
             boxShadow: isSimulation ? `inset 0 0 0 1px ${TOKENS.colors.white}` : 'none',
-            marginBottom: availableVaults.length > 0 ? TOKENS.spacing[6] : '0px',
+            marginBottom: availableVaults.length > 0 ? TOKENS.spacing[4] : '0px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: TOKENS.spacing[4] }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: TOKENS.spacing[4] }}>
             <div>
               <div style={{
                 fontFamily: TOKENS.fonts.mono,
@@ -184,9 +186,8 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                 fontWeight: TOKENS.fontWeights.black,
                 textTransform: 'uppercase',
                 color: TOKENS.colors.black,
-                marginBottom: TOKENS.spacing[2],
               }}>
-                Projection Tool
+                Projection
               </div>
             </div>
             <div style={{
@@ -198,14 +199,6 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
             }}>
               Open
             </div>
-          </div>
-          <div style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.bold,
-            color: 'rgba(0,0,0,0.65)',
-          }}>
-            Bear / Base / Bull · BTC Price · Time · Graph
           </div>
         </button>
 
@@ -224,7 +217,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                       width: '100%',
                       background: isSelected ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
                       border: `${TOKENS.borders.thin} solid ${isSelected ? TOKENS.colors.accent : 'rgba(255,255,255,0.16)'}`,
-                      padding: TOKENS.spacing[4],
+                      padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
                       cursor: 'pointer',
                       textAlign: 'left',
                     }}
@@ -268,6 +261,7 @@ export function Sidebar({ vaults, selectedId, onSelect, agg }: SidebarProps) {
                       fontSize: TOKENS.fontSizes.xs,
                       fontWeight: TOKENS.fontWeights.bold,
                       color: 'rgba(255,255,255,0.55)',
+                      marginTop: '2px',
                     }}>
                       Min. {fmtUsdCompact(vault.minDeposit)}
                     </div>
