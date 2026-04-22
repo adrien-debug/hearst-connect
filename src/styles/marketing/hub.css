@@ -185,7 +185,7 @@
 						background: var(--dashboard-surface);
 						border: none;
 						block-size: 2em;
-						font-size: 1.3em;
+						font-size: var(--dashboard-text-lg);
 						inline-size: 2.5em;
 						display: flex;
 						align-items: center;
@@ -417,7 +417,7 @@
 			align-items: center;
 			gap: 0.4rem;
 
-			font-size: 0.9em;
+			font-size: var(--dashboard-text-sm);
 			font-family: inherit;
 
 			cursor: pointer;
@@ -511,7 +511,7 @@
 				}
 
 				nav li {
-					font-size: 1.85em;
+					font-size: var(--dashboard-text-2xl);
 					font-weight: 350;
 					border-bottom: 1px solid var(--dashboard-card);
 
@@ -761,7 +761,7 @@
 			}
 
 			.hub-section-head h2 {
-				font-size: clamp(1.85rem, 3.8vw, 2.65rem);
+				font-size: var(--dashboard-text-2xl);
 				font-weight: 800;
 				letter-spacing: -0.035em;
 				line-height: 1.14;
@@ -785,7 +785,7 @@
 
 			.intro {
 				color: var(--dashboard-text-secondary);
-				font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+				font-size: var(--dashboard-text-base);
 				line-height: 1.6;
 				font-weight: 450;
 				margin: 0;
@@ -838,7 +838,7 @@
 
 						figcaption.carousel-caption {
 							color: var(--dashboard-text-bright);
-							font-size: clamp(1.15rem, 2.8vw, 1.85rem);
+							font-size: var(--dashboard-text-xl);
 							font-weight: 800;
 							letter-spacing: -0.02em;
 							line-height: 1.2;
@@ -860,7 +860,7 @@
 
 				h3 {
 					font-weight: 800;
-					font-size: clamp(1.35rem, 2.35vw, 1.9rem);
+					font-size: var(--dashboard-text-xl);
 					line-height: 1.18;
 					margin: 0;
 					letter-spacing: -0.025em;
@@ -890,7 +890,7 @@
 						color: var(--dashboard-accent);
 				    text-decoration: none;
 						font-weight: 600;
-						font-size: 0.95rem;
+						font-size: var(--dashboard-text-sm);
 						letter-spacing: 0.02em;
 
 						transition: gap 0.15s ease-in;
@@ -905,7 +905,7 @@
 							font-family: 'Material Symbols Outlined';
 							font-weight: normal;
 							font-style: normal;
-							font-size: 24px;
+							font-size: var(--dashboard-text-xl);
 							line-height: 1;
 							letter-spacing: normal;
 							text-transform: none;
@@ -960,7 +960,7 @@
 
 		h3 {
 			font-weight: 800;
-			font-size: clamp(1.5rem, 4vw, 2.35rem);
+			font-size: var(--dashboard-text-2xl);
 	    line-height: 1.15;
 			letter-spacing: -0.03em;
 			margin: 0;
@@ -981,7 +981,7 @@
 				margin-top: var(--hub-space-xs);
 				color: var(--dashboard-text-secondary);
 				font-weight: 500;
-				font-size: clamp(0.95rem, 2.1vw, 1.2rem);
+				font-size: var(--dashboard-text-base);
 				letter-spacing: 0.03em;
 				line-height: 1.4;
 				text-wrap: balance;
@@ -992,7 +992,7 @@
 
 		.hub-cta-primary,
 		.hub-cta-secondary {
-			font-size: 1.05rem;
+			font-size: var(--dashboard-text-base);
 			font-weight: 600;
 		}
 	}
@@ -1028,7 +1028,7 @@
 			}
 
 			p {
-				font-size: clamp(2rem, 5.5vw, 3.75rem);
+				font-size: var(--dashboard-text-display);
 				font-weight: 800;
 				letter-spacing: -0.04em;
 				line-height: 1.08;
@@ -1042,7 +1042,7 @@
 				display: flex;
 				flex-direction: column;
 				gap: var(--hub-space-sm);
-				font-size: 1.05rem;
+				font-size: var(--dashboard-text-base);
 				align-items: center;
 				justify-content: center;
 
@@ -1065,7 +1065,7 @@
 		background: var(--dashboard-page);
 		font-family: var(--font-sans);
 		font-weight: 400;
-		font-size: 16px;
+		font-size: var(--dashboard-text-base);
 		color: var(--dashboard-text-primary);
 		scroll-behavior: smooth;
 		-webkit-font-smoothing: antialiased;
@@ -1126,7 +1126,7 @@
 	}
 
 	h2 {
-		font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+		font-size: var(--dashboard-text-2xl);
 		font-weight: 500;
 		margin: 0.5rem 0;
 		line-height: 1.1;
@@ -1364,7 +1364,7 @@
 }
 
 #developers .hub-carousel-nav-btn .material-symbols-outlined {
-  font-size: 1.5rem;
+  font-size: var(--dashboard-text-xl);
 }
 
 /* Refactored inline styles */
@@ -1378,7 +1378,7 @@
 }
 
 .welcome-title {
-  font-size: clamp(1.45rem, 3.35vw, 2.45rem);
+  font-size: var(--dashboard-text-display);
   font-weight: 800;
   letter-spacing: -0.035em;
   margin-top: var(--hub-space-lg);
@@ -1393,7 +1393,7 @@
   color: var(--dashboard-accent);
   font-weight: 800;
   letter-spacing: -0.02em;
-  font-size: clamp(1rem, 2.35vw, 1.35rem);
+  font-size: var(--dashboard-text-lg);
   line-height: 1.25;
 }
 
@@ -1409,7 +1409,7 @@
   padding: 0.75rem 2rem;
   border-radius: var(--dashboard-radius-button, 9999px);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: var(--dashboard-text-base);
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(167,251,144,0.2);
 }
@@ -1442,7 +1442,7 @@ a.welcome-btn:focus-visible {
   padding: 0.5rem 1.5rem;
   border-radius: 9999px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--dashboard-text-sm);
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
@@ -1515,7 +1515,7 @@ a.welcome-btn:focus-visible {
   width: 100%;
   max-width: var(--hub-measure-prose);
   margin-inline: auto;
-  font-size: clamp(1.85rem, 3.9vw, 2.65rem);
+  font-size: var(--dashboard-text-2xl);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 1.18;
@@ -1560,7 +1560,7 @@ a.welcome-btn:focus-visible {
   align-items: flex-start;
   gap: var(--hub-space-sm);
   font-weight: 800;
-  font-size: clamp(2rem, 4vw, 3.15rem);
+  font-size: var(--dashboard-text-2xl);
   line-height: 1.08;
   letter-spacing: -0.035em;
   margin: 0 0 var(--hub-space-md) 0;
@@ -1659,7 +1659,7 @@ a.welcome-btn:focus-visible {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
-  font-size: 1.5rem;
+  font-size: var(--dashboard-text-xl);
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
@@ -1682,7 +1682,7 @@ a.welcome-btn:focus-visible {
 
 .feature-block p {
   font-weight: 400;
-  font-size: clamp(1.02rem, 1.35vw, 1.18rem);
+  font-size: var(--dashboard-text-base);
   line-height: 1.68;
   color: var(--dashboard-text-secondary);
   max-width: var(--hub-measure-prose);
@@ -1893,7 +1893,7 @@ a.welcome-btn:focus-visible {
 
 .hub-font-scope .hub-footer-tagline {
   margin: var(--hub-space-sm) 0 0;
-  font-size: clamp(0.9rem, 1.1vw, 1rem);
+  font-size: var(--dashboard-text-sm);
   line-height: 1.55;
   color: var(--dashboard-text-secondary);
 }
@@ -1930,7 +1930,7 @@ a.welcome-btn:focus-visible {
   color: var(--dashboard-text-secondary);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--dashboard-text-sm);
   transition: color 0.15s ease;
 }
 
@@ -1952,12 +1952,12 @@ a.welcome-btn:focus-visible {
 }
 
 .hub-font-scope .hub-footer-copy {
-  font-size: 0.85rem;
+  font-size: var(--dashboard-text-xs);
   color: var(--dashboard-text-muted);
 }
 
 .hub-font-scope .hub-footer-mail {
-  font-size: 0.9rem;
+  font-size: var(--dashboard-text-sm);
   font-weight: 600;
   color: var(--dashboard-accent);
   text-decoration: none;
@@ -2028,7 +2028,7 @@ a.welcome-btn:focus-visible {
 
 .hub-strategy-caption {
   color: var(--dashboard-text-bright);
-  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
+  font-size: var(--dashboard-text-xl);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -2041,7 +2041,7 @@ a.welcome-btn:focus-visible {
 
 .hub-strategy-slide h3 {
   font-weight: 800;
-  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-size: var(--dashboard-text-xl);
   line-height: 1.18;
   margin: 0;
   letter-spacing: -0.025em;
@@ -2057,7 +2057,7 @@ a.welcome-btn:focus-visible {
   font-weight: 400;
   line-height: 1.6;
   margin: 0;
-  font-size: clamp(0.9rem, 1.1vw, 1rem);
+  font-size: var(--dashboard-text-sm);
 }
 
 .hub-strategy-slide a {
@@ -2068,7 +2068,7 @@ a.welcome-btn:focus-visible {
   color: var(--dashboard-text-accent);
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--dashboard-text-sm);
   letter-spacing: 0.02em;
   transition: gap 0.15s ease, color 0.15s ease;
 }
@@ -2083,7 +2083,7 @@ a.welcome-btn:focus-visible {
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
-  font-size: 20px;
+  font-size: var(--dashboard-text-lg);
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;

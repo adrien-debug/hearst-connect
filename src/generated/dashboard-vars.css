@@ -104,6 +104,8 @@
   --dashboard-text-xl: 24px;
   --dashboard-text-2xl: 40px;
   --dashboard-text-3xl: 56px;
+  --dashboard-text-display: clamp(48px, 5vw, 64px);
+  --dashboard-text-figure: clamp(36px, 5vh, 64px);
   --dashboard-letter-spacing-body: 0.14em;
   --dashboard-letter-spacing-panel-label: 0.16em;
   --dashboard-letter-spacing-panel-heading: 0.2em;

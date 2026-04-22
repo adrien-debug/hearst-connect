@@ -47,18 +47,33 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex min-h-screen items-center justify-center bg-[var(--dashboard-page)]">
-          <div className="flex max-w-md flex-col gap-6 rounded-2xl border border-[var(--dashboard-border)] bg-[var(--dashboard-surface)] p-8 text-center">
+        <div
+          className="flex min-h-screen items-center justify-center"
+          style={{ backgroundColor: 'var(--dashboard-page)' }}
+        >
+          <div
+            className="flex max-w-md flex-col gap-6 rounded-2xl border p-8 text-center"
+            style={{
+              borderColor: 'var(--dashboard-border)',
+              backgroundColor: 'var(--dashboard-surface)',
+            }}
+          >
             <div className="flex flex-col gap-2">
               <h1
-                className="text-[length:var(--dashboard-text-xl)] font-bold tracking-tight"
-                style={{ color: 'var(--dashboard-text-primary)' }}
+                className="font-bold tracking-tight"
+                style={{
+                  color: 'var(--dashboard-text-primary)',
+                  fontSize: 'var(--dashboard-text-2xl)',
+                }}
               >
                 Something went wrong
               </h1>
               <p
-                className="text-[length:var(--dashboard-text-sm)] leading-relaxed"
-                style={{ color: 'var(--dashboard-text-muted)' }}
+                className="leading-relaxed"
+                style={{
+                  color: 'var(--dashboard-text-muted)',
+                  fontSize: 'var(--dashboard-text-sm)',
+                }}
               >
                 We encountered an unexpected error. Please refresh the page to continue.
               </p>
@@ -67,14 +82,21 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error && process.env.NODE_ENV === 'development' && (
               <details className="text-left">
                 <summary
-                  className="cursor-pointer text-[length:var(--dashboard-text-xs)] font-bold"
-                  style={{ color: 'var(--dashboard-text-ghost)' }}
+                  className="cursor-pointer font-bold"
+                  style={{
+                    color: 'var(--dashboard-text-ghost)',
+                    fontSize: 'var(--dashboard-text-xs)',
+                  }}
                 >
                   Error details
                 </summary>
                 <pre
-                  className="mt-2 overflow-auto rounded-lg bg-[var(--dashboard-overlay-02)] p-3 text-[length:var(--dashboard-text-dense-sm)]"
-                  style={{ color: 'var(--dashboard-text-muted)' }}
+                  className="mt-2 overflow-auto rounded-lg p-3"
+                  style={{
+                    color: 'var(--dashboard-text-muted)',
+                    backgroundColor: 'var(--dashboard-overlay-02)',
+                    fontSize: 'var(--dashboard-text-dense-sm)',
+                  }}
                 >
                   {this.state.error.message}
                   {'\n\n'}
@@ -85,10 +107,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <button
               onClick={() => window.location.reload()}
-              className="rounded-xl px-6 py-3 text-[length:var(--dashboard-text-sm)] font-bold transition-all duration-150 hover:opacity-90"
+              className="rounded-xl px-6 py-3 font-bold transition-all duration-150 hover:opacity-90"
               style={{
                 backgroundColor: 'var(--dashboard-accent)',
                 color: 'var(--dashboard-page)',
+                fontSize: 'var(--dashboard-text-sm)',
               }}
             >
               Refresh page

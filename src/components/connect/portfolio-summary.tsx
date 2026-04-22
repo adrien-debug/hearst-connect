@@ -41,7 +41,7 @@ export function PortfolioSummary({ vaults, agg }: { vaults: VaultLine[]; agg: Ag
         <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: TOKENS.spacing[12], alignItems: 'center' }}>
           <div>
             <div style={{
-              fontSize: 'clamp(40px, 6vh, 72px)',
+              fontSize: TOKENS.fontSizes.figure,
               fontWeight: TOKENS.fontWeights.black,
               letterSpacing: TOKENS.letterSpacing.tight,
               lineHeight: 0.95,
@@ -97,7 +97,7 @@ export function PortfolioSummary({ vaults, agg }: { vaults: VaultLine[]; agg: Ag
             flexShrink: 0
           }}>
             {['Position', 'Principal', 'Current Value', 'Yield', 'Maturity'].map(h => (
-              <span key={h} style={{ fontSize: '9px', fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', color: TOKENS.colors.textGhost }}>{h}</span>
+              <span key={h} style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, textTransform: 'uppercase', color: TOKENS.colors.textGhost }}>{h}</span>
             ))}
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }} className="hide-scrollbar">
@@ -124,16 +124,16 @@ function VaultRow({ vault: v }: { vault: ActiveVault }) {
       alignItems: 'center',
     }}>
       <div>
-        <div style={{ fontSize: '14px', fontWeight: 900, textTransform: 'uppercase' }}>{v.name}</div>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: TOKENS.colors.textSecondary }}>{v.strategy}</div>
+        <div style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.black, textTransform: 'uppercase' }}>{v.name}</div>
+        <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary }}>{v.strategy}</div>
       </div>
-      <div style={{ fontSize: '13px', fontWeight: 700, color: TOKENS.colors.textSecondary }}>{fmtUsdCompact(principal)}</div>
-      <div style={{ fontSize: '13px', fontWeight: 900 }}>{fmtUsdCompact(v.deposited)}</div>
+      <div style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary }}>{fmtUsdCompact(principal)}</div>
+      <div style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.black }}>{fmtUsdCompact(v.deposited)}</div>
       <div>
-        <div style={{ fontSize: '13px', fontWeight: 900, color: TOKENS.colors.accent }}>{fmtUsdCompact(v.claimable)}</div>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: TOKENS.colors.textSecondary }}>{v.apr}% APY</div>
+        <div style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.accent }}>{fmtUsdCompact(v.claimable)}</div>
+        <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary }}>{v.apr}% APY</div>
       </div>
-      <div style={{ fontSize: '13px', fontWeight: 700 }}>{v.maturity}</div>
+      <div style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.bold }}>{v.maturity}</div>
     </div>
   )
 }

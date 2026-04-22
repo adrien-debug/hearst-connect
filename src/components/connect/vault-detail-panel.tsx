@@ -31,7 +31,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         <div>
           <Label>Position Detail</Label>
           <div style={{
-            fontSize: 'clamp(36px, 5vh, 64px)',
+            fontSize: TOKENS.fontSizes.figure,
             fontWeight: TOKENS.fontWeights.black,
             letterSpacing: TOKENS.letterSpacing.tight,
             lineHeight: 0.95,
@@ -52,7 +52,7 @@ export function VaultDetailPanel({ vault }: { vault: ActiveVault | MaturedVault 
         <div style={{ textAlign: 'right' }}>
           <Label>Current Value</Label>
           <div style={{
-            fontSize: 'clamp(32px, 4.5vh, 56px)',
+            fontSize: TOKENS.fontSizes.xxxl,
             fontWeight: TOKENS.fontWeights.black,
             letterSpacing: TOKENS.letterSpacing.tight,
             color: TOKENS.colors.black,

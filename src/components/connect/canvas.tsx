@@ -51,7 +51,8 @@ export function Canvas() {
           alt="Hearst Connect"
           style={{
             display: 'block',
-            height: '180px',
+            height: '42px',
+            maxWidth: '189px',
             width: 'auto',
             objectFit: 'contain',
           }}

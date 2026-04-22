@@ -29,10 +29,10 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexShrink: 0 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textSecondary, marginBottom: TOKENS.spacing[3], textTransform: 'uppercase' }}>Subscription</div>
-          <div style={{ fontSize: 'clamp(40px, 6vh, 72px)', fontWeight: TOKENS.fontWeights.black, letterSpacing: TOKENS.letterSpacing.tight, color: TOKENS.colors.black, lineHeight: 0.9 }}>{vault.name}</div>
+          <div style={{ fontSize: TOKENS.fontSizes.figure, fontWeight: TOKENS.fontWeights.black, letterSpacing: TOKENS.letterSpacing.tight, color: TOKENS.colors.black, lineHeight: 0.9 }}>{vault.name}</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 'clamp(28px, 4vh, 48px)', fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.black, lineHeight: 1 }}>{vault.apr}%</div>
+          <div style={{ fontSize: TOKENS.fontSizes.xxl, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.black, lineHeight: 1 }}>{vault.apr}%</div>
           <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary, letterSpacing: TOKENS.letterSpacing.display, marginTop: TOKENS.spacing[2], textTransform: 'uppercase' }}>Target Yield</div>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
               border: 'none',
               outline: 'none',
               color: TOKENS.colors.black,
-              fontSize: 'clamp(64px, 12vh, 144px)', 
+              fontSize: TOKENS.fontSizes.display,
               fontFamily: TOKENS.fonts.sans,
               width: '100%',
               fontWeight: TOKENS.fontWeights.black,
@@ -128,7 +128,7 @@ function SpecItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textSecondary, marginBottom: TOKENS.spacing[3], textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 'clamp(24px, 3.5vh, 32px)', fontWeight: 900, color: TOKENS.colors.black, letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: TOKENS.fontSizes.xl, fontWeight: 900, color: TOKENS.colors.black, letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
     </div>
   )
 }
@@ -136,9 +136,9 @@ function SpecItem({ label, value }: { label: string; value: string }) {
 function ProjectionRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: '16px', fontWeight: 700, color: TOKENS.colors.textSecondary }}>{label}</span>
+      <span style={{ fontSize: TOKENS.fontSizes.md, fontWeight: 700, color: TOKENS.colors.textSecondary }}>{label}</span>
       <span style={{ 
-        fontSize: '24px', 
+        fontSize: TOKENS.fontSizes.xl, 
         fontWeight: 900, 
         color: accent ? TOKENS.colors.accent : TOKENS.colors.black, 
         background: accent ? TOKENS.colors.black : 'transparent', 

@@ -35,9 +35,10 @@ export const TOKENS = {
     md: '16px',
     lg: '20px',
     xl: '24px',
-    xxl: '48px',
-    xxxl: '80px', // Poussé au max
-    display: 'clamp(56px, 8vw, 96px)',
+    xxl: '40px',
+    xxxl: '56px',
+    display: 'clamp(48px, 5vw, 64px)',
+    figure: 'clamp(36px, 5vh, 64px)',
   },
   fontWeights: {
     regular: 400,

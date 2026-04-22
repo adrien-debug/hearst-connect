@@ -135,7 +135,7 @@ export function SimulationPanel() {
           <div style={{ maxWidth: '760px' }}>
             <div
               style={{
-                fontSize: TOKENS.fontSizes.display,
+                fontSize: TOKENS.fontSizes.figure,
                 fontWeight: TOKENS.fontWeights.black,
                 letterSpacing: TOKENS.letterSpacing.tight,
                 lineHeight: 0.92,
