@@ -7,50 +7,50 @@ export const TOKENS = {
     gray200: '#E9ECEF',
     gray500: '#ADB5BD',
     gray700: '#495057',
-    accent: '#a7fb90',
+    accent: '#a7fb90', // Citrus
+    accentDim: 'rgba(167, 251, 144, 0.05)', // Encore plus subtil
+    accentGlow: 'rgba(167, 251, 144, 0.15)', // Diffusion large
     bgPage: '#FFFFFF',
     bgSidebar: '#000000',
-    bgSurface: '#F8F9FA',
+    bgSurface: '#F9F9FB', 
     textPrimary: '#000000',
-    textSecondary: '#495057',
-    textGhost: '#ADB5BD',
+    textSecondary: '#52525B',
+    textGhost: '#D4D4D8', // Plus clair pour moins de dureté
     textOnDark: '#FFFFFF',
-    borderMain: '#000000',
-    borderSubtle: '#E9ECEF',
+    borderMain: 'rgba(0, 0, 0, 0.04)', // Presque invisible
+    borderSubtle: '#F4F4F7',
     sidebarTextPrimary: '#FFFFFF',
-    sidebarTextGhost: '#ADB5BD',
-    /** Row hover (light panels / tables) */
-    surfaceHover: '#F1F3F5',
-    /** Progress track / inactive bar */
-    surfaceActive: '#E9ECEF',
-    danger: '#EF4444',
+    sidebarTextGhost: 'rgba(255, 255, 255, 0.25)',
+    surfaceHover: '#F4F4F7',
+    surfaceActive: '#E4E4E7',
+    danger: '#FF453A',
   },
   fonts: {
     sans: "'Satoshi Variable', Inter, -apple-system, sans-serif",
-    mono: "'IBM Plex Mono', monospace",
+    mono: "'Satoshi Variable', Inter, -apple-system, sans-serif", // Satoshi partout
   },
   fontSizes: {
-    xs: '12px',           // marketing --dashboard-text-xs
-    sm: '14px',           // marketing --dashboard-text-sm
-    md: '16px',           // marketing --dashboard-text-base
-    lg: '20px',           // marketing --dashboard-text-lg
-    xl: '24px',           // marketing --dashboard-text-xl
-    xxl: '40px',          // marketing --dashboard-text-2xl
-    xxxl: '56px',         // marketing --dashboard-text-3xl
-    display: 'clamp(48px, 5vw, 64px)',
+    xs: '12px',
+    sm: '14px',
+    md: '16px',
+    lg: '20px',
+    xl: '24px',
+    xxl: '48px',
+    xxxl: '80px', // Poussé au max
+    display: 'clamp(56px, 8vw, 96px)',
   },
   fontWeights: {
     regular: 400,
     medium: 500,
     semibold: 600,
     bold: 700,
-    black: 800,
+    black: 900,
   },
   letterSpacing: {
-    tight: '-0.04em',
+    tight: '-0.06em',
     normal: '0',
-    wide: '0.1em',
-    display: '0.2em',
+    wide: '0.12em',
+    display: '0.3em',
   },
   spacing: {
     0: '0px',
@@ -63,12 +63,14 @@ export const TOKENS = {
     12: '48px',
     16: '64px',
     20: '80px',
+    24: '120px',
+    32: '160px',
   },
   borders: {
     none: 'none',
     thin: '1px',
     thick: '2px',
-    heavy: '6px',
+    heavy: '12px',
   }
 }
 
@@ -77,4 +79,8 @@ export const MONO = TOKENS.fonts.mono
 
 export function fmtUsd(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+export function fmtUsdCompact(n: number): string {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }

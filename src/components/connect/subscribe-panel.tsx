@@ -16,57 +16,35 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
   const totalYield = num * (targetPct / 100)
 
   return (
-    <div className="flex-1" style={{ overflowY: 'auto', padding: `${TOKENS.spacing[20]} ${TOKENS.spacing[12]}`, background: TOKENS.colors.bgPage }}>
-
-      {/* KPIs — grille séparée par border main */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: TOKENS.borders.thin, background: TOKENS.colors.borderMain, marginBottom: TOKENS.spacing[8] }}>
-        {[
-          { k: 'Target APY', v: vault.apr + '%', accent: true },
-          { k: 'Lock Period', v: vault.lockPeriod },
-          { k: 'Min Deposit', v: fmtUsd(vault.minDeposit) },
-          { k: 'Risk Profile', v: vault.risk },
-        ].map(item => (
-          <div key={item.k} style={{ background: TOKENS.colors.bgPage, padding: TOKENS.spacing[6] }}>
-            <div style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.xs,
-              fontWeight: TOKENS.fontWeights.bold,
-              textTransform: 'uppercase' as const,
-              letterSpacing: TOKENS.letterSpacing.display,
-              color: TOKENS.colors.textPrimary,
-              marginBottom: TOKENS.spacing[2],
-            }}>{item.k}</div>
-            <div style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.xl,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.tight,
-              lineHeight: 1,
-              color: item.accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
-            }}>{item.v}</div>
-          </div>
-        ))}
+    <div className="flex-1" style={{ 
+      height: '100%',
+      overflow: 'hidden',
+      padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[8]}`,
+      background: TOKENS.colors.white,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: TOKENS.spacing[8]
+    }}>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexShrink: 0 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textSecondary, marginBottom: TOKENS.spacing[3], textTransform: 'uppercase' }}>Subscription</div>
+          <div style={{ fontSize: 'clamp(40px, 6vh, 72px)', fontWeight: TOKENS.fontWeights.black, letterSpacing: TOKENS.letterSpacing.tight, color: TOKENS.colors.black, lineHeight: 0.9 }}>{vault.name}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 'clamp(28px, 4vh, 48px)', fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.black, lineHeight: 1 }}>{vault.apr}%</div>
+          <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary, letterSpacing: TOKENS.letterSpacing.display, marginTop: TOKENS.spacing[2], textTransform: 'uppercase' }}>Target Yield</div>
+        </div>
       </div>
 
-      {/* Amount input */}
-      <div style={{ marginBottom: TOKENS.spacing[8] }}>
-        <div style={{
-          fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.xs,
-          fontWeight: TOKENS.fontWeights.bold,
-          letterSpacing: TOKENS.letterSpacing.display,
-          textTransform: 'uppercase' as const,
-          color: TOKENS.colors.textPrimary,
-          marginBottom: TOKENS.spacing[2],
-        }}>
-          Amount (USDC)
-        </div>
+      <div style={{ flexShrink: 0, position: 'relative' }}>
+        <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, textTransform: 'uppercase', color: TOKENS.colors.textSecondary, marginBottom: TOKENS.spacing[2] }}>Amount to Deploy</div>
         <div style={{
           display: 'flex',
-          alignItems: 'center',
-          borderBottom: `${TOKENS.borders.thick} solid ${isValid ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
-          paddingBottom: TOKENS.spacing[2],
-          transition: 'border-color 200ms ease',
+          alignItems: 'baseline',
+          borderBottom: `1px solid ${isValid ? TOKENS.colors.accent : TOKENS.colors.black}`,
+          paddingBottom: TOKENS.spacing[3],
+          transition: '120ms ease-out',
         }}>
           <input
             type="number"
@@ -77,107 +55,95 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
               background: 'transparent',
               border: 'none',
               outline: 'none',
-              borderRadius: 0,
-              color: TOKENS.colors.textPrimary,
-              fontSize: TOKENS.fontSizes.xxxl,
-              fontFamily: TOKENS.fonts.mono,
+              color: TOKENS.colors.black,
+              fontSize: 'clamp(64px, 12vh, 144px)', 
+              fontFamily: TOKENS.fonts.sans,
               width: '100%',
-              fontWeight: TOKENS.fontWeights.semibold,
-              letterSpacing: TOKENS.letterSpacing.tight,
+              fontWeight: TOKENS.fontWeights.black,
+              letterSpacing: '-0.07em',
+              lineHeight: 0.85,
             }}
           />
-          <span style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.bold,
-            color: TOKENS.colors.textGhost,
-            letterSpacing: TOKENS.letterSpacing.wide,
-          }}>USDC</span>
+          <span style={{ fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.textSecondary, opacity: 0.5, letterSpacing: '-0.02em' }}>USDC</span>
         </div>
-        <div style={{ marginTop: TOKENS.spacing[2], fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold }}>
-          {num > 0 && !isValid && (
-            <span style={{ color: TOKENS.colors.danger }}>Min. deposit is {fmtUsd(vault.minDeposit)}</span>
-          )}
-          {isValid && (
-            <span style={{ color: TOKENS.colors.accent }}>✓ Minimum reached</span>
-          )}
+        <div style={{ marginTop: TOKENS.spacing[6], height: '24px' }}>
+          {num > 0 && !isValid && <div style={{ fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.danger, fontWeight: TOKENS.fontWeights.bold }}>Minimum deposit: {fmtUsd(vault.minDeposit)}</div>}
+          {isValid && <div style={{ fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.accent, background: TOKENS.colors.black, display: 'inline-block', padding: '3px 16px', fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, textTransform: 'uppercase' }}>Deposit amount valid</div>}
         </div>
       </div>
 
-      {/* Summary */}
-      <div style={{
-        borderTop: `${TOKENS.borders.heavy} solid ${TOKENS.colors.borderMain}`,
-        paddingTop: TOKENS.spacing[4],
-        marginBottom: TOKENS.spacing[8],
-        display: 'flex',
-        flexDirection: 'column',
-        gap: TOKENS.spacing[2],
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: TOKENS.spacing[8], borderTop: `1px solid ${TOKENS.colors.borderSubtle}`, paddingTop: TOKENS.spacing[8], flexShrink: 0 }}>
+        <SpecItem label="Lock Period" value={vault.lockPeriod} />
+        <SpecItem label="Risk Profile" value={vault.risk} />
+        <SpecItem label="Fees" value={vault.fees} />
+      </div>
+
+      <div style={{ 
+        marginTop: 'auto',
+        paddingTop: TOKENS.spacing[8],
+        display: 'grid', 
+        gridTemplateColumns: '1fr 420px', 
+        gap: TOKENS.spacing[8], 
+        alignItems: 'end',
+        flexShrink: 0
       }}>
-        <Row label="You deposit" value={num > 0 ? fmtUsd(num) + ' USDC' : '—'} />
-        <Row label="Est. yearly yield" value={num > 0 ? '+ ' + fmtUsd(yearlyYield) : '—'} accent />
-        <Row label="Total yield at close" value={num > 0 ? '+ ' + fmtUsd(totalYield) : '—'} accent />
-        <Row label="Capital unlocks" value={`When ${vault.target} target hit · max 3 years`} />
-        <Row label="Fees" value={vault.fees} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
+          <ProjectionRow label="Estimated Yearly Yield" value={num > 0 ? '+ ' + fmtUsd(yearlyYield) : '—'} accent />
+          <ProjectionRow label="Projected Yield at Maturity" value={num > 0 ? '+ ' + fmtUsd(totalYield) : '—'} accent />
+          <div style={{ fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textSecondary, fontWeight: TOKENS.fontWeights.medium, marginTop: TOKENS.spacing[3], lineHeight: 1.6, maxWidth: '520px' }}>
+            Capital remains allocated until the term or target condition is met. Review the term sheet before confirming the subscription.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[6] }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: TOKENS.spacing[4], background: TOKENS.colors.bgSurface, transition: '120ms ease-out' }}>
+            <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} style={{ width: '24px', height: '24px', accentColor: TOKENS.colors.black }} />
+            <span style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary }}>I confirm the term sheet and minimum deposit.</span>
+          </label>
+          <button
+            disabled={!isReady}
+            style={{
+              width: '100%',
+              padding: TOKENS.spacing[6],
+              background: isReady ? TOKENS.colors.black : TOKENS.colors.gray100,
+              color: isReady ? TOKENS.colors.accent : TOKENS.colors.textGhost,
+              border: 'none',
+              fontSize: TOKENS.fontSizes.lg,
+              fontWeight: TOKENS.fontWeights.black,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              cursor: isReady ? 'pointer' : 'not-allowed',
+              transition: '120ms ease-out',
+            }}
+          >
+            {isReady ? 'Deploy Capital' : 'Complete Review'}
+          </button>
+        </div>
       </div>
-
-      {/* Agree + CTA */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2], cursor: 'pointer', marginBottom: TOKENS.spacing[3] }}>
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={e => setAgreed(e.target.checked)}
-          style={{ accentColor: TOKENS.colors.accent, width: TOKENS.spacing[4], height: TOKENS.spacing[4] }}
-        />
-        <span style={{
-          fontFamily: TOKENS.fonts.sans,
-          fontSize: TOKENS.fontSizes.sm,             // sm (13px) — pas xs
-          color: TOKENS.colors.textSecondary,
-        }}>I have read and accept the term sheet.</span>
-      </label>
-
-      {/* CTA — DS btn-primary */}
-      <button
-        disabled={!isReady}
-        style={{
-          width: '100%',
-          padding: `18px ${TOKENS.spacing[10]}`,    // 18px 40px — spec DS
-          background: isReady ? TOKENS.colors.black : 'transparent',
-          color: isReady ? TOKENS.colors.textOnDark : TOKENS.colors.textGhost,
-          border: `${TOKENS.borders.thick} solid ${isReady ? TOKENS.colors.black : TOKENS.colors.borderSubtle}`,
-          borderRadius: 0,                           // explicite DS
-          fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.sm,
-          fontWeight: TOKENS.fontWeights.black,
-          letterSpacing: TOKENS.letterSpacing.display,
-          textTransform: 'uppercase' as const,
-          cursor: isReady ? 'pointer' : 'not-allowed',
-          transition: '120ms ease-out',
-        }}
-      >
-        {isReady ? 'Confirm Deposit' : 'Awaiting Input'}
-      </button>
     </div>
   )
 }
 
-function Row({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+function SpecItem({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      padding: `${TOKENS.spacing[2]} 0`,
-      borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-    }}>
-      <span style={{
-        fontFamily: TOKENS.fonts.sans,
-        fontSize: TOKENS.fontSizes.sm,              // sm (13px) — pas xs pour labels Row
-        color: TOKENS.colors.textSecondary,
-      }}>{label}</span>
-      <span style={{
-        fontFamily: TOKENS.fonts.mono,
-        fontSize: TOKENS.fontSizes.xs,
-        fontWeight: TOKENS.fontWeights.bold,
-        color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+    <div>
+      <div style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, letterSpacing: TOKENS.letterSpacing.display, color: TOKENS.colors.textSecondary, marginBottom: TOKENS.spacing[3], textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: 'clamp(24px, 3.5vh, 32px)', fontWeight: 900, color: TOKENS.colors.black, letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
+    </div>
+  )
+}
+
+function ProjectionRow({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span style={{ fontSize: '16px', fontWeight: 700, color: TOKENS.colors.textSecondary }}>{label}</span>
+      <span style={{ 
+        fontSize: '24px', 
+        fontWeight: 900, 
+        color: accent ? TOKENS.colors.accent : TOKENS.colors.black, 
+        background: accent ? TOKENS.colors.black : 'transparent', 
+        padding: accent ? '4px 16px' : '0',
+        letterSpacing: '-0.02em'
       }}>{value}</span>
     </div>
   )

@@ -4,6 +4,7 @@ interface BaseVault {
   apr: number
   target: string
   strategy: string
+  image?: string
 }
 
 export interface ActiveVault extends BaseVault {
@@ -48,7 +49,7 @@ export const VAULTS: VaultLine[] = [
     name: 'HashVault Prime #1',
     type: 'active',
     apr: 12.0,
-    deposited: 500000,
+    deposited: 542100, // Mis à jour pour correspondre au visuel (500k + 42.1k)
     claimable: 42100,
     lockedUntil: NOW + 86400 * 540,
     canWithdraw: false,
@@ -56,13 +57,14 @@ export const VAULTS: VaultLine[] = [
     target: '36%',
     progress: 61,
     strategy: 'RWA Mining · USDC Yield · BTC Hedged',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=200&h=200',
   },
   {
     id: 'growth-1',
     name: 'HashVault Growth #1',
     type: 'active',
     apr: 15.0,
-    deposited: 250000,
+    deposited: 260240, // Mis à jour (250k + 10.2k)
     claimable: 10240,
     lockedUntil: NOW + 86400 * 700,
     canWithdraw: false,
@@ -70,6 +72,7 @@ export const VAULTS: VaultLine[] = [
     target: '45%',
     progress: 24,
     strategy: 'BTC Spot · Collateral Mining',
+    image: 'https://images.unsplash.com/photo-1642104704074-907c0698cbd9?auto=format&fit=crop&q=80&w=200&h=200',
   },
   {
     id: 'prime-new',
@@ -82,6 +85,7 @@ export const VAULTS: VaultLine[] = [
     risk: 'Moderate',
     fees: '1.5% Mgmt · 15% Perf',
     strategy: 'RWA Mining · USDC Yield · BTC Hedged',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=200&h=200',
   },
   {
     id: 'growth-new',
@@ -94,6 +98,7 @@ export const VAULTS: VaultLine[] = [
     risk: 'Growth',
     fees: '2.0% Mgmt · 15% Perf',
     strategy: 'BTC Spot · Collateral Mining',
+    image: 'https://images.unsplash.com/photo-1642104704074-907c0698cbd9?auto=format&fit=crop&q=80&w=200&h=200',
   },
 ]
 
