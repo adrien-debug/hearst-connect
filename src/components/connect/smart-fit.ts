@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { SIDEBAR_WIDTH_PX, SIDEBAR_WIDTH_NARROW_PX, SHELL_PADDING, SHELL_GAP } from './constants'
 
 export type SmartFitMode = 'normal' | 'tight' | 'limit'
@@ -15,9 +15,9 @@ interface SmartFitOptions {
   limitHeight: number
   tightWidth?: number
   limitWidth?: number
-  /** Viewport &lt; this → `tight` (unless height forces `limit`). */
+  /** Viewport &lt; this → `tight` (unless height forces `limit`). Aligned with CSS @media (width < 930px) */
   midBreakpoint?: number
-  /** Viewport &lt; this (with mid) → stricter `tight` / `limit` heuristics. */
+  /** Viewport &lt; this (with mid) → stricter `tight` / `limit` heuristics. Aligned with CSS @media (width < 768px) */
   narrowBreakpoint?: number
   reserveHeight?: number
   reserveWidth?: number
@@ -26,19 +26,19 @@ interface SmartFitOptions {
 function resolveMode(width: number, height: number, options: SmartFitOptions): SmartFitMode {
   const availableWidth = Math.max(0, width - (options.reserveWidth ?? 0))
   const availableHeight = Math.max(0, height - (options.reserveHeight ?? 0))
-  const mid = options.midBreakpoint ?? 1280
-  const narrow = options.narrowBreakpoint ?? 1100
+  // Aligned with CSS breakpoints: 768px (mobile), 930px (tablet)
+  const mid = options.midBreakpoint ?? 930
+  const narrow = options.narrowBreakpoint ?? 768
   const heightCrisis = availableHeight <= options.limitHeight
   const heightTight = availableHeight <= options.tightHeight
 
-  /** &lt;1100px: smallest shell — limit if vertical space is also constrained, else tight */
+  /** &lt;768px: smallest shell — limit if vertical space is also constrained, else tight */
   if (width < narrow) {
     if (heightCrisis) return 'limit'
-    if (heightTight) return 'tight'
     return 'tight'
   }
 
-  /** 1100–1280: compact but not always limit */
+  /** 768–930: compact but not always limit */
   if (width < mid) {
     if (heightCrisis) return 'limit'
     return 'tight'
@@ -59,14 +59,35 @@ export function useSmartFit(options: SmartFitOptions) {
     return resolveMode(window.innerWidth, window.innerHeight, options)
   })
 
+  // Throttle resize updates to 60fps (16ms)
+  const rafRef = useRef<number | null>(null)
+  const lastModeRef = useRef<SmartFitMode>(mode)
+
   useEffect(() => {
     const update = () => {
-      setMode(resolveMode(window.innerWidth, window.innerHeight, options))
+      const newMode = resolveMode(window.innerWidth, window.innerHeight, options)
+      if (newMode !== lastModeRef.current) {
+        lastModeRef.current = newMode
+        setMode(newMode)
+      }
+    }
+
+    const throttledUpdate = () => {
+      if (rafRef.current) return
+      rafRef.current = requestAnimationFrame(() => {
+        update()
+        rafRef.current = null
+      })
     }
 
     update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    window.addEventListener('resize', throttledUpdate)
+    return () => {
+      window.removeEventListener('resize', throttledUpdate)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+    }
   }, [
     options.limitHeight,
     options.limitWidth,

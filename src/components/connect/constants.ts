@@ -15,6 +15,10 @@ export const TOKENS = {
     bgSidebar: '#050505',
     /** Subtle lift (modals, hover) */
     bgSurface: '#0A0A0A',
+    /** Secondary background - cards, panels */
+    bgSecondary: '#0F0F0F',
+    /** Tertiary background - nested elements */
+    bgTertiary: '#1A1A1A',
     /** Legacy aliases — map to scene */
     gray50: '#F8F9FA',
     gray100: '#0A0A0A',
@@ -24,12 +28,15 @@ export const TOKENS = {
     accent: '#A7FB90',
     accentDim: 'rgba(167, 251, 144, 0.05)',
     accentGlow: 'rgba(167, 251, 144, 0.12)',
+    /** Subtle accent background for selected states */
+    accentSubtle: 'rgba(167, 251, 144, 0.12)',
     textPrimary: 'rgba(255,255,255,0.92)',
     textSecondary: 'rgba(255,255,255,0.55)',
     textGhost: 'rgba(255,255,255,0.35)',
     textOnDark: 'rgba(255,255,255,0.92)',
     borderMain: 'rgba(255,255,255,0.06)',
     borderSubtle: 'rgba(255,255,255,0.08)',
+    borderStrong: 'rgba(255,255,255,0.14)',
     sidebarTextPrimary: 'rgba(255,255,255,0.92)',
     sidebarTextGhost: 'rgba(255,255,255,0.35)',
     surfaceHover: 'rgba(255,255,255,0.04)',
@@ -87,6 +94,13 @@ export const TOKENS = {
     thin: '1px',
     thick: '2px',
     heavy: '6px',
+  },
+  radius: {
+    sm: '4px',
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    full: '9999px',
   },
 }
 

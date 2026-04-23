@@ -44,7 +44,7 @@ NEXT_PUBLIC_GOOGLE_ADS_ID=              # Optional — Google Ads
 - **Look** : deep void `#050505`, scene carbon `#030303` (denser than sidebar, subtle shoulder light + carbon materiality), accent `#A7FB90`, type scale 24 / 14 / 11, spacing on an **8px** grid, radii **8–12px** where a radius is used (favor alignment over boxes).
 - **Chromatic separation** : avoid heavy card borders; prefer **inset shadows**, very low-opacity gradients, and whitespace. Long reading uses soft contrast overlays, not hard frames.
 - **Sidebar vault panels** : enriched micro-panels with 4-layer structure (header + core value + visual signal + footer). Prime vaults show mini-donut progress; Growth vaults show linear gauge. Available vaults use simplified linear gauge. All panels: 10px radius, subtle carbon gradient background, 16px padding.
-- **Static reference** : `design-system.html` (tokens, labels bar vs text, sidebar width 280/272px).
+- **Static reference** : `vault-ui-system.html` (tokens, labels bar vs text, sidebar width 280/272px).
 - **Tests** : `npm test` (Vitest) — `src/lib/*.test.ts` for `vault-math` and `projection-simulation`.
 - **Typecheck** (script `npm run lint`) : `tsc -p . --noEmit` — Next 16.2 in this repo does not ship `next lint`.
 
@@ -72,7 +72,29 @@ src/
 │   └── marketing/
 ```
 
-## Recent Updates (Apr 22, 2026)
+## Recent Updates (Apr 23, 2026) — Visual Coherence + No-Scroll Layouts
+
+- ✅ **Unified visual style across all panels**: All views (Dashboard, Available, Subscribe, Detail, Simulation) now share identical typography, spacing, and color patterns
+- ✅ **Consistent header structure**: All panels use the same header layout with Label (micro), title (xxxl/xxl/xl responsive), and value display
+- ✅ **No-scroll layouts**: All main containers use `overflow: 'hidden'` with `flex: 1` and `minHeight: 0` for perfect viewport fitting
+- ✅ **Typography unification**: All section labels now use `TOKENS.fontSizes.micro` + `MONO` + `letterSpacing.display` + uppercase
+- ✅ **Border radius tokens**: All cards and panels use `TOKENS.radius.lg` (12px) consistently
+- ✅ **Smart-fit responsive**: All panels use `useSmartFit()` + `useShellPadding()` + `fitValue()` for consistent responsive behavior
+- ✅ **No hardcoded values**: Replaced remaining magic numbers with TOKENS.spacing and TOKENS.radius
+- ✅ **Build passing**: No TypeScript errors, no lint issues, strict mode validated
+
+## Previous Updates (Apr 23, 2026) — Available Vaults Access + Token Cleanup
+
+- ✅ **Critical Fix — Available Vaults Access**: Added AVAIL button to Dock Radial and new `AvailableVaultsPanel` component for browsing subscription opportunities
+- ✅ **PortfolioSummary enhancement**: Added "Available Vaults" teaser section in right panel with quick-access cards for `prime-new` and `growth-new` vaults
+- ✅ **Navigation flow complete**: Dock Radial (DASH/AVAIL/SIMU) → AvailableVaultsPanel → SubscribePanel (click any available vault card)
+- ✅ **Design Tokens cleanup**: Added `TOKENS.radius.*` (sm/md/lg/xl/full) to constants.ts
+- ✅ **Fixed all hardcoded CSS vars**: Replaced `var(--radius-*)` with `TOKENS.radius.*` and `var(--color-*)` with `TOKENS.colors.*` across all connect components
+- ✅ **Fixed string literal bugs**: Corrected `'TOKENS.colors.*'` (quoted strings) to actual token references in `vault-detail-panel.tsx`
+
+## Previous Updates (Apr 22, 2026)
+
+## Previous Updates (Apr 22, 2026)
 
 - Cinematic Financial OS: sidebar `#050505`, main scene `#060606` with matte gradients on `.connect-main-scene`, 280px sidebar, shared `Label`, `VaultNode` rows, routing via `useConnectRouting`, `dashboard-vars.css` + `constants.ts` alignment, Vitest for `aggregate` / `computeMonthlyYield` / `projectScenario`
 - Removed unused Web3 stack (wagmi, viem, RainbowKit) and dead hooks/ABIs; connect UI is mock-data driven until on-chain is re-enabled

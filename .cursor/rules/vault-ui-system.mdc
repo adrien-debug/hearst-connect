@@ -1,10 +1,10 @@
 ---
-description: Hearst Connect Design System — règles de style institutionnelles. Appliqué à tous les composants connect/.
+description: Vault UI System — règles de style institutionnelles pour Hearst Connect. Appliqué à tous les composants connect/.
 globs: src/components/connect/**/*.tsx
 alwaysApply: false
 ---
 
-# Hearst Connect — Design System Lock
+# Vault UI System — Design System Lock
 
 Toute modification de style dans `src/components/connect/` DOIT respecter les règles suivantes.
 
@@ -12,7 +12,7 @@ Toute modification de style dans `src/components/connect/` DOIT respecter les r�
 
 - Tokens : `src/components/connect/constants.ts` → objet `TOKENS` (aligné avec `src/styles/connect/dashboard-vars.css`)
 - Composant `Label` partagé : `src/components/ui/label.tsx` (surtout `connect/` + besoins globaux)
-- Référence visuelle : `design-system.html`
+- Référence visuelle : `vault-ui-system.html`
 
 ## Règles absolues
 

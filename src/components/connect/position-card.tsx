@@ -12,14 +12,14 @@ interface PositionCardProps {
 export function PositionCard({ data, mode }: PositionCardProps) {
   return (
     <div style={{
-      background: 'var(--color-bg-secondary)',
-      borderRadius: 'var(--radius-lg)',
+      background: TOKENS.colors.bgSecondary,
+      borderRadius: TOKENS.radius.lg,
       padding: fitValue(mode, {
-        normal: TOKENS.spacing[4],
-        tight: TOKENS.spacing[3],
-        limit: TOKENS.spacing[3],
+        normal: TOKENS.spacing[3],
+        tight: TOKENS.spacing[2],
+        limit: TOKENS.spacing[2],
       }),
-      border: '1px solid var(--color-border-subtle)',
+      border: `1px solid ${TOKENS.colors.borderSubtle}`,
     }}>
       {/* Header — Position Value */}
       <div style={{
@@ -28,7 +28,7 @@ export function PositionCard({ data, mode }: PositionCardProps) {
         alignItems: 'baseline',
         marginBottom: TOKENS.spacing[4],
         paddingBottom: TOKENS.spacing[3],
-        borderBottom: '1px solid var(--color-border-subtle)',
+        borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
       }}>
         <div>
           <div style={{
@@ -62,8 +62,8 @@ export function PositionCard({ data, mode }: PositionCardProps) {
           {data.isTargetReached && (
             <span style={{
               padding: '2px 6px',
-              background: 'var(--color-accent-subtle)',
-              borderRadius: 'var(--radius-sm)',
+              background: TOKENS.colors.accentSubtle,
+              borderRadius: TOKENS.radius.sm,
               fontSize: TOKENS.fontSizes.micro,
               fontWeight: TOKENS.fontWeights.bold,
               color: TOKENS.colors.accent,
@@ -98,8 +98,8 @@ export function PositionCard({ data, mode }: PositionCardProps) {
 
       {/* Timeline */}
       <div style={{
-        background: 'var(--color-bg-tertiary)',
-        borderRadius: 'var(--radius-sm)',
+        background: TOKENS.colors.bgTertiary,
+        borderRadius: TOKENS.radius.sm,
         padding: TOKENS.spacing[3],
       }}>
         <div style={{
@@ -132,7 +132,7 @@ export function PositionCard({ data, mode }: PositionCardProps) {
         <div style={{
           height: '4px',
           background: TOKENS.colors.black,
-          borderRadius: 'var(--radius-sm)',
+          borderRadius: TOKENS.radius.sm,
           overflow: 'hidden',
         }}>
           <div style={{
@@ -141,7 +141,7 @@ export function PositionCard({ data, mode }: PositionCardProps) {
             background: data.unlockTimeline.progressPercent >= 100
               ? TOKENS.colors.accent
               : 'rgba(255,255,255,0.6)',
-            borderRadius: 'var(--radius-sm)',
+            borderRadius: TOKENS.radius.sm,
           }} />
         </div>
 
@@ -164,8 +164,8 @@ export function PositionCard({ data, mode }: PositionCardProps) {
         gap: TOKENS.spacing[2],
         marginTop: TOKENS.spacing[3],
         padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
-        background: 'var(--color-bg-tertiary)',
-        borderRadius: 'var(--radius-sm)',
+        background: TOKENS.colors.bgTertiary,
+        borderRadius: TOKENS.radius.sm,
       }}>
         <div style={{
           width: '6px',

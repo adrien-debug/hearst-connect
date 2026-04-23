@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { TOKENS } from './constants'
 import { fitValue, type SmartFitMode } from './smart-fit'
 
@@ -34,15 +34,26 @@ export function Modal({
     [onClose]
   )
 
+  // Store scroll position to restore on close
+  const scrollYRef = useRef<number>(0)
+
   useEffect(() => {
     if (isOpen) {
+      scrollYRef.current = window.scrollY
       document.addEventListener('keydown', handleKeyDown)
       document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollYRef.current}px`
+      document.body.style.width = '100%'
     }
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      window.scrollTo(0, scrollYRef.current)
     }
   }, [isOpen, handleKeyDown])
 
@@ -84,8 +95,8 @@ export function Modal({
           width: '100%',
           ...sizeStyles[size],
           background: TOKENS.colors.black,
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--color-border-subtle)',
+          borderRadius: TOKENS.radius.lg,
+          border: `1px solid ${TOKENS.colors.borderSubtle}`,
           boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
           animation: 'scaleIn 200ms ease-out',
           display: 'flex',
@@ -104,7 +115,7 @@ export function Modal({
               tight: TOKENS.spacing[3],
               limit: TOKENS.spacing[3],
             }),
-            borderBottom: '1px solid var(--color-border-subtle)',
+            borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
             flexShrink: 0,
           }}
         >
@@ -134,7 +145,7 @@ export function Modal({
               height: '32px',
               background: 'transparent',
               border: 'none',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: TOKENS.radius.md,
               color: TOKENS.colors.textSecondary,
               cursor: 'pointer',
               fontSize: TOKENS.fontSizes.xl,
@@ -171,7 +182,7 @@ export function Modal({
                 tight: TOKENS.spacing[3],
                 limit: TOKENS.spacing[3],
               }),
-              borderTop: '1px solid var(--color-border-subtle)',
+              borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
               flexShrink: 0,
             }}
           >

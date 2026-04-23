@@ -28,7 +28,7 @@ export function Label({ children, id, variant = 'bar', tone = 'scene', className
         id={id}
         style={{
           fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.micro,
+          fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',

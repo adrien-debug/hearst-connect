@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { NAV_LINKS, CTA_LINKS, HUB_MAILTO_SALES, HEARST_EMAIL } from '@/config/navigation';
 
 /** Scroll-driven fade + parallax for `.hub-chapter` nodes (reliable vs CSS view timelines). */
@@ -56,18 +56,21 @@ const FEATURE_PILLARS = [
 const INVESTMENT_STRATEGY_SLIDES = [
   {
     img: '/platform-screenshot.svg',
+    imgClass: 'slide-img-1',
     caption: 'Flagship — stable income',
     title: 'Hearst Prime Yield',
     desc: 'Target ~12% annual yield. $250K min, monthly USDC distributions, 3-year lock. Diversified mining income with volatility hedging for predictable returns.',
   },
   {
     img: '/platform-screenshot.svg',
+    imgClass: 'slide-img-2',
     caption: 'Growth — BTC upside',
     title: 'Hearst Growth',
     desc: 'Target 16–22% annual yield. $250K min, monthly distributions, 3-year lock. Forward BTC mining exposure plus spot price upside with USDC buffer.',
   },
   {
     img: '/platform-screenshot.svg',
+    imgClass: 'slide-img-3',
     caption: 'Yield mechanics',
     title: 'How yield is generated',
     desc: 'USDC is deployed into industrial mining operations. BTC rewards are converted via OTC desks. Net yield is distributed monthly, auditable end to end.',
@@ -95,42 +98,99 @@ const ICONS = [
   { name: 'Polkadot', src: `${CRYPTO_ICON_BASE}/dot.png` },
 ] as const;
 
-export default function HubPageClient() {
-  const strategyTrackRef = useRef<HTMLDivElement>(null);
+function useInfiniteCarousel(itemCount: number) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const rafRef = useRef<number>(0);
+  const scrollPosRef = useRef(0);
+
+  const totalSlides = itemCount * 3; // Original + 2 clones for infinite loop
 
   useEffect(() => {
-    const track = strategyTrackRef.current;
+    const track = trackRef.current;
     if (!track) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let raf = 0;
-    let speed = 0.4;
-    let paused = false;
+    const slideWidth = track.scrollWidth / 3;
+    // Start in the middle set
+    track.scrollLeft = slideWidth;
+    scrollPosRef.current = slideWidth;
 
-    const tick = (): void => {
-      if (!paused && track.scrollWidth > track.clientWidth) {
-        track.scrollLeft += speed;
-        if (track.scrollLeft >= track.scrollWidth - track.clientWidth - 1) {
-          track.scrollLeft = 0;
+    let lastTime = performance.now();
+    const speed = 0.6; // pixels per frame - smoother
+
+    const tick = (time: number): void => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      if (!isPaused && track.scrollWidth > track.clientWidth) {
+        scrollPosRef.current += speed * (delta / 16);
+
+        // Infinite loop logic
+        const maxScroll = slideWidth * 2;
+        const minScroll = slideWidth;
+
+        if (scrollPosRef.current >= maxScroll - 1) {
+          scrollPosRef.current = minScroll;
         }
+
+        track.scrollLeft = scrollPosRef.current;
+
+        // Update active index based on position
+        const currentSlide = Math.floor((scrollPosRef.current - slideWidth) / (track.scrollWidth / totalSlides));
+        setActiveIndex(currentSlide % itemCount);
       }
-      raf = requestAnimationFrame(tick);
+
+      rafRef.current = requestAnimationFrame(tick);
     };
 
-    raf = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tick);
 
-    const onEnter = () => { paused = true; };
-    const onLeave = () => { paused = false; };
+    const onEnter = () => setIsPaused(true);
+    const onLeave = () => setIsPaused(false);
+    const onScroll = () => {
+      scrollPosRef.current = track.scrollLeft;
+    };
 
     track.addEventListener('pointerenter', onEnter);
     track.addEventListener('pointerleave', onLeave);
+    track.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(rafRef.current);
       track.removeEventListener('pointerenter', onEnter);
       track.removeEventListener('pointerleave', onLeave);
+      track.removeEventListener('scroll', onScroll);
     };
-  }, []);
+  }, [itemCount, isPaused, totalSlides]);
+
+  const scrollTo = useCallback((index: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const slideWidth = track.scrollWidth / totalSlides;
+    const targetScroll = slideWidth * (itemCount + index);
+
+    track.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    setActiveIndex(index);
+  }, [itemCount, totalSlides]);
+
+  const scrollPrev = useCallback(() => {
+    const newIndex = activeIndex === 0 ? itemCount - 1 : activeIndex - 1;
+    scrollTo(newIndex);
+  }, [activeIndex, itemCount, scrollTo]);
+
+  const scrollNext = useCallback(() => {
+    const newIndex = activeIndex === itemCount - 1 ? 0 : activeIndex + 1;
+    scrollTo(newIndex);
+  }, [activeIndex, itemCount, scrollTo]);
+
+  return { trackRef, activeIndex, isPaused, scrollPrev, scrollNext, scrollTo, totalSlides };
+}
+
+export default function HubPageClient() {
+  const { trackRef, activeIndex, scrollPrev, scrollNext, scrollTo } = useInfiniteCarousel(INVESTMENT_STRATEGY_SLIDES.length);
 
   useEffect(() => {
     const nav = document.getElementById('hub-site-nav');
@@ -300,13 +360,13 @@ export default function HubPageClient() {
       {/* Intro */}
       <section id="intro" className="theme-light" lang="en">
         <div className="hub-section-lead">
-          <h2>
-            <span className="typewriter">
-              <span className="hub-lead-accent">Hearst</span> offers qualified investors direct
-              exposure to industrial mining cash flows. USDC vaults backed by regulated infrastructure
-              and clear reporting.
-            </span>
+          <h2 className="typewriter">
+            <span className="hub-lead-accent">Hearst</span> — Institutional Mining Yield
           </h2>
+          <p className="hub-lead-subtitle">
+            Qualified investors gain direct exposure to industrial mining cash flows.
+            USDC vaults backed by regulated infrastructure and clear reporting.
+          </p>
         </div>
 
         <div className="icons">
@@ -360,24 +420,62 @@ export default function HubPageClient() {
           </p>
         </div>
 
-        <div
-          className="hub-strategy-strip"
-          ref={strategyTrackRef}
-          role="region"
-          lang="en"
-          aria-label="Vault strategies"
-        >
-          {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
-            <article key={`${slide.title}-${i}`} className="hub-strategy-slide">
-              <figure>
-                <img src={slide.img} alt="" draggable={false} />
-                <figcaption className="hub-strategy-caption">{slide.caption}</figcaption>
-              </figure>
-              <h3>{slide.title}</h3>
-              <p>{slide.desc}</p>
-              <a href={CTA_LINKS.viewOffering.href}>{CTA_LINKS.viewOffering.label}</a>
-            </article>
-          ))}
+        <div className="hub-carousel-wrapper">
+          <div
+            className="hub-strategy-strip"
+            ref={trackRef}
+            role="region"
+            lang="en"
+            aria-label="Vault strategies"
+          >
+            {/* 3 sets for infinite scroll: prev + current + next */}
+            {[...INVESTMENT_STRATEGY_SLIDES, ...INVESTMENT_STRATEGY_SLIDES, ...INVESTMENT_STRATEGY_SLIDES].map((slide, i) => (
+              <article key={`${slide.title}-clone-${i}`} className="hub-strategy-slide" aria-roledescription="slide">
+                <figure className={slide.imgClass}>
+                  <img src={slide.img} alt="" draggable={false} />
+                  <figcaption className="hub-strategy-caption">{slide.caption}</figcaption>
+                </figure>
+                <h3>{slide.title}</h3>
+                <p>{slide.desc}</p>
+                <a href={CTA_LINKS.viewOffering.href}>{CTA_LINKS.viewOffering.label}</a>
+              </article>
+            ))}
+          </div>
+
+          {/* Navigation controls */}
+          <div className="hub-carousel-controls">
+            <button
+              className="hub-carousel-nav-btn"
+              onClick={scrollPrev}
+              aria-label="Previous slide"
+              type="button"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+            </button>
+
+            <div className="hub-carousel-dots" role="tablist" aria-label="Slide navigation">
+              {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
+                <button
+                  key={slide.title}
+                  className={`hub-carousel-dot ${i === activeIndex ? 'active' : ''}`}
+                  onClick={() => scrollTo(i)}
+                  aria-label={`Go to slide ${i + 1}: ${slide.title}`}
+                  aria-selected={i === activeIndex}
+                  role="tab"
+                  type="button"
+                />
+              ))}
+            </div>
+
+            <button
+              className="hub-carousel-nav-btn"
+              onClick={scrollNext}
+              aria-label="Next slide"
+              type="button"
+            >
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
         </div>
       </section>
 

@@ -11,8 +11,8 @@ interface SkeletonProps {
 export function Skeleton({ mode, variant = 'card' }: SkeletonProps) {
   const basePulse = {
     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-    background: 'var(--color-bg-tertiary)',
-    borderRadius: 'var(--radius-sm)',
+    background: TOKENS.colors.bgTertiary,
+    borderRadius: TOKENS.radius.sm,
   }
 
   const variants = {
@@ -38,14 +38,14 @@ export function Skeleton({ mode, variant = 'card' }: SkeletonProps) {
 function CardSkeleton({ basePulse, mode }: { basePulse: React.CSSProperties; mode: SmartFitMode }) {
   return (
     <div style={{
-      background: 'var(--color-bg-secondary)',
-      borderRadius: 'var(--radius-lg)',
+      background: TOKENS.colors.bgSecondary,
+      borderRadius: TOKENS.radius.lg,
       padding: fitValue(mode, {
         normal: TOKENS.spacing[4],
         tight: TOKENS.spacing[3],
         limit: TOKENS.spacing[3],
       }),
-      border: '1px solid var(--color-border-subtle)',
+      border: `1px solid ${TOKENS.colors.borderSubtle}`,
     }}>
       {/* Header */}
       <div style={{ marginBottom: TOKENS.spacing[4], display: 'flex', justifyContent: 'space-between' }}>
@@ -60,7 +60,7 @@ function CardSkeleton({ basePulse, mode }: { basePulse: React.CSSProperties; mod
       <div style={{
         height: '4px',
         background: TOKENS.colors.black,
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: TOKENS.radius.sm,
         marginBottom: TOKENS.spacing[2],
       }}>
         <div style={{ ...basePulse, width: '60%', height: '100%' }} />
@@ -97,7 +97,7 @@ function ChartSkeleton({ basePulse }: { basePulse: React.CSSProperties }) {
   return (
     <div style={{
       background: TOKENS.colors.black,
-      borderRadius: 'var(--radius-sm)',
+      borderRadius: TOKENS.radius.sm,
       height: '120px',
       padding: TOKENS.spacing[4],
     }}>
@@ -128,14 +128,14 @@ function ListSkeleton({ basePulse, mode }: { basePulse: React.CSSProperties; mod
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: 'var(--color-bg-secondary)',
-            borderRadius: 'var(--radius-lg)',
+            background: TOKENS.colors.bgSecondary,
+            borderRadius: TOKENS.radius.lg,
             padding: fitValue(mode, {
               normal: TOKENS.spacing[4],
               tight: TOKENS.spacing[3],
               limit: TOKENS.spacing[3],
             }),
-            border: '1px solid var(--color-border-subtle)',
+            border: `1px solid ${TOKENS.colors.borderSubtle}`,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3] }}>

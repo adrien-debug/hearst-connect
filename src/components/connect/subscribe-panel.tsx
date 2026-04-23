@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { SubscriptionComposer } from './subscription-composer'
-import { TOKENS, fmtUsd, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
+import { TOKENS, MONO, fmtUsd, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
 import type { AvailableVault } from './data'
 import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
 import type { SmartFitMode } from './smart-fit'
+import { CockpitGauge } from './cockpit-gauge'
 
-export function SubscribePanel({ vault }: { vault: AvailableVault }) {
+export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBack?: () => void }) {
   const { mode, isLimit } = useSmartFit({
     tightHeight: 740,
     limitHeight: 660,
@@ -45,80 +46,92 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
         color: TOKENS.colors.textPrimary,
       }}
     >
-      {/* Header */}
+      {/* COCKPIT HEADER — Same structure as dashboard */}
       <div
         style={{
-          padding: `${shellPadding}px`,
+          padding: fitValue(mode, {
+            normal: `${shellPadding}px`,
+            tight: `${shellPadding * 0.75}px`,
+            limit: `${shellPadding * 0.5}px`,
+          }),
           borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
           background: TOKENS.colors.bgApp,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <Label id="sub-header" tone="scene" variant="text">
-              Subscribe
-            </Label>
-            <div style={{
-              fontSize: fitValue(mode, {
-                normal: TOKENS.fontSizes.xxxl,
-                tight: TOKENS.fontSizes.xxl,
-                limit: TOKENS.fontSizes.xl,
-              }),
-              fontWeight: TOKENS.fontWeights.black,
-              textTransform: 'uppercase',
-              marginTop: TOKENS.spacing[2],
-              lineHeight: LINE_HEIGHT.tight,
-              letterSpacing: VALUE_LETTER_SPACING,
-            }}>
-              {vault.name}
-            </div>
-            <div style={{
-              fontSize: TOKENS.fontSizes.xs,
-              color: TOKENS.colors.textSecondary,
-              marginTop: TOKENS.spacing[2],
-              lineHeight: LINE_HEIGHT.body,
-            }}>
-              {vault.strategy}
-            </div>
+        {/* Top row — Context */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: TOKENS.spacing[3],
+        }}>
+          <Label id="sub-header" tone="scene" variant="text">
+            Subscribe
+          </Label>
+          <div style={{
+            fontFamily: MONO,
+            fontSize: TOKENS.fontSizes.micro,
+            color: TOKENS.colors.textGhost,
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+          }}>
+            {vault.lockPeriod} lock
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{
-              fontSize: fitValue(mode, {
-                normal: TOKENS.fontSizes.xxxl,
-                tight: TOKENS.fontSizes.xxl,
-                limit: TOKENS.fontSizes.xl,
-              }),
-              fontWeight: TOKENS.fontWeights.black,
-              letterSpacing: VALUE_LETTER_SPACING,
-              color: TOKENS.colors.accent,
-            }}>
-              {vault.apr}%
-            </div>
-            <div style={{
-              fontSize: TOKENS.fontSizes.xs,
-              fontWeight: TOKENS.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: TOKENS.letterSpacing.display,
-              color: TOKENS.colors.textSecondary,
-              marginTop: TOKENS.spacing[2],
-            }}>
-              APY
-            </div>
-          </div>
+        </div>
+
+        {/* Main cockpit gauges — Min / Target / APY */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: fitValue(mode, {
+            normal: 'repeat(3, 1fr)',
+            tight: 'repeat(3, 1fr)',
+            limit: '1fr',
+          }),
+          gap: fitValue(mode, {
+            normal: TOKENS.spacing[6],
+            tight: TOKENS.spacing[4],
+            limit: TOKENS.spacing[3],
+          }),
+        }}>
+          <CockpitGauge
+            label="Minimum Entry"
+            value={fmtUsd(vault.minDeposit)}
+            valueCompact={fmtUsdCompact(vault.minDeposit)}
+            subtext="Capital required"
+            mode={mode}
+          />
+          <CockpitGauge
+            label="Target Yield"
+            value={vault.target}
+            valueCompact={vault.target}
+            subtext="Cumulative return"
+            mode={mode}
+            primary
+            accent
+          />
+          <CockpitGauge
+            label="Annual APY"
+            value={`${vault.apr}%`}
+            valueCompact={`${vault.apr}%`}
+            subtext={`${vault.risk} risk profile`}
+            mode={mode}
+          />
         </div>
       </div>
 
       {/* Main content */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: shellPadding,
-        gap: shellGap,
-        minHeight: 0,
-        overflow: 'hidden',
-      }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: shellPadding,
+          gap: shellGap,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
+      >
         {/* Vault stats overview */}
         <div style={{
           display: 'grid',
@@ -139,8 +152,8 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
         {/* Projection calculator */}
         {num > 0 && (
           <div style={{
-            background: 'var(--color-bg-secondary)',
-            
+            background: TOKENS.colors.bgSecondary,
+            borderRadius: TOKENS.radius.lg,
             padding: fitValue(mode, {
               normal: TOKENS.spacing[4],
               tight: TOKENS.spacing[3],
@@ -171,14 +184,14 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
         {/* Subscription form */}
         <div style={{
           flex: 1,
-          background: 'var(--color-bg-secondary)',
-          
+          background: TOKENS.colors.bgSecondary,
+          borderRadius: TOKENS.radius.lg,
           padding: fitValue(mode, {
             normal: TOKENS.spacing[6],
             tight: TOKENS.spacing[4],
             limit: TOKENS.spacing[3],
           }),
-          overflow: 'auto',
+          overflow: 'hidden',
         }}>
           <SubscriptionComposer
             vault={vault}
@@ -198,8 +211,8 @@ export function SubscribePanel({ vault }: { vault: AvailableVault }) {
 
         {/* Terms block */}
         <div style={{
-          background: 'var(--color-bg-secondary)',
-          
+          background: TOKENS.colors.bgSecondary,
+          borderRadius: TOKENS.radius.lg,
           padding: fitValue(mode, {
             normal: TOKENS.spacing[4],
             tight: TOKENS.spacing[3],
@@ -235,8 +248,8 @@ function StatCard({ label, value, subtext, mode, accent = false }: {
 }) {
   return (
     <div style={{
-      background: 'var(--color-bg-secondary)',
-      
+      background: TOKENS.colors.bgSecondary,
+      borderRadius: TOKENS.radius.lg,
       padding: fitValue(mode, {
         normal: TOKENS.spacing[3],
         tight: TOKENS.spacing[2],
@@ -244,12 +257,13 @@ function StatCard({ label, value, subtext, mode, accent = false }: {
       }),
     }}>
       <div style={{
-        fontSize: TOKENS.fontSizes.xs,
+        fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         color: TOKENS.colors.textSecondary,
         marginBottom: TOKENS.spacing[2],
+        fontFamily: MONO,
       }}>
         {label}
       </div>
@@ -284,8 +298,9 @@ function ProjectionItem({ label, value, accent = false }: {
   return (
     <div>
       <div style={{
-        fontSize: TOKENS.fontSizes.xs,
+        fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
+        fontFamily: MONO,
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         color: TOKENS.colors.textSecondary,
@@ -309,8 +324,9 @@ function TermItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div style={{
-        fontSize: TOKENS.fontSizes.xs,
+        fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
+        fontFamily: MONO,
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         color: TOKENS.colors.textSecondary,
@@ -329,3 +345,4 @@ function TermItem({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+

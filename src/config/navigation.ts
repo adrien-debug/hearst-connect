@@ -8,8 +8,8 @@ export const HEARST_EMAIL = 'hello@hearstvault.com'
 export const HUB_MAILTO_SALES = `mailto:${HEARST_EMAIL}?subject=${encodeURIComponent('Hearst investor inquiry')}`
 
 export const NAV_LINKS = [
-  { href: '#intro', label: 'Intégrations' },
-  { href: '#feature-unified', label: 'Plateforme' },
+  { href: '#intro', label: 'Integrations' },
+  { href: '#feature-unified', label: 'Platform' },
   { href: '#developers', label: 'Solutions' },
   { href: '#who', label: 'Contact' },
 ] as const

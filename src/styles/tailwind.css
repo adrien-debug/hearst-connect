@@ -49,7 +49,7 @@
 /*
  * ─── CONNECT SCOPE — Design System Lock ───────────────────────────────────────
  * Isole l'app Connect des tokens marketing (dark, Satoshi, radius arrondis).
- * Source de vérité : design-system.html + src/components/connect/constants.ts
+ * Source de vérité : vault-ui-system.html + src/components/connect/constants.ts
  * ──────────────────────────────────────────────────────────────────────────────
  */
 .connect-scope {

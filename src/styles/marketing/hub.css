@@ -1937,19 +1937,29 @@ a.welcome-btn:focus-visible {
   color: var(--dashboard-accent-hover);
 }
 
-/* ─── Strategy strip (auto-scroll carousel replacement) ─── */
+/* ─── Strategy carousel (infinite scroll with snap) ─── */
+
+.hub-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
 
 .hub-strategy-strip {
   display: flex;
   gap: var(--hub-space-md);
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: auto; /* managed by JS for smooth auto-scroll */
   padding-inline: 3rem;
   padding-bottom: var(--hub-space-sm);
   width: calc(100% + 6rem);
   margin-inline: -3rem;
   cursor: grab;
+  user-select: none;
 }
 
 .hub-strategy-strip::-webkit-scrollbar {
@@ -1961,15 +1971,30 @@ a.welcome-btn:focus-visible {
 }
 
 .hub-strategy-slide {
-  flex: 0 0 min(82vw, 440px);
+  flex: 0 0 min(85vw, 520px);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
   display: flex;
   flex-direction: column;
   gap: var(--hub-space-sm);
+  padding: 0 0.5rem;
+}
+
+@media (width >= 640px) {
+  .hub-strategy-slide {
+    flex: 0 0 min(70vw, 560px);
+  }
 }
 
 @media (width >= 930px) {
   .hub-strategy-slide {
-    flex-basis: min(50vw, 520px);
+    flex: 0 0 min(45vw, 600px);
+  }
+}
+
+@media (width >= 1200px) {
+  .hub-strategy-slide {
+    flex: 0 0 min(35vw, 640px);
   }
 }
 
@@ -2057,4 +2082,124 @@ a.welcome-btn:focus-visible {
   display: inline-block;
   -webkit-font-smoothing: antialiased;
   content: "\f46a";
+}
+
+/* ─── Carousel controls ─── */
+.hub-carousel-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hub-space-md);
+  margin-top: var(--hub-space-lg);
+  padding-inline: 3rem;
+}
+
+.hub-carousel-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface);
+  color: var(--dashboard-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.hub-carousel-nav-btn:hover {
+  background: var(--dashboard-overlay-10);
+  border-color: var(--dashboard-border-mid);
+  transform: scale(1.05);
+}
+
+.hub-carousel-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.hub-carousel-nav-btn .material-symbols-outlined {
+  font-size: var(--dashboard-text-xl);
+}
+
+.hub-carousel-dots {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hub-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: var(--dashboard-border-mid);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hub-carousel-dot:hover {
+  background: var(--dashboard-text-muted);
+  transform: scale(1.1);
+}
+
+.hub-carousel-dot.active {
+  background: var(--dashboard-accent);
+  width: 28px;
+  border-radius: 5px;
+}
+
+/* ─── Fix min-height sections ─── */
+#intro,
+#developers {
+  min-height: min(80vh, 640px);
+}
+
+/* ─── Lead subtitle (intro section) ─── */
+.hub-section-lead .hub-lead-subtitle {
+  font-size: var(--dashboard-text-lg);
+  color: var(--dashboard-text-secondary);
+  max-width: var(--hub-measure-prose);
+  margin-top: var(--hub-space-md);
+  line-height: 1.6;
+}
+
+/* ─── Slide image variants (distinct visuals) ─── */
+.hub-strategy-slide figure {
+  position: relative;
+  overflow: hidden;
+}
+
+.hub-strategy-slide figure::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.hub-strategy-slide figure.slide-img-1::before {
+  background: linear-gradient(135deg, rgba(167, 251, 144, 0.08) 0%, transparent 60%);
+}
+
+.hub-strategy-slide figure.slide-img-2::before {
+  background: linear-gradient(135deg, rgba(167, 251, 144, 0.15) 0%, transparent 50%);
+}
+
+.hub-strategy-slide figure.slide-img-3::before {
+  background: linear-gradient(135deg, rgba(200, 245, 184, 0.12) 0%, transparent 55%);
+}
+
+.hub-strategy-slide figure.slide-img-2 img {
+  filter: hue-rotate(5deg) saturate(1.1);
+}
+
+.hub-strategy-slide figure.slide-img-3 img {
+  filter: hue-rotate(-5deg) saturate(0.95);
 }
