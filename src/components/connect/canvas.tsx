@@ -13,6 +13,7 @@ import type { VaultLine, Aggregate, AvailableVault } from './data'
 import { SIMULATION_VIEW_ID, AVAILABLE_VAULTS_VIEW_ID } from './view-ids'
 import { DockRadial } from './dock-radial'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { injected } from 'wagmi/connectors'
 
 const ON_DARK_GHOST = 'rgba(255,255,255,0.35)'
 
@@ -158,7 +159,7 @@ export function Canvas() {
           <a
             href="/admin"
             style={{
-              padding: `${TOKENS.spacing[1]}px ${TOKENS.spacing[3]}px`,
+              padding: `${TOKENS.spacing[2 as 2]}px ${TOKENS.spacing[3 as 3]}px`,
               background: 'transparent',
               border: `1px solid ${TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.md,
@@ -269,8 +270,7 @@ function WalletButton() {
   }
 
   const handleConnect = () => {
-    // @ts-ignore - wagmi v2 connect without args
-    connect()
+    connect({ connector: injected({ target: 'metaMask' }) })
   }
 
   if (!isConnected) {

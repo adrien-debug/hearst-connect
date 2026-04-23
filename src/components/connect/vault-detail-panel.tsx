@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAccount } from 'wagmi'
 import { Label } from '@/components/ui/label'
 import { TOKENS, MONO, fmtUsd, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
 import { formatVaultName } from './formatting'
@@ -14,11 +15,12 @@ import type { SmartFitMode } from './smart-fit'
 import { CockpitGauge } from './cockpit-gauge'
 import { StatCard } from './stat-card'
 import { ActionButton } from './action-button'
-import { usePositionData } from '@/hooks/usePositionData'
+import { usePositionData } from '@/hooks/usePositionDataReal'
+import { useVaultActions } from '@/hooks/useVault'
+import { useVaultById } from '@/hooks/useVaultRegistry'
 import { useTransaction } from '@/hooks/useTransaction'
 import { Skeleton } from './skeleton'
-
-const MOCK_WALLET = '0x5F...AA57'
+import { WalletNotConnected, NoPosition, VaultNotConfigured, OnChainError } from './empty-states'
 
 type ModalType = 'claim' | 'manage' | 'exit' | null
 
@@ -29,6 +31,7 @@ export function VaultDetailPanel({
   vault: ActiveVault | MaturedVault
   onBack?: () => void
 }) {
+  const { address: connectedAddress, isConnected } = useAccount()
   const { mode, isLimit } = useSmartFit({
     tightHeight: 760,
     limitHeight: 680,
@@ -39,29 +42,203 @@ export function VaultDetailPanel({
   })
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
 
-  const { data: positionData, isLoading, error } = usePositionData({
+  // Get vault config from registry
+  const vaultConfig = useVaultById(vault.id)
+
+  // Get real on-chain position data
+  const {
+    data: positionData,
+    isLoading,
+    error,
+    refresh,
+    isVaultConfigured,
+    isWalletConnected,
+    vaultAddress,
+  } = usePositionData({
     vaultId: vault.id,
-    walletAddress: MOCK_WALLET,
-    refreshInterval: 30000,
+    walletAddress: connectedAddress,
   })
+
+  // Get vault actions
+  const { claim, withdraw, isPending: isActionPending } = useVaultActions(
+    isVaultConfigured ? vaultAddress : undefined
+  )
 
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const transaction = useTransaction()
 
-  const capitalDeployed = positionData?.capitalDeployed ?? vault.deposited
-  const accruedYield = positionData?.accruedYield ?? vault.claimable
-  const currentValue = positionData?.positionValue ?? (vault.deposited + vault.claimable)
-  const daysRemaining = positionData?.unlockTimeline.daysRemaining ??
-    Math.ceil((new Date(vault.maturity).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-  const progressToTarget = positionData?.unlockTimeline.progressPercent ?? vault.progress
+  // Show empty states if needed
+  if (!isVaultConfigured) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          padding: `${shellPadding}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        <div style={{ marginBottom: TOKENS.spacing[4] }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
+              background: 'none',
+              border: 'none',
+              color: TOKENS.colors.accent,
+              fontSize: TOKENS.fontSizes.sm,
+              fontWeight: TOKENS.fontWeights.bold,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
+        <VaultNotConfigured />
+      </div>
+    )
+  }
+
+  if (!isWalletConnected) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          padding: `${shellPadding}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        <div style={{ marginBottom: TOKENS.spacing[4] }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
+              background: 'none',
+              border: 'none',
+              color: TOKENS.colors.accent,
+              fontSize: TOKENS.fontSizes.sm,
+              fontWeight: TOKENS.fontWeights.bold,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
+        <WalletNotConnected />
+      </div>
+    )
+  }
+
+  // Use on-chain data when available, fallback to vault data for UI skeleton
+  const capitalDeployed = positionData?.capitalDeployed ?? 0
+  const accruedYield = positionData?.accruedYield ?? 0
+  const currentValue = positionData?.positionValue ?? 0
+  const daysRemaining = positionData?.unlockTimeline.daysRemaining ?? vaultConfig?.lockPeriodDays ?? 0
+  const progressToTarget = positionData?.unlockTimeline.progressPercent ?? 0
   const isMatured = vault.type === 'matured'
   const unlockDays = Math.max(0, daysRemaining)
-  const isTargetReached = positionData?.isTargetReached ?? (vault.progress >= 100)
-  const isPositionReadyForExit = positionData?.canWithdraw ?? (isMatured || vault.canWithdraw)
+  const isTargetReached = positionData?.isTargetReached ?? false
+  const isPositionReadyForExit = positionData?.canWithdraw ?? false
   const statusLabel = isPositionReadyForExit ? 'Ready for exit' : 'Active'
 
   const totalTargetYield = capitalDeployed * (parseFloat(vault.target) / 100)
   const remainingToTarget = Math.max(0, totalTargetYield - accruedYield)
+
+  // Check if user has a position
+  const hasPosition = capitalDeployed > 0
+
+  // Real claim handler
+  const handleClaim = async () => {
+    if (!claim) {
+      alert('Claim not available. Check vault configuration.')
+      return
+    }
+
+    await transaction.execute(
+      async () => {
+        await claim()
+        // Wait for transaction confirmation (simplified)
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        // Refresh data after claim
+        refresh()
+      },
+      {
+        pending: 'Processing claim...',
+        success: `Claimed ${fmtUsdCompact(accruedYield)} successfully!`,
+        error: 'Claim failed. Please try again.',
+      }
+    )
+  }
+
+  // Real exit handler
+  const handleExit = async () => {
+    if (!withdraw) {
+      alert('Withdraw not available. Check vault configuration.')
+      return
+    }
+
+    const withdrawAmount = BigInt(Math.floor(capitalDeployed * 1e6)) // Convert to USDC decimals
+
+    await transaction.execute(
+      async () => {
+        await withdraw(withdrawAmount)
+        // Wait for transaction confirmation (simplified)
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        // Refresh data after exit
+        refresh()
+      },
+      {
+        pending: 'Processing exit...',
+        success: 'Position exited successfully!',
+        error: 'Exit failed. Please contact support.',
+      }
+    )
+  }
+
+  // Show error state if there's an on-chain error
+  if (error && error.code !== 'WALLET_NOT_CONNECTED' && error.code !== 'VAULT_NOT_FOUND') {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          padding: `${shellPadding}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        <div style={{ marginBottom: TOKENS.spacing[4] }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
+              background: 'none',
+              border: 'none',
+              color: TOKENS.colors.accent,
+              fontSize: TOKENS.fontSizes.sm,
+              fontWeight: TOKENS.fontWeights.bold,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
+        <OnChainError error={error} onRetry={refresh} />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -409,14 +586,8 @@ export function VaultDetailPanel({
               <ActionButton
                 label="Confirm Claim"
                 variant="accent"
-                onClick={() => transaction.execute(
-                  async () => { await new Promise(r => setTimeout(r, 2000)) },
-                  {
-                    pending: 'Processing claim...',
-                    success: `Claimed ${fmtUsdCompact(accruedYield)} successfully!`,
-                    error: 'Claim failed. Please try again.',
-                  }
-                )}
+                disabled={isActionPending}
+                onClick={handleClaim}
               />
             </div>
           )
@@ -495,14 +666,8 @@ export function VaultDetailPanel({
               <ActionButton
                 label="Confirm Exit"
                 variant="accent"
-                onClick={() => transaction.execute(
-                  async () => { await new Promise(r => setTimeout(r, 3000)) },
-                  {
-                    pending: 'Processing exit...',
-                    success: 'Position exited successfully!',
-                    error: 'Exit failed. Please contact support.',
-                  }
-                )}
+                disabled={isActionPending}
+                onClick={handleExit}
               />
             </div>
           )

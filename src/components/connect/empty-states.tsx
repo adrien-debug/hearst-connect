@@ -1,5 +1,6 @@
 'use client'
 
+import { useConnect } from 'wagmi'
 import { TOKENS } from './constants'
 
 interface EmptyStateProps {
@@ -116,6 +117,17 @@ export function VaultNotConfigured({ onConfigure }: { onConfigure?: () => void }
 }
 
 export function WalletNotConnected({ onConnect }: { onConnect?: () => void }) {
+  const { connect, isPending } = useConnect()
+
+  const handleConnect = () => {
+    if (onConnect) {
+      onConnect()
+    } else {
+      // @ts-ignore - wagmi v2 connect without args
+      connect()
+    }
+  }
+
   return (
     <EmptyState
       title="Wallet Not Connected"
@@ -126,14 +138,10 @@ export function WalletNotConnected({ onConnect }: { onConnect?: () => void }) {
           <path d="M16 11.5a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5H12" />
         </svg>
       }
-      action={
-        onConnect
-          ? {
-              label: 'Connect Wallet',
-              onClick: onConnect,
-            }
-          : undefined
-      }
+      action={{
+        label: isPending ? 'Connecting...' : 'Connect Wallet',
+        onClick: handleConnect,
+      }}
     />
   )
 }
@@ -201,5 +209,54 @@ export function LoadingState() {
         }
       `}</style>
     </div>
+  )
+}
+
+export function OnChainError({
+  error,
+  onRetry,
+}: {
+  error: { code: string; message: string }
+  onRetry?: () => void
+}) {
+  const isRpcError = error.code === 'FETCH_ERROR' || error.message.includes('RPC')
+  const isVaultError = error.code === 'VAULT_NOT_FOUND'
+
+  const getErrorTitle = () => {
+    if (isRpcError) return 'Connection Error'
+    if (isVaultError) return 'Vault Configuration Error'
+    return 'Error'
+  }
+
+  const getErrorDescription = () => {
+    if (isRpcError) {
+      return 'Unable to connect to the blockchain. Please check your network connection and try again.'
+    }
+    if (isVaultError) {
+      return 'The vault configuration is missing or invalid. Please configure a vault in the admin panel.'
+    }
+    return error.message
+  }
+
+  return (
+    <EmptyState
+      title={getErrorTitle()}
+      description={getErrorDescription()}
+      icon={
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      }
+      action={
+        onRetry
+          ? {
+              label: 'Retry',
+              onClick: onRetry,
+            }
+          : undefined
+      }
+    />
   )
 }

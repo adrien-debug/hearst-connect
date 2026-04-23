@@ -161,9 +161,9 @@ function VaultConfigForm({
   const [formData, setFormData] = useState<VaultConfigInput>({
     name: initialData?.name || '',
     description: initialData?.description || '',
-    vaultAddress: initialData?.vaultAddress || '0x0000000000000000000000000000000000000000',
-    usdcAddress: initialData?.usdcAddress || '0x0000000000000000000000000000000000000000',
-    chain: initialData?.chain || { id: 8453, name: 'Base', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [''] } } },
+    vaultAddress: (initialData?.vaultAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+    usdcAddress: (initialData?.usdcAddress || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+    chain: initialData?.chain || { id: 8453, name: 'Base', nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [''] } } } as const,
     apr: initialData?.apr || 12,
     target: initialData?.target || '36%',
     lockPeriodDays: initialData?.lockPeriodDays || 1095,
@@ -538,7 +538,7 @@ function VaultCard({
             style={{
               fontSize: TOKENS.fontSizes.md,
               fontWeight: TOKENS.fontWeights.bold,
-              margin: `0 0 ${TOKENS.spacing[1]}px 0`,
+              margin: `0 0 ${TOKENS.spacing[2]}px 0`,
             }}
           >
             {vault.name}

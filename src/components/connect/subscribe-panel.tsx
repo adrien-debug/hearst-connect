@@ -8,11 +8,10 @@ import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
 import { CockpitGauge } from './cockpit-gauge'
 import { useVaultActions } from '@/hooks/useVault'
 import { useTokenAllowance } from '@/hooks/useTokenAllowance'
+import { useVaultById } from '@/hooks/useVaultRegistry'
 import { useAccount } from 'wagmi'
 import { parseUnits } from 'viem'
-
-const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS as `0x${string}` | undefined
-const VAULT_ADDRESS = process.env.NEXT_PUBLIC_VAULT_ADDRESS as `0x${string}` | undefined
+import { WalletNotConnected, VaultNotConfigured } from './empty-states'
 
 export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBack?: () => void }) {
   const { mode, isLimit } = useSmartFit({
@@ -27,9 +26,22 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
   const [agreed, setAgreed] = useState(false)
   const [isDepositing, setIsDepositing] = useState(false)
 
-  const { address } = useAccount()
-  const { deposit, isPending: isDepositPending } = useVaultActions(VAULT_ADDRESS)
-  const { approve, isPending: isApprovePending } = useTokenAllowance(USDC_ADDRESS, address, VAULT_ADDRESS)
+  const { address, isConnected } = useAccount()
+
+  // Get vault config from registry for real addresses
+  const vaultConfig = useVaultById(vault.id)
+  const vaultAddress = vaultConfig?.vaultAddress
+  const usdcAddress = vaultConfig?.usdcAddress
+  const isVaultConfigured = !!vaultConfig && !!vaultAddress && !!usdcAddress
+
+  const { deposit, isPending: isDepositPending } = useVaultActions(
+    isVaultConfigured ? vaultAddress : undefined
+  )
+  const { approve, isPending: isApprovePending } = useTokenAllowance(
+    isVaultConfigured ? usdcAddress : undefined,
+    address,
+    isVaultConfigured ? vaultAddress : undefined
+  )
 
   const num = parseFloat(amount) || 0
   const isValid = num >= vault.minDeposit
@@ -45,12 +57,14 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
   }
 
   const handleDeposit = async () => {
-    if (!isReady) return
+    if (!isReady || !isVaultConfigured) return
     try {
       setIsDepositing(true)
       const amountBigInt = parseUnits(amount, 6) // USDC has 6 decimals
       await deposit(amountBigInt)
       // Success - could show toast/redirect here
+      setAmount('')
+      setAgreed(false)
     } catch (err) {
       console.error('Deposit failed:', err)
     } finally {
@@ -61,6 +75,77 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
   // Calculate projection details
   const monthlyYield = num * (vault.apr / 100) / 12
   const dailyYield = monthlyYield / 30
+
+  // Show empty states if needed
+  if (!isVaultConfigured) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          padding: `${shellPadding}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        <div style={{ marginBottom: TOKENS.spacing[4] }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
+              background: 'none',
+              border: 'none',
+              color: TOKENS.colors.accent,
+              fontSize: TOKENS.fontSizes.sm,
+              fontWeight: TOKENS.fontWeights.bold,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
+        <VaultNotConfigured />
+      </div>
+    )
+  }
+
+  if (!isConnected) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          padding: `${shellPadding}px`,
+          gap: `${shellGap}px`,
+        }}
+      >
+        <div style={{ marginBottom: TOKENS.spacing[4] }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: TOKENS.spacing[2],
+              background: 'none',
+              border: 'none',
+              color: TOKENS.colors.accent,
+              fontSize: TOKENS.fontSizes.sm,
+              fontWeight: TOKENS.fontWeights.bold,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
+        <WalletNotConnected />
+      </div>
+    )
+  }
 
   return (
     <div
