@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Address, Chain } from 'viem'
+import type { Address } from 'viem'
 import type { VaultConfig, VaultConfigInput, VaultRegistryState } from '@/types/vault'
 
 const STORAGE_KEY = 'hearst:vault-registry'

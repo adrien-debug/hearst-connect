@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 8100 --webpack",
+    "dev": "lsof -ti:8100 | xargs kill -9 2>/dev/null; sleep 1; next dev --port 8100 --webpack",
     "build": "next build --webpack",
     "start": "next start --port 8100",
     "lint": "tsc -p . --noEmit",
@@ -24,6 +24,7 @@
     "@types/node": "^24.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "kill-port": "^2.0.1",
     "postcss": "^8",
     "tailwindcss": "^4.2.0",
     "typescript": "^5.8.3",

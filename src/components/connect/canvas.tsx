@@ -145,7 +145,7 @@ export function Canvas() {
         }}
       >
         {/* Logo - aligné à gauche */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: TOKENS.spacing[4] }}>
           <img
             src="/logos/hearst.svg"
             alt="Hearst"
@@ -155,6 +155,32 @@ export function Canvas() {
               display: 'block',
             }}
           />
+          <a
+            href="/admin"
+            style={{
+              padding: `${TOKENS.spacing[1]}px ${TOKENS.spacing[3]}px`,
+              background: 'transparent',
+              border: `1px solid ${TOKENS.colors.borderSubtle}`,
+              borderRadius: TOKENS.radius.md,
+              color: TOKENS.colors.textGhost,
+              fontSize: TOKENS.fontSizes.micro,
+              fontWeight: TOKENS.fontWeights.bold,
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              transition: 'all 120ms ease-out',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = TOKENS.colors.accent
+              e.currentTarget.style.color = TOKENS.colors.accent
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
+              e.currentTarget.style.color = TOKENS.colors.textGhost
+            }}
+          >
+            Admin
+          </a>
         </div>
 
         {/* Wallet / Connect Button - aligné à droite */}

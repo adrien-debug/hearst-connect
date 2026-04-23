@@ -9,7 +9,6 @@ import { useVaultById } from './useVaultRegistry'
 interface UsePositionDataOptions {
   vaultId: string
   walletAddress?: string
-  refreshInterval?: number
 }
 
 interface UsePositionDataReturn {
@@ -27,7 +26,6 @@ interface UsePositionDataReturn {
 export function usePositionData({
   vaultId,
   walletAddress: propWalletAddress,
-  refreshInterval = 12000,
 }: UsePositionDataOptions): UsePositionDataReturn {
   const { address: connectedAddress } = useAccount()
   const vaultConfig = useVaultById(vaultId)

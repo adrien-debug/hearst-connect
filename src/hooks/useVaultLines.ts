@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useAccount } from 'wagmi'
 import type { VaultLine, ActiveVault, AvailableVault, Aggregate } from '@/components/connect/data'
 import { useVaultRegistry } from './useVaultRegistry'
 
@@ -25,7 +24,6 @@ function calculateAggregate(vaults: VaultLine[]): Aggregate {
 }
 
 export function useVaultLines() {
-  const { address: userAddress } = useAccount()
   const { activeVaults, isLoading: isRegistryLoading, hasVaults } = useVaultRegistry()
 
   // Convert configs to vault lines
@@ -57,6 +55,5 @@ export function useVaultLines() {
     agg,
     hasVaults,
     isLoading: isRegistryLoading,
-    userAddress,
   }
 }
