@@ -45,202 +45,294 @@ export function SubscriptionComposer({
 
   return (
     <div
-      className="flex min-h-0 flex-1 flex-col"
+      className="flex flex-col flex-1"
       style={{
         gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
       }}
     >
-      <div
-        className="flex shrink-0 flex-wrap items-end justify-between"
-        style={{ gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[2] }) }}
-      >
-        <div className="min-w-0 flex-1">
-          <Label id="sub-kicker" tone="scene" variant="text">
-            Subscription
-          </Label>
-          <h1
-            className="m-0"
-            style={{
-              fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xl, tight: TOKENS.fontSizes.lg, limit: TOKENS.fontSizes.md }),
-              fontWeight: TOKENS.fontWeights.black,
-              letterSpacing: TOKENS.letterSpacing.tight,
-              color: TOKENS.colors.textPrimary,
-              lineHeight: 1,
-            }}
-          >
-            {vault.name}
-          </h1>
-        </div>
-        <div className="text-right" role="group" aria-label="Target annual yield">
-          <div
-            style={{
-              fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xl, tight: TOKENS.fontSizes.lg, limit: TOKENS.fontSizes.md }),
-              fontWeight: TOKENS.fontWeights.black,
-              color: TOKENS.colors.textPrimary,
-              lineHeight: 1,
-            }}
-            aria-label={`Target yield ${vault.apr} percent per year`}
-          >
-            {vault.apr}%
-          </div>
-          <div
-            style={{
-              fontSize: TOKENS.fontSizes.xs,
-              fontWeight: TOKENS.fontWeights.bold,
-              color: TOKENS.colors.textSecondary,
-              letterSpacing: TOKENS.letterSpacing.display,
-              marginTop: TOKENS.spacing[2],
-              textTransform: 'uppercase',
-            }}
-          >
-            APY
-          </div>
-        </div>
-      </div>
-
-      <fieldset
-        className="min-w-0 shrink-0 border-0 p-0"
-        style={{ margin: 0 }}
-      >
-        <legend className="sr-only">Deployment amount in USDC</legend>
-        <label
-          htmlFor={idAmount}
-          id={idAmountHint}
-          className="mb-2 block font-mono text-xs font-bold uppercase tracking-[0.2em] text-white/55"
-        >
-          Amount to deploy (USDC)
-        </label>
-        <div
-          className="flex items-baseline border-b border-white/10 pb-3 transition-colors"
-          style={{ borderBottomColor: isValid && num > 0 ? TOKENS.colors.accent : undefined }}
-        >
-          <input
-            id={idAmount}
-            name="amount"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => onAmountChange(e.target.value)}
-            autoComplete="off"
-            aria-invalid={showError}
-            aria-describedby={[idAmountHint, num > 0 ? idAmountStatus : ''].filter(Boolean).join(' ') || undefined}
-            className="w-full min-w-0 border-0 bg-transparent font-bold text-white/90 outline-none"
-            style={{
-              fontSize: fitValue(mode, { normal: TOKENS.fontSizes.figure, tight: TOKENS.fontSizes.xxxl, limit: TOKENS.fontSizes.xl }),
-              fontFamily: TOKENS.fonts.sans,
-              letterSpacing: '-0.07em',
-              lineHeight: 1,
-            }}
-          />
-          <span
-            className="font-bold text-white/50"
-            style={{
-              fontSize: fitValue(mode, { normal: TOKENS.fontSizes.lg, tight: TOKENS.fontSizes.md, limit: TOKENS.fontSizes.sm }),
-            }}
-            aria-hidden
-          >
-            USDC
-          </span>
-        </div>
-        <div
-          id={idAmountStatus}
-          role="status"
-          aria-live="polite"
-          className="mt-4 min-h-[20px] text-xs font-bold"
-          style={{ color: showError ? TOKENS.colors.danger : showValidHint ? TOKENS.colors.accent : 'transparent' }}
-        >
-          {showError && <span>Minimum deposit: {fmtUsd(vault.minDeposit)}</span>}
-          {showValidHint && !showError && <span>Deposit amount valid</span>}
-        </div>
-      </fieldset>
-
-      <div
-        className="grid shrink-0 border-0 border-t border-white/10 pt-4"
-        style={{
-          gridTemplateColumns: isLimit ? '1fr' : 'repeat(3, minmax(0,1fr))',
-          gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
-        }}
-      >
-        <SpecItem mode={mode} label="Unlock Timeline" value={vault.lockPeriod} />
-        <SpecItem mode={mode} label="Risk" value={vault.risk} />
-        <SpecItem mode={mode} label="Fees" value={vault.fees} />
-      </div>
-
-      <div
-        className="mt-auto grid items-end"
-        style={{
-          gridTemplateColumns: isLimit ? '1fr' : 'minmax(0,1fr) minmax(0,280px)',
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isLimit ? '1fr' : '1fr 380px',
+        gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+        flex: 1,
+        minHeight: 0,
+      }}>
+        {/* LEFT COLUMN: Product & Input */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
           gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
-          paddingTop: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
-        }}
-      >
-        <div
-          className="flex flex-col"
-          style={{ gap: fitValue(mode, { normal: TOKENS.spacing[3], tight: TOKENS.spacing[2], limit: TOKENS.spacing[2] }) }}
-        >
-          <ProjectionLine mode={mode} label="Est. annual yield" value={num > 0 ? `+ ${fmtUsd(yearlyYield)}` : '—'} highlight />
-          <ProjectionLine
-            mode={mode}
-            label="Projected yield at target"
-            value={num > 0 ? `+ ${fmtUsd(totalYield)}` : '—'}
-            highlight
-          />
-          {!isLimit && (
-            <p className="m-0 max-w-[520px] text-sm leading-normal text-white/55">
-              Capital remains allocated until the term or target is met. Review the term sheet before confirming.
-            </p>
-          )}
+          minHeight: 0,
+        }}>
+          {/* Product Header */}
+          <div style={{
+            background: TOKENS.colors.black,
+            border: `1px solid ${TOKENS.colors.borderSubtle}`,
+            borderRadius: TOKENS.radius.lg,
+            padding: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[4] }}>
+              {vault.image && (
+                <img
+                  src={vault.image}
+                  alt={vault.name}
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: TOKENS.radius.md,
+                    objectFit: 'cover',
+                  }}
+                />
+              )}
+              <div>
+                <Label id="sub-kicker" tone="scene" variant="text">
+                  Subscription
+                </Label>
+                <h1
+                  style={{
+                    margin: `${TOKENS.spacing[1]}px 0 0 0`,
+                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xxl, tight: TOKENS.fontSizes.xl, limit: TOKENS.fontSizes.lg }),
+                    fontWeight: TOKENS.fontWeights.black,
+                    letterSpacing: TOKENS.letterSpacing.tight,
+                    color: TOKENS.colors.textPrimary,
+                    lineHeight: 1,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {vault.name}
+                </h1>
+                <div style={{
+                  fontSize: TOKENS.fontSizes.sm,
+                  color: TOKENS.colors.textSecondary,
+                  marginTop: TOKENS.spacing[2],
+                }}>
+                  {vault.strategy}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div style={{
+            flex: 1,
+            background: TOKENS.colors.black,
+            border: `1px solid ${TOKENS.colors.borderSubtle}`,
+            borderRadius: TOKENS.radius.lg,
+            padding: fitValue(mode, { normal: TOKENS.spacing[8], tight: TOKENS.spacing[6], limit: TOKENS.spacing[4] }),
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}>
+            <fieldset
+              className="min-w-0 shrink-0 border-0 p-0"
+              style={{ margin: 0 }}
+            >
+              <legend className="sr-only">Deployment amount in USDC</legend>
+              <label
+                htmlFor={idAmount}
+                id={idAmountHint}
+                style={{
+                  display: 'block',
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  textTransform: 'uppercase',
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  color: TOKENS.colors.textSecondary,
+                  marginBottom: TOKENS.spacing[3],
+                }}
+              >
+                Amount to deploy (USDC)
+              </label>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  borderBottom: `2px solid ${isValid && num > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
+                  paddingBottom: TOKENS.spacing[3],
+                  transition: 'border-color 0.2s ease',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.figure, tight: TOKENS.fontSizes.xxxl, limit: TOKENS.fontSizes.xxl }),
+                    fontWeight: TOKENS.fontWeights.black,
+                    color: num > 0 ? TOKENS.colors.textPrimary : TOKENS.colors.textGhost,
+                    marginRight: TOKENS.spacing[2],
+                  }}
+                >
+                  $
+                </span>
+                <input
+                  id={idAmount}
+                  name="amount"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => onAmountChange(e.target.value)}
+                  autoComplete="off"
+                  aria-invalid={showError}
+                  aria-describedby={[idAmountHint, num > 0 ? idAmountStatus : ''].filter(Boolean).join(' ') || undefined}
+                  style={{
+                    width: '100%',
+                    minWidth: 0,
+                    border: 0,
+                    background: 'transparent',
+                    fontWeight: TOKENS.fontWeights.black,
+                    color: TOKENS.colors.textPrimary,
+                    outline: 'none',
+                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.figure, tight: TOKENS.fontSizes.xxxl, limit: TOKENS.fontSizes.xxl }),
+                    fontFamily: TOKENS.fonts.sans,
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1,
+                  }}
+                />
+                <span
+                  style={{
+                    fontWeight: TOKENS.fontWeights.bold,
+                    color: TOKENS.colors.textGhost,
+                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xl, tight: TOKENS.fontSizes.lg, limit: TOKENS.fontSizes.md }),
+                    marginLeft: TOKENS.spacing[3],
+                  }}
+                  aria-hidden
+                >
+                  USDC
+                </span>
+              </div>
+              <div
+                id={idAmountStatus}
+                role="status"
+                aria-live="polite"
+                style={{
+                  marginTop: TOKENS.spacing[3],
+                  minHeight: '20px',
+                  fontSize: TOKENS.fontSizes.xs,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  color: showError ? TOKENS.colors.danger : showValidHint ? TOKENS.colors.accent : 'transparent',
+                }}
+              >
+                {showError && <span>Minimum deposit: {fmtUsd(vault.minDeposit)}</span>}
+                {showValidHint && !showError && <span>Deposit amount valid</span>}
+              </div>
+            </fieldset>
+          </div>
         </div>
 
-        <div
-          className="flex w-full flex-col"
-          style={{ gap: fitValue(mode, { normal: TOKENS.spacing[3], tight: TOKENS.spacing[2], limit: TOKENS.spacing[2] }) }}
-        >
-          <fieldset id={idFieldsetTerms} className="m-0 border-0 p-0">
-            <legend className="sr-only">Terms confirmation</legend>
-            <label
-              htmlFor={idAgree}
-              className="flex cursor-pointer items-center gap-3"
-            >
-              <input
-                id={idAgree}
-                name="terms"
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => onAgreedChange(e.target.checked)}
-                className="h-6 w-6 shrink-0"
-                style={{ accentColor: TOKENS.colors.accent }}
-                aria-describedby={`${idAgree}-desc`}
-              />
-              <span
-                id={`${idAgree}-desc`}
-                className="text-sm font-bold text-white/55"
-              >
-                I confirm the term sheet and minimum deposit.
+        {/* RIGHT COLUMN: Order Summary */}
+        <div style={{
+          background: TOKENS.colors.black,
+          border: `1px solid ${TOKENS.colors.borderSubtle}`,
+          borderRadius: TOKENS.radius.lg,
+          padding: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[4] }),
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <span style={{
+            fontFamily: TOKENS.fonts.mono,
+            fontSize: TOKENS.fontSizes.micro,
+            fontWeight: TOKENS.fontWeights.bold,
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+            color: TOKENS.colors.textSecondary,
+            marginBottom: TOKENS.spacing[6],
+          }}>
+            Order Summary
+          </span>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4], flex: 1 }}>
+            <SpecItem mode={mode} label="Unlock Timeline" value={vault.lockPeriod} />
+            <SpecItem mode={mode} label="Risk Profile" value={vault.risk} />
+            <SpecItem mode={mode} label="Management Fees" value={vault.fees} />
+            
+            <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0` }} />
+            
+            <ProjectionLine mode={mode} label="Est. Annual Yield" value={num > 0 ? `+${fmtUsd(yearlyYield)}` : '—'} highlight />
+            <ProjectionLine mode={mode} label="Target Yield" value={num > 0 ? `+${fmtUsd(totalYield)}` : '—'} highlight />
+            
+            <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0`, flex: 1 }} />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: TOKENS.spacing[6] }}>
+              <span style={{ 
+                fontSize: TOKENS.fontSizes.xs, 
+                fontWeight: TOKENS.fontWeights.bold,
+                color: TOKENS.colors.textPrimary,
+                textTransform: 'uppercase',
+                letterSpacing: TOKENS.letterSpacing.display,
+              }}>
+                Total Value
               </span>
-            </label>
-          </fieldset>
-          <button
-            type="button"
-            disabled={!isReady}
-            className="w-full font-black uppercase"
-            style={{
-              padding: `${fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[3] })} ${fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] })}`,
-              background: isReady ? TOKENS.colors.textPrimary : TOKENS.colors.bgTertiary,
-              color: isReady ? TOKENS.colors.black : TOKENS.colors.textGhost,
-              border: 'none',
-              fontSize: fitValue(mode, { normal: TOKENS.fontSizes.md, tight: TOKENS.fontSizes.sm, limit: TOKENS.fontSizes.sm }),
-              fontWeight: TOKENS.fontWeights.black,
-              letterSpacing: TOKENS.letterSpacing.display,
-              cursor: isReady ? 'pointer' : 'not-allowed',
-            }}
-            aria-label={isReady ? 'Confirm subscription' : 'Complete form to deploy'}
-            aria-disabled={!isReady}
-          >
-            {isReady ? 'Deploy capital' : 'Complete review'}
-          </button>
+              <span style={{ 
+                fontSize: TOKENS.fontSizes.xl, 
+                fontWeight: TOKENS.fontWeights.black,
+                color: TOKENS.colors.textPrimary,
+                letterSpacing: '-0.02em',
+              }}>
+                {num > 0 ? fmtUsd(num + totalYield) : '—'}
+              </span>
+            </div>
+
+            {/* Checkbox & CTA */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
+              <fieldset id={idFieldsetTerms} className="m-0 border-0 p-0">
+                <legend className="sr-only">Terms confirmation</legend>
+                <label
+                  htmlFor={idAgree}
+                  style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3], cursor: 'pointer' }}
+                >
+                  <input
+                    id={idAgree}
+                    name="terms"
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => onAgreedChange(e.target.checked)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      accentColor: TOKENS.colors.accent,
+                      cursor: 'pointer',
+                    }}
+                    aria-describedby={`${idAgree}-desc`}
+                  />
+                  <span
+                    id={`${idAgree}-desc`}
+                    style={{
+                      fontSize: TOKENS.fontSizes.xs,
+                      fontWeight: TOKENS.fontWeights.bold,
+                      color: TOKENS.colors.textSecondary,
+                    }}
+                  >
+                    I confirm the term sheet and minimum deposit.
+                  </span>
+                </label>
+              </fieldset>
+              
+              <button
+                type="button"
+                disabled={!isReady}
+                style={{
+                  width: '100%',
+                  padding: TOKENS.spacing[4],
+                  background: isReady ? TOKENS.colors.accent : TOKENS.colors.bgTertiary,
+                  color: isReady ? TOKENS.colors.black : TOKENS.colors.textGhost,
+                  border: 'none',
+                  borderRadius: TOKENS.radius.md,
+                  fontSize: TOKENS.fontSizes.md,
+                  fontWeight: TOKENS.fontWeights.black,
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  textTransform: 'uppercase',
+                  cursor: isReady ? 'pointer' : 'not-allowed',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isReady ? `0 4px 16px ${TOKENS.colors.accent}40` : 'none',
+                }}
+                aria-label={isReady ? 'Confirm subscription' : 'Complete form to deploy'}
+                aria-disabled={!isReady}
+              >
+                {isReady ? 'Deploy Capital' : 'Complete Review'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

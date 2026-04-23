@@ -419,7 +419,40 @@ export function SimulationPanel() {
               <RecapRow label="Est. APY" value={formatPercent(active.annualApr * 100)} />
               <RecapRow label="Net Yield" value={`+${fmtUsd(active.cumulativeYield)}`} accent />
               
-              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[1]}px 0`, flex: 1, minHeight: TOKENS.spacing[4] }} />
+              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[1]}px 0`, flexShrink: 0 }} />
+              
+              {/* Visual Ratio (Principal vs Yield) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2], marginTop: TOKENS.spacing[2] }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: TOKENS.fontSizes.micro, color: TOKENS.colors.textSecondary, fontFamily: TOKENS.fonts.mono, textTransform: 'uppercase' }}>
+                  <span>Principal</span>
+                  <span>Yield</span>
+                </div>
+                <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', background: TOKENS.colors.bgTertiary }}>
+                  <div style={{ width: `${(500000 / active.totalValue) * 100}%`, background: TOKENS.colors.white }} />
+                  <div style={{ width: `${(active.cumulativeYield / active.totalValue) * 100}%`, background: TOKENS.colors.accent }} />
+                </div>
+              </div>
+
+              {/* Multiplier */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: TOKENS.spacing[2],
+                padding: TOKENS.spacing[3],
+                background: TOKENS.colors.bgTertiary,
+                borderRadius: TOKENS.radius.md,
+                marginTop: TOKENS.spacing[2],
+              }}>
+                <span style={{ fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textSecondary, textTransform: 'uppercase', letterSpacing: TOKENS.letterSpacing.display, fontWeight: TOKENS.fontWeights.bold }}>
+                  Multiplier
+                </span>
+                <span style={{ fontSize: TOKENS.fontSizes.md, fontWeight: TOKENS.fontWeights.black, color: TOKENS.colors.accent, letterSpacing: VALUE_LETTER_SPACING }}>
+                  {(active.totalValue / 500000).toFixed(2)}x
+                </span>
+              </div>
+              
+              <div style={{ flex: 1, minHeight: TOKENS.spacing[4] }} />
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
                 <span style={{ 

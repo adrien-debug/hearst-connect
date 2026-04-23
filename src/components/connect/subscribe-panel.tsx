@@ -123,6 +123,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
 
       {/* Main content */}
       <div
+        className="hide-scrollbar"
         style={{
           flex: 1,
           display: 'flex',
@@ -130,111 +131,23 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           padding: shellPadding,
           gap: shellGap,
           minHeight: 0,
-          overflow: 'hidden',
+          overflow: 'auto',
         }}
       >
-        {/* Vault stats overview */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: fitValue(mode, {
-            normal: 'repeat(4, 1fr)',
-            tight: 'repeat(2, 1fr)',
-            limit: '1fr',
-          }),
-          gap: TOKENS.spacing[2],
-          flexShrink: 0,
-        }}>
-          <StatCard label="Minimum" value={fmtUsdCompact(vault.minDeposit)} subtext="Entry threshold" mode={mode} size="compact" />
-          <StatCard label="Target" value={vault.target} subtext="Cumulative yield" mode={mode} accent size="compact" />
-          <StatCard label="Unlock Timeline" value={vault.lockPeriod} subtext="Duration" mode={mode} size="compact" />
-          <StatCard label="Risk" value={vault.risk} subtext="Profile" mode={mode} size="compact" />
-        </div>
-
-        {/* Projection calculator */}
-        {num > 0 && (
-          <div style={{
-            background: TOKENS.colors.bgSecondary,
-            borderRadius: TOKENS.radius.lg,
-            padding: fitValue(mode, {
-              normal: TOKENS.spacing[4],
-              tight: TOKENS.spacing[3],
-              limit: TOKENS.spacing[3],
-            }),
-            flexShrink: 0,
-          }}>
-            <Label id="proj-label" tone="scene" variant="text">
-              Yield projection
-            </Label>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: fitValue(mode, {
-                normal: 'repeat(3, 1fr)',
-                tight: 'repeat(3, 1fr)',
-                limit: '1fr',
-              }),
-              gap: TOKENS.spacing[3],
-              marginTop: TOKENS.spacing[3],
-            }}>
-              <ProjectionItem label="Monthly" value={fmtUsdCompact(monthlyYield)} />
-              <ProjectionItem label="Daily" value={fmtUsdCompact(dailyYield)} />
-              <ProjectionItem label="To target" value={fmtUsdCompact(totalYield)} accent />
-            </div>
-          </div>
-        )}
-
-        {/* Subscription form */}
-        <div style={{
-          flex: 1,
-          background: TOKENS.colors.bgSecondary,
-          borderRadius: TOKENS.radius.lg,
-          padding: fitValue(mode, {
-            normal: TOKENS.spacing[6],
-            tight: TOKENS.spacing[4],
-            limit: TOKENS.spacing[3],
-          }),
-          overflow: 'hidden',
-        }}>
-          <SubscriptionComposer
-            vault={vault}
-            mode={mode}
-            isLimit={isLimit}
-            amount={amount}
-            onAmountChange={setAmount}
-            agreed={agreed}
-            onAgreedChange={setAgreed}
-            isValid={isValid}
-            isReady={isReady}
-            num={num}
-            yearlyYield={yearlyYield}
-            totalYield={totalYield}
-          />
-        </div>
-
-        {/* Terms block */}
-        <div style={{
-          background: TOKENS.colors.bgSecondary,
-          borderRadius: TOKENS.radius.lg,
-          padding: fitValue(mode, {
-            normal: TOKENS.spacing[4],
-            tight: TOKENS.spacing[3],
-            limit: TOKENS.spacing[3],
-          }),
-          flexShrink: 0,
-        }}>
-          <Label id="sub-info" tone="scene" variant="text">
-            Vault terms
-          </Label>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isLimit ? '1fr' : 'repeat(3, 1fr)',
-            gap: shellGap,
-            marginTop: TOKENS.spacing[3],
-          }}>
-            <TermItem label="Fees" value={vault.fees} />
-            <TermItem label="Target" value={vault.target} />
-            <TermItem label="Maturity" value={vault.lockPeriod} />
-          </div>
-        </div>
+        <SubscriptionComposer
+          vault={vault}
+          mode={mode}
+          isLimit={isLimit}
+          amount={amount}
+          onAmountChange={setAmount}
+          agreed={agreed}
+          onAgreedChange={setAgreed}
+          isValid={isValid}
+          isReady={isReady}
+          num={num}
+          yearlyYield={yearlyYield}
+          totalYield={totalYield}
+        />
       </div>
     </div>
   )
