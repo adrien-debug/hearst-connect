@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import '@/styles/ui/tokens.css'
 import { Label } from '@/components/ui/label'
 import { EmptyState } from './empty-state'
@@ -49,9 +49,12 @@ export function PortfolioSummary({
   const donutData = useMemo(() => {
     const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.35)', 'rgba(255,255,255,0.25)']
     return activeVaults.map((vault, index) => ({
-      ...vault,
+      id: vault.id,
+      name: vault.name,
       color: palette[index % palette.length],
       pct: agg.totalDeposited > 0 ? (vault.deposited / agg.totalDeposited) * 100 : 0,
+      value: vault.deposited + vault.claimable,
+      claimable: vault.claimable,
     }))
   }, [activeVaults, agg.totalDeposited])
 
@@ -196,7 +199,13 @@ export function PortfolioSummary({
                 flexDirection: 'column',
                 alignItems: 'center',
               }}>
-                <AllocationDonut data={donutData} total={agg.totalDeposited} mode={mode} compact />
+                <AllocationDonut 
+                  data={donutData} 
+                  total={agg.totalDeposited} 
+                  mode={mode} 
+                  compact
+                  onSegmentClick={(vaultId) => onVaultSelect?.(vaultId)}
+                />
                 <div style={{
                   display: 'flex',
                   gap: TOKENS.spacing[3],
@@ -299,6 +308,14 @@ export function PortfolioSummary({
                       total={agg.totalDeposited}
                       mode={mode}
                       onClick={() => onVaultSelect?.(vault.id)}
+                      onClaim={() => {
+                        // TODO: Connect to claim functionality
+                        console.log('Claim clicked for vault:', vault.id)
+                      }}
+                      onExit={() => {
+                        // TODO: Connect to exit functionality
+                        console.log('Exit clicked for vault:', vault.id)
+                      }}
                     />
                   ))
                 )}
@@ -384,10 +401,26 @@ type DonutVaultItem = {
   name: string
   color: string
   pct: number
+  value: number
+  claimable: number
 }
 
-/** AllocationDonut — Circular portfolio allocation chart */
-function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVaultItem[]; total: number; mode: SmartFitMode; compact?: boolean }) {
+/** AllocationDonut — Circular portfolio allocation chart with interactive tooltips */
+function AllocationDonut({ 
+  data, 
+  total, 
+  mode, 
+  compact = false,
+  onSegmentClick,
+}: { 
+  data: DonutVaultItem[]; 
+  total: number; 
+  mode: SmartFitMode; 
+  compact?: boolean
+  onSegmentClick?: (vaultId: string) => void
+}) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  
   const size = compact
     ? fitValue(mode, { normal: 140, tight: 120, limit: 100 })
     : fitValue(mode, { normal: 200, tight: 160, limit: 140 })
@@ -409,11 +442,17 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
         offset: -offsetCursor,
         color: vault.color,
         id: vault.id,
+        name: vault.name,
+        value: vault.value,
+        claimable: vault.claimable,
+        pct: vault.pct,
       }
       offsetCursor += dash
       return segment
     })
   }, [data, circumference, total])
+
+  const hoveredSegment = segments.find(s => s.id === hoveredId)
 
   return (
     <div style={{
@@ -421,6 +460,7 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
       flexDirection: 'column',
       alignItems: 'center',
       gap: TOKENS.spacing[4],
+      position: 'relative',
     }}>
       {/* Donut Chart */}
       <div style={{ position: 'relative', width: `${size}px`, height: `${size}px` }}>
@@ -440,21 +480,32 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
             strokeWidth={strokeWidth}
           />
 
-          {/* Segments — pre-calculated */}
-          {segments.map((seg) => (
-            <circle
-              key={seg.id}
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${seg.dash} ${seg.gap}`}
-              strokeDashoffset={seg.offset}
-              strokeLinecap="round"
-            />
-          ))}
+          {/* Segments — interactive with hover effects */}
+          {segments.map((seg) => {
+            const isHovered = hoveredId === seg.id
+            return (
+              <circle
+                key={seg.id}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth={isHovered ? strokeWidth + 3 : strokeWidth}
+                strokeDasharray={`${seg.dash} ${seg.gap}`}
+                strokeDashoffset={seg.offset}
+                strokeLinecap="round"
+                style={{
+                  cursor: onSegmentClick ? 'pointer' : 'default',
+                  transition: 'all 150ms ease-out',
+                  filter: isHovered ? `drop-shadow(0 0 8px ${seg.color})` : 'none',
+                }}
+                onMouseEnter={() => setHoveredId(seg.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => onSegmentClick?.(seg.id)}
+              />
+            )
+          })}
         </svg>
 
         {/* Center text */}
@@ -467,32 +518,124 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
           justifyContent: 'center',
           textAlign: 'center',
         }}>
-          <div style={{
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-            color: TOKENS.colors.textGhost,
-          }}>
-            Total
-          </div>
-          <div style={{
-            fontSize: fitValue(mode, {
-              normal: TOKENS.fontSizes.md,
-              tight: TOKENS.fontSizes.sm,
-              limit: TOKENS.fontSizes.sm,
-            }),
-            fontWeight: TOKENS.fontWeights.black,
-            letterSpacing: VALUE_LETTER_SPACING,
-            color: TOKENS.colors.textPrimary,
-            marginTop: TOKENS.spacing[2],
-          }}>
-            {fmtUsdCompact(total)}
-          </div>
+          {hoveredSegment ? (
+            <>
+              <div style={{
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                color: hoveredSegment.color,
+                maxWidth: '80%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {hoveredSegment.name.replace('HashVault ', '')}
+              </div>
+              <div style={{
+                fontSize: fitValue(mode, {
+                  normal: TOKENS.fontSizes.md,
+                  tight: TOKENS.fontSizes.sm,
+                  limit: TOKENS.fontSizes.sm,
+                }),
+                fontWeight: TOKENS.fontWeights.black,
+                letterSpacing: VALUE_LETTER_SPACING,
+                color: TOKENS.colors.textPrimary,
+                marginTop: TOKENS.spacing[2],
+              }}>
+                {fmtUsdCompact(hoveredSegment.value)}
+              </div>
+              <div style={{
+                fontSize: TOKENS.fontSizes.micro,
+                color: TOKENS.colors.accent,
+                marginTop: TOKENS.spacing[2],
+              }}>
+                +{fmtUsdCompact(hoveredSegment.claimable)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                color: TOKENS.colors.textGhost,
+              }}>
+                Total
+              </div>
+              <div style={{
+                fontSize: fitValue(mode, {
+                  normal: TOKENS.fontSizes.md,
+                  tight: TOKENS.fontSizes.sm,
+                  limit: TOKENS.fontSizes.sm,
+                }),
+                fontWeight: TOKENS.fontWeights.black,
+                letterSpacing: VALUE_LETTER_SPACING,
+                color: TOKENS.colors.textPrimary,
+                marginTop: TOKENS.spacing[2],
+              }}>
+                {fmtUsdCompact(total)}
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Tooltip overlay */}
+        {hoveredSegment && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '-60px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: TOKENS.colors.bgTertiary,
+              border: `1px solid ${TOKENS.colors.borderSubtle}`,
+              borderRadius: TOKENS.radius.md,
+              padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+              zIndex: 10,
+              pointerEvents: 'none',
+              animation: 'fadeIn 150ms ease-out',
+              minWidth: '140px',
+            }}
+          >
+            <div style={{
+              fontSize: TOKENS.fontSizes.micro,
+              fontWeight: TOKENS.fontWeights.bold,
+              textTransform: 'uppercase',
+              color: hoveredSegment.color,
+              marginBottom: TOKENS.spacing[2],
+            }}>
+              {hoveredSegment.name}
+            </div>
+            <div style={{
+              fontSize: TOKENS.fontSizes.md,
+              fontWeight: TOKENS.fontWeights.black,
+              color: TOKENS.colors.textPrimary,
+            }}>
+              {fmtUsdCompact(hoveredSegment.value)}
+            </div>
+            <div style={{
+              fontSize: TOKENS.fontSizes.micro,
+              color: TOKENS.colors.textSecondary,
+              marginTop: TOKENS.spacing[2],
+            }}>
+              {hoveredSegment.pct.toFixed(1)}% of portfolio
+            </div>
+            <div style={{
+              fontSize: TOKENS.fontSizes.micro,
+              color: TOKENS.colors.accent,
+              marginTop: TOKENS.spacing[2],
+            }}>
+              +{fmtUsdCompact(hoveredSegment.claimable)} claimable
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Legend */}
+      {/* Legend — clickable */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -502,12 +645,20 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
         {data.map((vault) => (
           <div
             key={vault.id}
+            onClick={() => onSegmentClick?.(vault.id)}
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: TOKENS.spacing[3],
+              cursor: onSegmentClick ? 'pointer' : 'default',
+              padding: `${TOKENS.spacing[2]}px`,
+              borderRadius: TOKENS.radius.sm,
+              transition: 'all 120ms ease-out',
+              background: hoveredId === vault.id ? TOKENS.colors.bgTertiary : 'transparent',
             }}
+            onMouseEnter={() => setHoveredId(vault.id)}
+            onMouseLeave={() => setHoveredId(null)}
           >
             <div style={{
               display: 'flex',
@@ -523,7 +674,8 @@ function AllocationDonut({ data, total, mode, compact = false }: { data: DonutVa
               <span style={{
                 fontSize: TOKENS.fontSizes.xs,
                 fontWeight: TOKENS.fontWeights.bold,
-                color: TOKENS.colors.textSecondary,
+                color: hoveredId === vault.id ? TOKENS.colors.textPrimary : TOKENS.colors.textSecondary,
+                transition: 'color 120ms ease-out',
               }}>
                 {vault.name.replace('HashVault ', '')}
               </span>

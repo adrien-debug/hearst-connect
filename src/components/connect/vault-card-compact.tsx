@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { TOKENS, fmtUsdCompact, VALUE_LETTER_SPACING } from './constants'
 import type { ActiveVault } from './data'
 import type { SmartFitMode } from './smart-fit'
@@ -10,17 +11,24 @@ interface VaultCardCompactProps {
   total: number
   mode: SmartFitMode
   onClick?: () => void
+  onClaim?: () => void
+  onExit?: () => void
 }
 
 const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.35)']
 
-export function VaultCardCompact({ vault, index, total, mode, onClick }: VaultCardCompactProps) {
+export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, onExit }: VaultCardCompactProps) {
   const color = palette[index % palette.length]
   const daysToMaturity = Math.max(0, Math.ceil((new Date(vault.maturity).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+  const [isHovered, setIsHovered] = useState(false)
+  
+  const canClaim = vault.claimable > 0
+  const canExit = vault.canWithdraw || daysToMaturity <= 0
+  const showActions = isHovered && (canClaim || canExit)
 
   return (
     <div
-      onClick={onClick}
+      onClick={!showActions ? onClick : undefined}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick() } : undefined}
@@ -28,23 +36,17 @@ export function VaultCardCompact({ vault, index, total, mode, onClick }: VaultCa
         background: TOKENS.colors.black,
         borderRadius: TOKENS.radius.md,
         padding: mode === 'limit' ? '10px 12px' : '12px 14px',
-        border: `1px solid ${TOKENS.colors.borderSubtle}`,
+        border: `1px solid ${isHovered ? TOKENS.colors.borderStrong : TOKENS.colors.borderSubtle}`,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 120ms ease-out',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.borderColor = TOKENS.colors.borderStrong
-          e.currentTarget.style.background = TOKENS.colors.bgTertiary
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
-        e.currentTarget.style.background = TOKENS.colors.black
-      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Color dot */}
       <div style={{
@@ -62,6 +64,8 @@ export function VaultCardCompact({ vault, index, total, mode, onClick }: VaultCa
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
+        opacity: showActions ? 0.3 : 1,
+        transition: 'opacity 150ms ease-out',
       }}>
         <div style={{
           display: 'flex',
@@ -135,6 +139,8 @@ export function VaultCardCompact({ vault, index, total, mode, onClick }: VaultCa
       <div style={{
         textAlign: 'right',
         flexShrink: 0,
+        opacity: showActions ? 0.3 : 1,
+        transition: 'opacity 150ms ease-out',
       }}>
         <span style={{
           fontSize: '10px',
@@ -144,6 +150,115 @@ export function VaultCardCompact({ vault, index, total, mode, onClick }: VaultCa
           +{fmtUsdCompact(vault.claimable)}
         </span>
       </div>
+
+      {/* Quick Actions Overlay */}
+      {showActions && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: TOKENS.spacing[2],
+            padding: TOKENS.spacing[2],
+            animation: 'fadeIn 150ms ease-out',
+            backdropFilter: 'blur(2px)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {canClaim && (
+            <ActionButton
+              label="Claim"
+              variant="accent"
+              onClick={(e) => {
+                e.stopPropagation()
+                onClaim?.()
+              }}
+            />
+          )}
+          <ActionButton
+            label="View"
+            variant="primary"
+            onClick={(e) => {
+              e.stopPropagation()
+              onClick?.()
+            }}
+          />
+          {canExit && (
+            <ActionButton
+              label="Exit"
+              variant="danger"
+              onClick={(e) => {
+                e.stopPropagation()
+                onExit?.()
+              }}
+            />
+          )}
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
+  )
+}
+
+function ActionButton({ 
+  label, 
+  variant, 
+  onClick 
+}: { 
+  label: string
+  variant: 'accent' | 'primary' | 'danger'
+  onClick: (e: React.MouseEvent) => void
+}) {
+  const styles = {
+    accent: {
+      background: TOKENS.colors.accent,
+      color: TOKENS.colors.black,
+      border: 'none',
+    },
+    primary: {
+      background: TOKENS.colors.accentSubtle,
+      color: TOKENS.colors.accent,
+      border: `1px solid ${TOKENS.colors.accent}`,
+    },
+    danger: {
+      background: 'rgba(239, 68, 68, 0.15)',
+      color: TOKENS.colors.danger,
+      border: `1px solid ${TOKENS.colors.danger}`,
+    },
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+        borderRadius: TOKENS.radius.sm,
+        fontSize: TOKENS.fontSizes.micro,
+        fontWeight: TOKENS.fontWeights.black,
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        cursor: 'pointer',
+        transition: 'all 100ms ease-out',
+        whiteSpace: 'nowrap',
+        ...styles[variant],
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.05)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)'
+      }}
+    >
+      {label}
+    </button>
   )
 }
