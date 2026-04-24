@@ -26,29 +26,14 @@
     radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255, 255, 255, 0.03) 0%, transparent 65%);
 }
 
-/* ── Header ── */
+/* ── Header — back link only ── */
 .intro-header {
   position: relative;
   z-index: 20;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1.25rem 2.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.intro-logo-link {
-  display: flex;
-  align-items: center;
-  opacity: 0.85;
-  transition: opacity 0.2s ease;
-}
-.intro-logo-link:hover { opacity: 1; }
-
-.intro-logo {
-  height: 1.625rem;
-  width: auto;
-  filter: brightness(0) invert(1);
 }
 
 .intro-back {

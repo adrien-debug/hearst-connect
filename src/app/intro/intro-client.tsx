@@ -3,58 +3,36 @@
 import Link from 'next/link'
 
 const PILLARS = [
-  { label: 'Industrial mining yield', desc: 'Direct exposure to real hashrate — no synthetic instruments.' },
-  { label: 'Monthly USDC distributions', desc: 'On-chain disbursements, auditable end to end.' },
-  { label: 'Institutional controls', desc: 'Multi-sig governance, audited contracts, regulated custody.' },
+  'Industrial mining yield',
+  'Monthly USDC distributions',
+  'Institutional controls',
+  'On-chain proof of reserves',
+  'Audited smart contracts',
 ]
 
 export function IntroClient() {
   return (
     <div className="intro-shell" data-theme="dark">
 
-      {/* ── Header ── */}
+      {/* ── Header — back link only ── */}
       <header className="intro-header">
-        <Link href="/" className="intro-logo-link">
-          <img src="/logos/hearst.svg" alt="Hearst" className="intro-logo" />
-        </Link>
         <Link href="/" className="intro-back">← Back to Home</Link>
       </header>
 
-      {/* ── 50 / 50 split ── */}
+      {/* ── Split ── */}
       <main className="intro-main">
 
-        {/* LEFT — copy */}
+        {/* LEFT — bullets + CTA only */}
         <div className="intro-left">
-          {/* Eyebrow */}
-          <p className="intro-eyebrow">Institutional mining yield</p>
-
-          {/* Wordmark */}
-          <img
-            src="/logos/hearst-connect-blackbg.svg"
-            alt="Hearst Connect"
-            className="intro-wordmark"
-          />
-
-          {/* Sub */}
-          <p className="intro-subtitle">
-            USDC vaults backed by industrial Bitcoin mining infrastructure.
-            Transparent reporting. Institutional controls.
-          </p>
-
-          {/* Pillars */}
           <ul className="intro-pillars">
-            {PILLARS.map((p) => (
-              <li key={p.label} className="intro-pillar">
+            {PILLARS.map((label) => (
+              <li key={label} className="intro-pillar">
                 <span className="intro-pillar-dot" aria-hidden />
-                <div>
-                  <strong className="intro-pillar-label">{p.label}</strong>
-                  <span className="intro-pillar-desc">{p.desc}</span>
-                </div>
+                <strong className="intro-pillar-label">{label}</strong>
               </li>
             ))}
           </ul>
 
-          {/* CTA */}
           <div className="intro-cta-group">
             <Link href="/app" className="intro-cta-primary">
               <span>Enter Platform</span>
@@ -62,7 +40,6 @@ export function IntroClient() {
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
-            <p className="intro-cta-hint">Connect your wallet to view available vaults</p>
           </div>
         </div>
 
