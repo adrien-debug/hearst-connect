@@ -61,7 +61,7 @@
 }
 .intro-back:hover { color: #eef0f4; }
 
-/* ── Main: left column only (right half is fixed video) ── */
+/* ── Main: left 30% text, right 70% video ── */
 .intro-main {
   position: relative;
   z-index: 10;
@@ -69,9 +69,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* Occupy only the left 50% of the viewport */
-  width: 50%;
-  padding: clamp(2.5rem, 6vh, 5rem) clamp(2.5rem, 5vw, 5rem);
+  width: 30%;
+  padding: clamp(2.5rem, 6vh, 5rem) clamp(1.75rem, 3vw, 3.5rem);
   box-sizing: border-box;
 }
 
@@ -212,13 +211,12 @@
   letter-spacing: 0.02em;
 }
 
-/* ── RIGHT — video fills the full right half ── */
+/* ── RIGHT — video fills 70% right of viewport ── */
 .intro-right {
-  /* Escape the grid cell and fill the entire right side of the viewport */
   position: fixed;
   top: 0;
   right: 0;
-  width: 50%;
+  width: 70%;
   height: 100%;
   z-index: 1;
   overflow: hidden;
@@ -310,7 +308,7 @@
     top: auto;
     right: auto;
     width: 100%;
-    height: 55vw;
+    height: 60vw;
     min-height: 240px;
   }
 
