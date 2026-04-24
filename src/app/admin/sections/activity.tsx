@@ -186,7 +186,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: TOKENS.spacing[2],
   },
   filterBtn: {
-    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
     background: TOKENS.colors.bgSidebar,
     border: `1px solid ${TOKENS.colors.borderSubtle}`,
     borderRadius: TOKENS.radius.md,
@@ -205,7 +205,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'grid',
     gridTemplateColumns: '3fr 1fr 2fr 1fr',
     gap: TOKENS.spacing[4],
-    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
     background: TOKENS.colors.bgApp,
     fontFamily: MONO,
     fontSize: TOKENS.fontSizes.micro,
@@ -227,7 +227,7 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: '3fr 1fr 2fr 1fr',
     gap: TOKENS.spacing[4],
     alignItems: 'center',
-    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
     borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
   },
   cellEvent: {
@@ -262,7 +262,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   levelBadge: {
     display: 'inline-block',
-    padding: `${TOKENS.spacing[1]}px ${TOKENS.spacing[2]}px`,
+    padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[2]}`,
     border: `1px solid`,
     borderRadius: TOKENS.radius.sm,
     fontFamily: MONO,
@@ -274,7 +274,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
   },
   pageInfo: {
     fontSize: TOKENS.fontSizes.sm,
@@ -285,7 +285,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: TOKENS.spacing[2],
   },
   pageBtn: {
-    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
     background: TOKENS.colors.bgSidebar,
     border: `1px solid ${TOKENS.colors.borderSubtle}`,
     borderRadius: TOKENS.radius.md,

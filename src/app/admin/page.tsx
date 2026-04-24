@@ -206,7 +206,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: TOKENS.fontSizes.xl,
     fontWeight: TOKENS.fontWeights.black,
     textTransform: 'uppercase',
-    margin: `0 0 ${TOKENS.spacing[2]}px 0`,
+    margin: `0 0 ${TOKENS.spacing[2]} 0`,
     letterSpacing: TOKENS.letterSpacing.normal,
   },
   loginSubtitle: {
@@ -232,7 +232,8 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: TOKENS.letterSpacing.normal,
   },
   input: {
-    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
+
     background: TOKENS.colors.bgTertiary,
     border: `1px solid ${TOKENS.colors.borderSubtle}`,
     borderRadius: TOKENS.radius.md,
