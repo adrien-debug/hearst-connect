@@ -1936,19 +1936,26 @@ a.welcome-btn:focus-visible {
 }
 
 .hub-slide-card {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
   height: auto;
 }
 
-.hub-slide-media {
+/* Rounded shell + shadow; intrinsic height from media only (no crop on video/img). */
+.hub-slide-stack {
   position: relative;
+  isolation: isolate;
   width: 100%;
   border-radius: 1.5rem;
   overflow: hidden;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  background: #0A0A0A;
+  background: #0a0a0a;
+}
+
+.hub-slide-media {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  margin: 0;
+  background: #0a0a0a;
 }
 
 .hub-slide-media img,
@@ -1956,19 +1963,79 @@ a.welcome-btn:focus-visible {
   width: 100%;
   height: auto;
   display: block;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.hub-slide-scrim {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  bottom: 0;
+  /* Taller + darker: screenshots (dashboard UI) need a strong band so copy never fights the image */
+  height: min(82%, 36rem);
+  min-height: min(56%, 22rem);
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.97) 0%,
+    rgba(0, 0, 0, 0.88) 12%,
+    rgba(0, 0, 0, 0.72) 32%,
+    rgba(0, 0, 0, 0.38) 58%,
+    rgba(0, 0, 0, 0.12) 82%,
+    transparent 100%
+  );
 }
 
 .hub-slide-content {
+  position: absolute;
+  z-index: 2;
+  /* Stacking context so ::before (z-index: -1) stays above sibling .hub-slide-scrim */
+  isolation: isolate;
+  inset-inline: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0 1rem;
+  align-items: stretch;
+  gap: 0.65rem;
+  padding: 1.25rem 1rem 1.25rem;
+  text-align: left;
+  box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+/* Extra local dim behind typography only (above scrim) — fixes busy video/UI under the title */
+.hub-slide-content::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset-inline: 0;
+  bottom: 0;
+  top: -0.35rem;
+  border-radius: 0 0 1.45rem 1.45rem;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.28) 55%,
+    transparent 100%
+  );
+}
+
+@media (min-width: 930px) {
   .hub-slide-content {
-    padding: 0 2rem;
+    align-items: flex-start;
+    padding: 2.25rem clamp(1.75rem, 4vw, 3rem) clamp(2.25rem, 3.5vw, 3rem)
+      clamp(1.75rem, 4vw, 3.5rem);
+    max-width: 100%;
+  }
+
+  .hub-slide-content .hub-slide-title,
+  .hub-slide-content .hub-slide-desc {
+    max-width: min(40rem, 86%);
+  }
+
+  .hub-slide-content .hub-slide-cta {
+    margin-top: 0.35rem;
   }
 }
 
@@ -1979,48 +2046,59 @@ a.welcome-btn:focus-visible {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #4CAF50;
-  background: rgba(167, 251, 144, 0.15);
+  color: #c8f5b8;
+  background: rgba(167, 251, 144, 0.18);
+  border: 1px solid rgba(167, 251, 144, 0.28);
   border-radius: 999px;
   width: fit-content;
 }
 
 .hub-slide-title {
+  position: relative;
   font-size: var(--dashboard-text-xl);
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #0A0A0A;
+  color: #f4f6f9;
   margin: 0;
+  text-wrap: balance;
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.8),
+    0 1px 3px rgba(0, 0, 0, 0.65);
 }
 
 .hub-slide-desc {
+  position: relative;
   font-size: var(--dashboard-text-sm);
   line-height: 1.6;
-  color: #5A5F68;
+  color: rgba(252, 253, 255, 0.94);
   margin: 0;
+  text-wrap: pretty;
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.75),
+    0 1px 2px rgba(0, 0, 0, 0.55);
 }
 
-/* CTA */
+/* CTA — readable on dark scrim */
 .hub-slide-cta {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
   padding: 0.6rem 1.2rem;
   font-size: var(--dashboard-text-sm);
   font-weight: 600;
-  color: #0A0A0A;
+  color: #f4f6f9;
   text-decoration: none;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, gap 0.2s ease;
   width: fit-content;
 }
 
 .hub-slide-cta:hover {
   background: var(--dashboard-accent);
-  color: #0A0A0A;
+  color: #0a0a0a;
   border-color: var(--dashboard-accent);
   gap: 0.75rem;
 }

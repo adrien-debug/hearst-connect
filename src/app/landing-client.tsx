@@ -372,30 +372,33 @@ export default function HubPageClient() {
                 aria-hidden={i !== activeIndex}
               >
                 <div className="hub-slide-card">
-                  <figure className="hub-slide-media">
-                    {slide.type === 'video' ? (
-                      <video
-                        src={slide.src}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        draggable={false}
-                      />
-                    ) : (
-                      <img src={slide.src} alt="" draggable={false} />
-                    )}
-                  </figure>
-                  <div className="hub-slide-content">
-                    <span className="hub-slide-badge">{slide.caption}</span>
-                    <h3 className="hub-slide-title">{slide.title}</h3>
-                    <p className="hub-slide-desc">{slide.desc}</p>
-                    <a href={CTA_LINKS.viewOffering.href} className="hub-slide-cta">
-                      <span>{CTA_LINKS.viewOffering.label}</span>
-                      <svg className="hub-slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </a>
+                  <div className="hub-slide-stack">
+                    <figure className="hub-slide-media">
+                      {slide.type === 'video' ? (
+                        <video
+                          src={slide.src}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          draggable={false}
+                        />
+                      ) : (
+                        <img src={slide.src} alt="" draggable={false} />
+                      )}
+                    </figure>
+                    <div className="hub-slide-scrim" aria-hidden={true} />
+                    <div className="hub-slide-content">
+                      <span className="hub-slide-badge">{slide.caption}</span>
+                      <h3 className="hub-slide-title">{slide.title}</h3>
+                      <p className="hub-slide-desc">{slide.desc}</p>
+                      <a href={CTA_LINKS.viewOffering.href} className="hub-slide-cta">
+                        <span>{CTA_LINKS.viewOffering.label}</span>
+                        <svg className="hub-slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </article>

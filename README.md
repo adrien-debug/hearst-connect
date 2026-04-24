@@ -6,7 +6,7 @@ Onchain access to institutional Bitcoin mining cash flows.
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page — marketing, investment strategies, CTA |
+| `/` | Landing page — marketing, investment strategies carousel (copy overlaid on media + gradient scrim), CTA |
 | `/app` | Cinematic Financial OS — portfolio, vaults, subscription & projection |
 | `/admin` | Vault registry management (add/edit/remove vaults) |
 | `/intro` | Intro / onboarding |
