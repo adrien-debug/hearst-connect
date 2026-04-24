@@ -55,10 +55,10 @@ export function Canvas() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            height: '64px',
+            height: TOKENS.spacing[16],
             width: '100%',
             background: TOKENS.colors.bgApp,
-            borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+            borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
             paddingLeft: TOKENS.spacing[6],
             paddingRight: TOKENS.spacing[6],
             zIndex: 100,
@@ -98,10 +98,10 @@ export function Canvas() {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          height: '64px',
+          height: TOKENS.spacing[16],
           width: '100%',
           background: TOKENS.colors.bgApp,
-          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+          borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           paddingLeft: TOKENS.spacing[6],
           paddingRight: TOKENS.spacing[6],
           zIndex: 100,
@@ -118,40 +118,13 @@ export function Canvas() {
               display: 'block',
             }}
           />
-          {isDemo && (
-            <a
-              href="/admin"
-              style={{
-                padding: `${TOKENS.spacing[2 as 2]} ${TOKENS.spacing[3 as 3]}`,
-                background: 'transparent',
-                border: `1px solid ${TOKENS.colors.borderSubtle}`,
-                borderRadius: TOKENS.radius.md,
-                color: TOKENS.colors.textGhost,
-                fontSize: TOKENS.fontSizes.micro,
-                fontWeight: TOKENS.fontWeights.bold,
-                textDecoration: 'none',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                transition: 'all 120ms ease-out',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = TOKENS.colors.accent
-                e.currentTarget.style.color = TOKENS.colors.accent
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
-                e.currentTarget.style.color = TOKENS.colors.textGhost
-              }}
-            >
-              Admin
-            </a>
-          )}
         </div>
 
-        {/* Live: wallet only + discreet demo entry. Demo: toggle + reset + wallet */}
+        {/* Demo: indicator (one-way to live) + reset + wallet. Live: wallet only */}
         <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: TOKENS.spacing[3] }}>
-          {isDemo ? (
+          {isDemo && (
             <>
+              {/* Demo indicator - one way switch to live only */}
               <button
                 type="button"
                 onClick={toggleMode}
@@ -159,17 +132,17 @@ export function Canvas() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: TOKENS.spacing[2],
-                  padding: `4px 4px 4px ${TOKENS.spacing[3]}`,
+                  padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[1]} ${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
                   background: TOKENS.colors.accentDim,
-                  border: `1px solid ${TOKENS.colors.accentSubtle}`,
+                  border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accentSubtle}`,
                   borderRadius: TOKENS.radius.full,
                   color: TOKENS.colors.accent,
                   fontSize: TOKENS.fontSizes.micro,
                   fontWeight: TOKENS.fontWeights.bold,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  letterSpacing: TOKENS.letterSpacing.wide,
                   cursor: 'pointer',
-                  transition: 'all 200ms ease-out',
+                  transition: 'all var(--transition-default)',
                 }}
                 title="Passer en mode Live (registre + chaîne)"
               >
@@ -179,26 +152,26 @@ export function Canvas() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
+                    width: TOKENS.spacing[6],
+                    height: TOKENS.spacing[6],
+                    borderRadius: TOKENS.radius.full,
                     background: TOKENS.colors.accent,
-                    transition: 'all 200ms ease-out',
-                    boxShadow: `0 2px 8px ${TOKENS.colors.accentSubtle}`,
+                    transition: 'all var(--transition-default)',
+                    boxShadow: `0 ${TOKENS.spacing[1]} ${TOKENS.spacing[2]} ${TOKENS.colors.accentSubtle}`,
                   }}
                 >
                   <svg
-                    width="12"
-                    height="12"
+                    width={TOKENS.spacing[3]}
+                    height={TOKENS.spacing[3]}
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke={TOKENS.colors.black}
-                    strokeWidth="3"
+                    strokeWidth={TOKENS.borders.thick}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     style={{
                       transform: 'rotate(0deg)',
-                      transition: 'transform 200ms ease-out',
+                      transition: 'transform var(--transition-default)',
                     }}
                   >
                     <polyline points="9 18 15 12 9 6" />
@@ -218,15 +191,15 @@ export function Canvas() {
                 style={{
                   padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
                   background: confirmReset ? TOKENS.colors.danger : `${TOKENS.colors.danger}26`,
-                  border: `1px solid ${confirmReset ? TOKENS.colors.danger : `${TOKENS.colors.danger}80`}`,
+                  border: `${TOKENS.borders.thin} solid ${confirmReset ? TOKENS.colors.danger : `${TOKENS.colors.danger}80`}`,
                   borderRadius: TOKENS.radius.sm,
                   color: confirmReset ? TOKENS.colors.white : TOKENS.colors.danger,
                   fontSize: TOKENS.fontSizes.micro,
                   fontWeight: TOKENS.fontWeights.bold,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
+                  letterSpacing: TOKENS.letterSpacing.wide,
                   cursor: 'pointer',
-                  transition: 'all 150ms ease-out',
+                  transition: 'all var(--transition-fast)',
                 }}
                 title="Réinitialiser le portefeuille démo"
                 onMouseEnter={(e) => {
@@ -245,27 +218,6 @@ export function Canvas() {
                 {confirmReset ? 'Confirmer ?' : 'Reset'}
               </button>
             </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setMode('demo')}
-              style={{
-                padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-                background: 'transparent',
-                border: `1px solid ${TOKENS.colors.borderSubtle}`,
-                borderRadius: TOKENS.radius.md,
-                color: TOKENS.colors.textGhost,
-                fontFamily: MONO,
-                fontSize: TOKENS.fontSizes.micro,
-                fontWeight: TOKENS.fontWeights.bold,
-                letterSpacing: TOKENS.letterSpacing.display,
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-              }}
-              title="Revenir au mode présentation (données simulées)"
-            >
-              Mode démo
-            </button>
           )}
           <WalletButton />
         </div>
@@ -273,7 +225,7 @@ export function Canvas() {
 
       <main 
         className="flex min-h-0 min-w-0 flex-1 overflow-hidden"
-        style={{ paddingBottom: '96px' }} // Réserve l'espace pour le dock en bas
+        style={{ paddingBottom: `calc(6 * ${TOKENS.spacing[4]})` }}
       >
         <section
           className="connect-main-scene min-h-0 min-w-0 flex-1 overflow-hidden"
@@ -372,7 +324,7 @@ function WalletButton() {
           padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
           background: TOKENS.colors.accent,
           color: TOKENS.colors.black,
-          border: 'none',
+          border: TOKENS.borders.none,
           borderRadius: TOKENS.radius.md,
           fontFamily: MONO,
           fontSize: TOKENS.fontSizes.xs,
@@ -381,7 +333,7 @@ function WalletButton() {
           textTransform: 'uppercase',
           cursor: !mounted ? 'default' : isConnecting ? 'wait' : 'pointer',
           opacity: !mounted || isConnecting ? 0.7 : 1,
-          transition: 'all 120ms ease-out',
+          transition: 'all var(--transition-fast)',
         }}
         onMouseEnter={(e) => {
           if (mounted && !isConnecting) e.currentTarget.style.opacity = '0.9'
@@ -390,7 +342,7 @@ function WalletButton() {
           if (mounted && !isConnecting) e.currentTarget.style.opacity = '1'
         }}
       >
-        <svg width={TOKENS.spacing[4]} height={TOKENS.spacing[4]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width={TOKENS.spacing[4]} height={TOKENS.spacing[4]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TOKENS.borders.thin}>
           <path d="M19 7H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2z" />
           <path d="M16 11h0" />
         </svg>
@@ -418,14 +370,14 @@ function WalletButton() {
         style={{
           padding: TOKENS.spacing[2],
           background: 'transparent',
-          border: `1px solid ${TOKENS.colors.borderSubtle}`,
+          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           borderRadius: TOKENS.radius.md,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: TOKENS.colors.textSecondary,
-          transition: 'all 120ms ease-out',
+          transition: 'all var(--transition-fast)',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = TOKENS.colors.accent
@@ -437,7 +389,7 @@ function WalletButton() {
         }}
         title="Disconnect"
       >
-        <svg width={TOKENS.spacing[3]} height={TOKENS.spacing[3]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width={TOKENS.spacing[3]} height={TOKENS.spacing[3]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={TOKENS.borders.thin}>
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
           <polyline points="16 17 21 12 16 7" />
           <line x1="21" y1="12" x2="9" y2="12" />

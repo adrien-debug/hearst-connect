@@ -9,8 +9,8 @@ import {
   getSystemDemoVaultById,
   calculateDemoYield 
 } from '@/lib/demo-data'
-
-const STORAGE_KEY = 'hearst:demo-portfolio-v3'
+import { STORAGE_KEYS } from '@/config/storage-keys'
+import { MS_PER_DAY, MIN_CLAIMABLE_THRESHOLD } from '@/lib/constants'
 
 interface DemoStore {
   positions: DemoPosition[]
@@ -23,7 +23,7 @@ function loadStore(): DemoStore {
     return { positions: [], history: [], initialized: false }
   }
   try {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    const saved = localStorage.getItem(STORAGE_KEYS.DEMO_PORTFOLIO)
     if (saved) return JSON.parse(saved)
   } catch {}
   return { positions: [], history: [], initialized: false }
@@ -31,7 +31,7 @@ function loadStore(): DemoStore {
 
 function saveStore(store: DemoStore) {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+    localStorage.setItem(STORAGE_KEYS.DEMO_PORTFOLIO, JSON.stringify(store))
   }
 }
 
@@ -61,10 +61,11 @@ function emit() {
 }
 
 // Actions
-export function seedDemoPortfolio(preset: 'conservative' | 'balanced' | 'aggressive' | 'ultra' = 'conservative') {
+export function seedDemoPortfolio(preset: 'demo' | 'conservative' | 'balanced' | 'aggressive' | 'ultra' = 'demo') {
   const now = Date.now()
 
   const templates: Record<string, Array<{ vaultId: string; amount: number; daysAgo: number }>> = {
+    demo: [{ vaultId: 'demo-vault', amount: 10_000, daysAgo: 30 }],
     conservative: [{ vaultId: 'sys-prime', amount: 500_000, daysAgo: 60 }],
     balanced: [
       { vaultId: 'sys-prime', amount: 500_000, daysAgo: 90 },
@@ -85,7 +86,7 @@ export function seedDemoPortfolio(preset: 'conservative' | 'balanced' | 'aggress
 
   const positions: DemoPosition[] = template.map((cfg) => {
     const vault = getSystemDemoVaultById(cfg.vaultId)!
-    const createdAt = now - cfg.daysAgo * 24 * 60 * 60 * 1000
+    const createdAt = now - cfg.daysAgo * MS_PER_DAY
     const maturityDate = createdAt + vault.meta.lockPeriodDays * 24 * 60 * 60 * 1000
 
     return {
@@ -128,7 +129,7 @@ function depositDemoPosition(vaultId: string, amount: number) {
   if (!vault || amount <= 0) return
 
   const now = Date.now()
-  const maturityDate = now + vault.meta.lockPeriodDays * 24 * 60 * 60 * 1000
+    const maturityDate = now + vault.meta.lockPeriodDays * MS_PER_DAY
 
   const existingIdx = globalStore.positions.findIndex((p) => p.vaultId === vaultId && p.state !== 'withdrawn')
   if (existingIdx >= 0) {
@@ -178,7 +179,7 @@ function claimDemoYield(positionId: string): boolean {
 
   const totalYield = calculateDemoYield(position)
   const claimable = totalYield - position.claimedYield
-  if (claimable < 0.01) return false
+  if (claimable < MIN_CLAIMABLE_THRESHOLD) return false
 
   globalStore.positions = globalStore.positions.map((p, i) =>
     i === idx ? { ...p, claimedYield: totalYield, accumulatedYield: totalYield } : p
@@ -241,7 +242,7 @@ export function useDemoPortfolio() {
 
     globalStore = loadStore()
     if (!globalStore.initialized && globalStore.positions.length === 0) {
-      seedDemoPortfolio('conservative')
+      seedDemoPortfolio('demo')
     } else {
       emit()
     }
@@ -266,7 +267,7 @@ export function useDemoPortfolio() {
     stats,
     isEmpty: globalStore.positions.length === 0,
     actions: {
-      seed: useCallback(() => seedDemoPortfolio('conservative'), []),
+      seed: useCallback(() => seedDemoPortfolio('demo'), []),
       reset: useCallback(() => resetDemoPortfolio(), []),
       deposit: useCallback((vaultId: string, amount: number) => depositDemoPosition(vaultId, amount), []),
       claim: useCallback((id: string): boolean => claimDemoYield(id), []),

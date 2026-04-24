@@ -4,8 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { base } from 'wagmi/chains'
 import type { VaultConfig, VaultConfigInput, VaultRegistryState } from '@/types/vault'
-
-const STORAGE_KEY = 'hearst:vault-registry'
+import { STORAGE_KEYS } from '@/config/storage-keys'
 
 const SEED_VAULT: VaultConfig = {
   id: 'seed-hashvault-test',
@@ -41,7 +40,7 @@ function loadFromStorage(): VaultRegistryState {
   if (typeof window === 'undefined') return getInitialState()
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEYS.VAULT_REGISTRY)
 
     if (!stored) {
       const seeded: VaultRegistryState = {
@@ -64,7 +63,7 @@ function loadFromStorage(): VaultRegistryState {
     }
   } catch (e) {
     console.error('[VaultRegistry] Corrupted storage, resetting:', e)
-    try { localStorage.removeItem(STORAGE_KEY) } catch {}
+    try { localStorage.removeItem(STORAGE_KEYS.VAULT_REGISTRY) } catch {}
     return getInitialState()
   }
 }
@@ -73,7 +72,7 @@ function saveToStorage(state: VaultRegistryState): void {
   if (typeof window === 'undefined') return
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    localStorage.setItem(STORAGE_KEYS.VAULT_REGISTRY, JSON.stringify(state))
   } catch {
     // Silent fail in SSR or if storage is full
   }

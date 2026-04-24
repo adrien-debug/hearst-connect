@@ -2,10 +2,9 @@
 
 import { useState } from 'react'
 import { SubscriptionComposer } from './subscription-composer'
-import { TOKENS, MONO, fmtUsd, fmtUsdCompact } from './constants'
+import { TOKENS, fmtUsd, fmtUsdCompact } from './constants'
 import type { AvailableVault } from './data'
 import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
-import { CockpitGauge } from './cockpit-gauge'
 import { useVaultActions } from '@/hooks/useVault'
 import { useTokenAllowance } from '@/hooks/useTokenAllowance'
 import { useVaultById } from '@/hooks/useVaultRegistry'
@@ -104,26 +103,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           gap: `${shellGap}px`,
         }}
       >
-        <div style={{ marginBottom: TOKENS.spacing[4] }}>
-          <button
-            type="button"
-            onClick={onBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[2],
-              background: 'none',
-              border: 'none',
-              color: TOKENS.colors.accent,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-            }}
-          >
-            ← Back
-          </button>
-        </div>
+        <BackButton onBack={onBack} />
         <VaultNotConfigured />
       </div>
     )
@@ -140,25 +120,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           gap: `${shellGap}px`,
         }}
       >
-        <div style={{ marginBottom: TOKENS.spacing[4] }}>
-          <button
-            onClick={onBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[2],
-              background: 'none',
-              border: 'none',
-              color: TOKENS.colors.accent,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-            }}
-          >
-            ← Back
-          </button>
-        </div>
+        <BackButton onBack={onBack} />
         <WalletNotConnected />
       </div>
     )
@@ -178,7 +140,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
         color: TOKENS.colors.textPrimary,
       }}
     >
-      {/* COCKPIT HEADER */}
+      {/* Compact Header with Back + Lock Info */}
       <div
         style={{
           padding: fitValue(mode, {
@@ -189,67 +151,23 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
           background: TOKENS.colors.bgApp,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
+        <BackButton onBack={onBack} />
         <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          marginBottom: TOKENS.spacing[3],
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.micro,
+          color: TOKENS.colors.textGhost,
+          letterSpacing: TOKENS.letterSpacing.display,
+          textTransform: 'uppercase',
         }}>
-          <div style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.micro,
-            color: TOKENS.colors.textGhost,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-          }}>
-            {isDemo && (
-              <span style={{ color: TOKENS.colors.accent, marginRight: TOKENS.spacing[2] }}>DEMO</span>
-            )}
-            {vault.lockPeriod} lock
-          </div>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: fitValue(mode, {
-            normal: 'repeat(3, 1fr)',
-            tight: 'repeat(3, 1fr)',
-            limit: '1fr',
-          }),
-          gap: fitValue(mode, {
-            normal: TOKENS.spacing[6],
-            tight: TOKENS.spacing[4],
-            limit: TOKENS.spacing[3],
-          }),
-        }}>
-          <CockpitGauge
-            label="Minimum Entry"
-            value={fmtUsd(vault.minDeposit)}
-            valueCompact={fmtUsdCompact(vault.minDeposit)}
-            subtext="Capital required"
-            mode={mode}
-            align="center"
-          />
-          <CockpitGauge
-            label="Target Yield"
-            value={vault.target}
-            valueCompact={vault.target}
-            subtext="Cumulative return"
-            mode={mode}
-            primary
-            accent
-            align="center"
-          />
-          <CockpitGauge
-            label="Annual APY"
-            value={`${vault.apr}%`}
-            valueCompact={`${vault.apr}%`}
-            subtext={`${vault.risk} risk profile`}
-            mode={mode}
-            align="center"
-          />
+          {isDemo && (
+            <span style={{ color: TOKENS.colors.accent, marginRight: TOKENS.spacing[2] }}>DEMO</span>
+          )}
+          {vault.lockPeriod} lock
         </div>
       </div>
 
@@ -270,6 +188,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           vault={vault}
           mode={mode}
           isLimit={isLimit}
+          isDemo={isDemo}
           amount={amount}
           onAmountChange={setAmount}
           agreed={agreed}
@@ -286,5 +205,28 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
         />
       </div>
     </div>
+  )
+}
+
+function BackButton({ onBack }: { onBack?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: TOKENS.spacing[2],
+        background: 'none',
+        border: 'none',
+        color: TOKENS.colors.accent,
+        fontSize: TOKENS.fontSizes.sm,
+        fontWeight: TOKENS.fontWeights.bold,
+        cursor: 'pointer',
+        textTransform: 'uppercase',
+      }}
+    >
+      ← Back
+    </button>
   )
 }

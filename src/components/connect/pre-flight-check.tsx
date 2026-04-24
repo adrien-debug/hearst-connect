@@ -4,6 +4,7 @@ import { useAccount, useChainId } from 'wagmi'
 import { useTokenAllowance } from '@/hooks/useTokenAllowance'
 import { useVaultGlobal } from '@/hooks/useVault'
 import { useVaultById } from '@/hooks/useVaultRegistry'
+import { useAppMode } from '@/hooks/useAppMode'
 import { TOKENS, MONO } from './constants'
 import type { AvailableVault } from './data'
 
@@ -18,6 +19,7 @@ export function PreFlightCheck({
   onApprove: () => void
   isApproving: boolean
 }) {
+  const { isDemo } = useAppMode()
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
 
@@ -37,6 +39,69 @@ export function PreFlightCheck({
   const formatAddress = (addr?: string) => {
     if (!addr) return ''
     return `${addr.slice(0, 6)}…${addr.slice(-4)}`
+  }
+  
+  // Demo mode: simulate a clean pre-flight check
+  if (isDemo) {
+    return (
+      <div style={{
+        background: TOKENS.colors.bgSecondary,
+        border: `1px solid ${TOKENS.colors.borderSubtle}`,
+        borderRadius: TOKENS.radius.lg,
+        padding: TOKENS.spacing[4],
+      }}>
+        {/* Header */}
+        <div style={{
+          fontFamily: MONO,
+          fontSize: TOKENS.fontSizes.micro,
+          fontWeight: TOKENS.fontWeights.bold,
+          letterSpacing: TOKENS.letterSpacing.display,
+          textTransform: 'uppercase',
+          color: TOKENS.colors.textSecondary,
+          marginBottom: TOKENS.spacing[4],
+        }}>
+          Deployment Status
+        </div>
+        
+        {/* Demo checklist - all good */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3] }}>
+          <CheckItem 
+            status="success"
+            label="Demo Wallet"
+            value="✓ Connected · 0xDemo...User"
+          />
+          <CheckItem 
+            status="success"
+            label="Network"
+            value="✓ Base Mainnet"
+          />
+          <CheckItem 
+            status="success"
+            label="Allowance"
+            value="✓ USDC approved for demo"
+          />
+          <CheckItem 
+            status="success"
+            label="Vault"
+            statusLabel="OPEN"
+            value="✓ Ready for deposits"
+          />
+        </div>
+        
+        {/* Summary */}
+        <div style={{
+          marginTop: TOKENS.spacing[4],
+          paddingTop: TOKENS.spacing[4],
+          borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
+          fontSize: TOKENS.fontSizes.sm,
+          color: TOKENS.colors.accent,
+          fontFamily: MONO,
+          textAlign: 'center',
+        }}>
+          ✓ Ready to deploy (Demo Mode)
+        </div>
+      </div>
+    )
   }
   
   const allGood = isConnected && 

@@ -1,18 +1,17 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { STORAGE_KEYS } from '@/config/storage-keys'
+import { SESSION_DURATION_MS } from '@/lib/constants'
 
 // Simple admin credentials - in production, this should be server-side
 const ADMIN_EMAIL = 'admin@hearst.app'
-const ADMIN_PASSWORD_HASH = 'c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd56e9037000a879104bd9b1e9e5c6c5c6c6c6c6c6c6c6c6c6c' // "hearst2024"
+const ADMIN_PASSWORD_HASH = '5045c8f03dc38b3428abb7f692e6776492550f2bf1bc188d43dd26fdde34e67e' // "hearst2024"
 
 interface AdminSession {
   email: string
   timestamp: number
 }
-
-const SESSION_KEY = 'hearst:admin-session'
-const SESSION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 
 // Simple SHA-256 hash (client-side only - for demo purposes)
 async function hashPassword(password: string): Promise<string> {
@@ -39,7 +38,7 @@ export function useAdminAuth() {
     }
 
     try {
-      const saved = localStorage.getItem(SESSION_KEY)
+      const saved = localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION)
       if (!saved) {
         setIsAuthenticated(false)
         setIsLoading(false)
@@ -49,14 +48,14 @@ export function useAdminAuth() {
       const session: AdminSession = JSON.parse(saved)
       const now = Date.now()
 
-      if (now - session.timestamp > SESSION_DURATION) {
-        localStorage.removeItem(SESSION_KEY)
+      if (now - session.timestamp > SESSION_DURATION_MS) {
+        localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION)
         setIsAuthenticated(false)
       } else {
         setIsAuthenticated(true)
       }
     } catch {
-      localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION)
       setIsAuthenticated(false)
     }
     setIsLoading(false)
@@ -81,13 +80,13 @@ export function useAdminAuth() {
       timestamp: Date.now(),
     }
 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, JSON.stringify(session))
     setIsAuthenticated(true)
     return true
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION)
     setIsAuthenticated(false)
     setError(null)
   }, [])

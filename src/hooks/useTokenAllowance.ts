@@ -3,8 +3,7 @@
 import { useReadContract, useWriteContract } from 'wagmi'
 import { ERC20_ABI } from '@/config/abi/vault'
 import { type Address, parseUnits } from 'viem'
-
-const USDC_DECIMALS = 6
+import { USDC_DECIMALS, POLL_INTERVAL_APPROVE } from '@/lib/constants'
 
 export function useTokenAllowance(tokenAddress?: Address, owner?: Address, spender?: Address) {
   const { data: allowance, isLoading } = useReadContract({
@@ -14,7 +13,7 @@ export function useTokenAllowance(tokenAddress?: Address, owner?: Address, spend
     args: owner && spender ? [owner, spender] : undefined,
     query: {
       enabled: !!tokenAddress && !!owner && !!spender,
-      refetchInterval: 3000, // Check frequently during approve flow
+      refetchInterval: POLL_INTERVAL_APPROVE,
     },
   })
 

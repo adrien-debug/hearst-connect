@@ -1,6 +1,20 @@
 import type { DemoPosition, DemoPortfolioStats, HydratedDemoPosition } from '@/types/demo'
+import { MS_PER_DAY, DAYS_PER_YEAR, MIN_CLAIMABLE_THRESHOLD } from './constants'
 
 export const SYSTEM_DEMO_VAULTS = [
+  {
+    id: 'demo-vault',
+    meta: {
+      name: 'Demo Vault',
+      apr: 15,
+      target: '30%',
+      lockPeriodDays: 90,
+      minDeposit: 1_000,
+      risk: 'Low',
+      strategy: 'Demo Simulation',
+      fees: '0.5% Mgmt',
+    },
+  },
   {
     id: 'sys-prime',
     meta: {
@@ -62,8 +76,8 @@ export function getSystemDemoVaultById(id: string) {
 export function calculateDemoYield(position: DemoPosition): number {
   const vault = getSystemDemoVaultById(position.vaultId)
   if (!vault) return 0
-  const elapsedDays = (Date.now() - position.createdAt) / (1000 * 60 * 60 * 24)
-  const dailyRate = vault.meta.apr / 100 / 365
+  const elapsedDays = (Date.now() - position.createdAt) / MS_PER_DAY
+  const dailyRate = vault.meta.apr / 100 / DAYS_PER_YEAR
   return position.deposited * dailyRate * elapsedDays
 }
 
@@ -72,7 +86,7 @@ export function hydrateDemoPosition(position: DemoPosition): HydratedDemoPositio
   const totalYield = calculateDemoYield(position)
   const now = Date.now()
   const isMatured = now >= position.maturityDate
-  const daysRemaining = Math.max(0, Math.ceil((position.maturityDate - now) / (1000 * 60 * 60 * 24)))
+  const daysRemaining = Math.max(0, Math.ceil((position.maturityDate - now) / MS_PER_DAY))
   const progressPercent = Math.min(100, Math.round(((now - position.createdAt) / (position.maturityDate - position.createdAt)) * 100))
   
   return {
@@ -81,7 +95,7 @@ export function hydrateDemoPosition(position: DemoPosition): HydratedDemoPositio
     currentYield: totalYield - position.claimedYield,
     isMatured,
     canWithdraw: isMatured && position.state !== 'withdrawn',
-    canClaim: totalYield > position.claimedYield + 0.01,
+    canClaim: totalYield > position.claimedYield + MIN_CLAIMABLE_THRESHOLD,
     daysRemaining,
     progressPercent,
     vaultName: vault.meta.name,

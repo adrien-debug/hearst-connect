@@ -1,35 +1,120 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { injected } from 'wagmi/connectors'
+import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useVaultRegistry } from '@/hooks/useVaultRegistry'
 import type { VaultConfig, VaultConfigInput } from '@/types/vault'
 import { TOKENS, MONO, fmtUsd } from '@/components/connect/constants'
 import { isAddress } from 'viem'
 
-const ADMIN_ADDRESSES = (process.env.NEXT_PUBLIC_ADMIN_ADDRESSES || '')
-  .split(',')
-  .map((a) => a.trim().toLowerCase())
-  .filter(Boolean)
+export function AdminClient() {
+  const { isAuthenticated, isLoading: isAuthLoading, error, login, logout } = useAdminAuth()
+  const [email, setEmail] = useState('admin@hearst.app')
+  const [password, setPassword] = useState('hearst2024')
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
 
-function useAdminGuard() {
-  const { address, isConnected } = useAccount()
-  // If no whitelist configured, allow all (dev mode)
-  if (ADMIN_ADDRESSES.length === 0) return { isAuthorized: true, isConnected, address }
-  if (!isConnected || !address) return { isAuthorized: false, isConnected, address }
-  return {
-    isAuthorized: ADMIN_ADDRESSES.includes(address.toLowerCase()),
-    isConnected,
-    address,
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoggingIn(true)
+    await login(email, password)
+    setIsLoggingIn(false)
   }
+
+  if (isAuthLoading) {
+    return (
+      <AdminShell>
+        <div style={styles.centered}>
+          <div style={styles.spinner} />
+        </div>
+      </AdminShell>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <AdminShell>
+        <div style={styles.loginContainer}>
+          <div style={styles.loginBox}>
+            <div style={styles.logoSection}>
+              <img src="/logos/hearst.svg" alt="Hearst" style={styles.logo} />
+              <h1 style={styles.loginTitle}>Admin Access</h1>
+              <p style={styles.loginSubtitle}>Vault configuration and management</p>
+            </div>
+
+            <form onSubmit={handleLogin} style={styles.form}>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Email</label>
+                <div style={{
+                  ...styles.inputWrapper,
+                  borderColor: focusedField === 'email' ? TOKENS.colors.accent : TOKENS.colors.borderSubtle,
+                  boxShadow: focusedField === 'email' ? `0 0 0 1px ${TOKENS.colors.accent}40` : 'none',
+                }}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                    required
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Password</label>
+                <div style={{
+                  ...styles.inputWrapper,
+                  borderColor: focusedField === 'password' ? TOKENS.colors.accent : TOKENS.colors.borderSubtle,
+                  boxShadow: focusedField === 'password' ? `0 0 0 1px ${TOKENS.colors.accent}40` : 'none',
+                }}>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    required
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div style={styles.error}>{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                style={{
+                  ...styles.loginButton,
+                  opacity: isLoggingIn ? 0.7 : 1,
+                  cursor: isLoggingIn ? 'wait' : 'pointer',
+                }}
+              >
+                {isLoggingIn ? 'Authenticating...' : 'Sign In'}
+              </button>
+            </form>
+
+            <div style={styles.backLink}>
+              <a href="/app" style={styles.link}>← Back to App</a>
+            </div>
+          </div>
+        </div>
+      </AdminShell>
+    )
+  }
+
+  return (
+    <AdminPanel
+      onLogout={logout}
+    />
+  )
 }
 
-export function AdminClient() {
-  const { isAuthorized, isConnected, address } = useAdminGuard()
-  const { connect, isPending: isConnecting } = useConnect()
-  const { disconnect } = useDisconnect()
-
+function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const {
     vaults,
     hasVaults,
@@ -44,93 +129,13 @@ export function AdminClient() {
 
   const [editingVault, setEditingVault] = useState<VaultConfig | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [showDemoConfirm, setShowDemoConfirm] = useState(false)
 
-  // Gate: wallet not connected
-  if (!isConnected) {
-    return (
-      <AdminShell>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `${TOKENS.spacing[12]}px`, textAlign: 'center' }}>
-          <h2 style={{ fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.black, margin: `0 0 ${TOKENS.spacing[3]}px 0`, textTransform: 'uppercase' }}>
-            Admin Access
-          </h2>
-          <p style={{ fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textSecondary, margin: `0 0 ${TOKENS.spacing[6]}px 0`, maxWidth: '400px' }}>
-            Connect your wallet to access the admin panel.{ADMIN_ADDRESSES.length > 0 ? ' Only whitelisted addresses are authorized.' : ''}
-          </p>
-          <button
-            onClick={() => connect({ connector: injected() })}
-            disabled={isConnecting}
-            style={{
-              padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[6]}px`,
-              background: TOKENS.colors.accent,
-              color: TOKENS.colors.black,
-              border: 'none',
-              borderRadius: TOKENS.radius.md,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: isConnecting ? 'wait' : 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              opacity: isConnecting ? 0.7 : 1,
-            }}
-          >
-            {isConnecting ? 'Connecting…' : 'Connect Wallet'}
-          </button>
-        </div>
-      </AdminShell>
-    )
-  }
-
-  // Gate: wallet connected but not authorized
-  if (!isAuthorized) {
-    return (
-      <AdminShell>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `${TOKENS.spacing[12]}px`, textAlign: 'center' }}>
-          <h2 style={{ fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.black, margin: `0 0 ${TOKENS.spacing[3]}px 0`, textTransform: 'uppercase', color: TOKENS.colors.danger }}>
-            Access Denied
-          </h2>
-          <p style={{ fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textSecondary, margin: `0 0 ${TOKENS.spacing[2]}px 0`, maxWidth: '400px' }}>
-            Your wallet is not authorized to access the admin panel.
-          </p>
-          <p style={{ fontSize: TOKENS.fontSizes.micro, color: TOKENS.colors.textGhost, fontFamily: MONO, margin: `0 0 ${TOKENS.spacing[6]}px 0` }}>
-            {address?.slice(0, 6)}…{address?.slice(-4)}
-          </p>
-          <div style={{ display: 'flex', gap: TOKENS.spacing[3] }}>
-            <button
-              onClick={() => disconnect()}
-              style={{
-                padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
-                background: 'transparent',
-                border: `1px solid ${TOKENS.colors.borderSubtle}`,
-                borderRadius: TOKENS.radius.md,
-                color: TOKENS.colors.textSecondary,
-                fontSize: TOKENS.fontSizes.sm,
-                fontWeight: TOKENS.fontWeights.bold,
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-              }}
-            >
-              Switch Wallet
-            </button>
-            <a
-              href="/app"
-              style={{
-                padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
-                background: TOKENS.colors.accent,
-                color: TOKENS.colors.black,
-                border: 'none',
-                borderRadius: TOKENS.radius.md,
-                fontSize: TOKENS.fontSizes.sm,
-                fontWeight: TOKENS.fontWeights.bold,
-                textDecoration: 'none',
-                textTransform: 'uppercase',
-              }}
-            >
-              Back to App
-            </a>
-          </div>
-        </div>
-      </AdminShell>
-    )
+  const handleEnterDemo = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hearst:app-mode', 'demo')
+      window.location.href = '/app'
+    }
   }
 
   const handleSave = async (data: VaultConfigInput) => {
@@ -160,85 +165,40 @@ export function AdminClient() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: TOKENS.colors.bgApp,
-        color: TOKENS.colors.textPrimary,
-        fontFamily: TOKENS.fonts.sans,
-      }}
-    >
+    <div style={styles.adminContainer}>
       {/* Header */}
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${TOKENS.spacing[4]}px ${TOKENS.spacing[6]}px`,
-          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-          background: TOKENS.colors.bgSidebar,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[4] }}>
-          <a
-            href="/app"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[2],
-              color: TOKENS.colors.textSecondary,
-              textDecoration: 'none',
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            <span>←</span>
-            <span>Back to App</span>
-          </a>
-          <h1
-            style={{
-              fontSize: TOKENS.fontSizes.xl,
-              fontWeight: TOKENS.fontWeights.black,
-              textTransform: 'uppercase',
-              letterSpacing: '0.02em',
-              margin: 0,
-            }}
-          >
-            Admin
-          </h1>
+      <header style={styles.header}>
+        <div style={styles.headerLeft}>
+          <a href="/app" style={styles.backToApp}>← Back to App</a>
+          <h1 style={styles.headerTitle}>Admin</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3] }}>
-          {address && (
-            <span style={{ fontSize: TOKENS.fontSizes.micro, color: TOKENS.colors.textGhost, fontFamily: MONO, letterSpacing: TOKENS.letterSpacing.display, textTransform: 'uppercase' }}>
-              {address.slice(0, 6)}…{address.slice(-4)}
-            </span>
+        <div style={styles.headerRight}>
+          {/* Demo Mode Entry - Admin Only */}
+          {showDemoConfirm ? (
+            <div style={styles.demoConfirm}>
+              <span style={styles.demoConfirmText}>Enter demo mode?</span>
+              <button onClick={handleEnterDemo} style={styles.demoConfirmYes}>Yes</button>
+              <button onClick={() => setShowDemoConfirm(false)} style={styles.demoConfirmNo}>No</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowDemoConfirm(true)}
+              style={styles.demoButton}
+            >
+              Demo Mode
+            </button>
           )}
           <button
-            onClick={() => setShowForm(true)}
-            disabled={isAdding}
-            style={{
-              padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
-              background: TOKENS.colors.accent,
-              color: TOKENS.colors.black,
-              border: 'none',
-              borderRadius: TOKENS.radius.md,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: isAdding ? 'wait' : 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              opacity: isAdding ? 0.7 : 1,
-            }}
+            onClick={onLogout}
+            style={styles.logoutButton}
           >
-            {isAdding ? 'Creating...' : '+ Add Vault'}
+            Logout
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ padding: TOKENS.spacing[6] }}>
+      <main style={styles.main}>
         {showForm && (
           <VaultConfigForm
             initialData={editingVault}
@@ -337,41 +297,19 @@ function VaultConfigForm({
     value: VaultConfigInput[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    // Clear error when field is edited
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }))
     }
   }
 
   return (
-    <div
-      style={{
-        background: TOKENS.colors.bgSidebar,
-        border: `1px solid ${TOKENS.colors.borderSubtle}`,
-        borderRadius: TOKENS.radius.lg,
-        padding: TOKENS.spacing[6],
-        marginBottom: TOKENS.spacing[6],
-      }}
-    >
-      <h2
-        style={{
-          fontSize: TOKENS.fontSizes.lg,
-          fontWeight: TOKENS.fontWeights.black,
-          textTransform: 'uppercase',
-          margin: `0 0 ${TOKENS.spacing[4]}px 0`,
-        }}
-      >
+    <div style={styles.formContainer}>
+      <h2 style={styles.formTitle}>
         {initialData ? 'Edit Vault' : 'Create New Vault'}
       </h2>
 
       <form onSubmit={handleSubmit}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: TOKENS.spacing[4],
-          }}
-        >
+        <div style={styles.formGrid}>
           <FormField
             label="Name"
             value={formData.name}
@@ -470,30 +408,12 @@ function VaultConfigForm({
           />
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: TOKENS.spacing[3],
-            marginTop: TOKENS.spacing[6],
-            justifyContent: 'flex-end',
-          }}
-        >
+        <div style={styles.formActions}>
           <button
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            style={{
-              padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
-              background: 'transparent',
-              border: `1px solid ${TOKENS.colors.borderSubtle}`,
-              borderRadius: TOKENS.radius.md,
-              color: TOKENS.colors.textSecondary,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
+            style={styles.cancelButton}
           >
             Cancel
           </button>
@@ -501,17 +421,9 @@ function VaultConfigForm({
             type="submit"
             disabled={isSaving}
             style={{
-              padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
-              background: TOKENS.colors.accent,
-              color: TOKENS.colors.black,
-              border: 'none',
-              borderRadius: TOKENS.radius.md,
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              cursor: isSaving ? 'wait' : 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              ...styles.saveButton,
               opacity: isSaving ? 0.7 : 1,
+              cursor: isSaving ? 'wait' : 'pointer',
             }}
           >
             {isSaving ? 'Saving...' : initialData ? 'Update Vault' : 'Create Vault'}
@@ -540,18 +452,10 @@ function FormField({
   required?: boolean
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2] }}>
-      <label
-        style={{
-          fontSize: TOKENS.fontSizes.xs,
-          fontWeight: TOKENS.fontWeights.bold,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: TOKENS.colors.textSecondary,
-        }}
-      >
+    <div style={styles.field}>
+      <label style={styles.fieldLabel}>
         {label}
-        {required && <span style={{ color: TOKENS.colors.accent }}> *</span>}
+        {required && <span style={styles.required}> *</span>}
       </label>
       <input
         type={type}
@@ -559,18 +463,12 @@ function FormField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         style={{
-          padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
-          background: TOKENS.colors.bgTertiary,
-          border: `1px solid ${error ? '#ef4444' : TOKENS.colors.borderSubtle}`,
-          borderRadius: TOKENS.radius.md,
-          color: TOKENS.colors.textPrimary,
-          fontSize: TOKENS.fontSizes.sm,
-          fontFamily: type === 'number' ? MONO : TOKENS.fonts.sans,
-          outline: 'none',
+          ...styles.fieldInput,
+          borderColor: error ? TOKENS.colors.danger : TOKENS.colors.borderSubtle,
         }}
       />
       {error && (
-        <span style={{ fontSize: TOKENS.fontSizes.xs, color: '#ef4444' }}>{error}</span>
+        <span style={styles.fieldError}>{error}</span>
       )}
     </div>
   )
@@ -589,18 +487,9 @@ function VaultList({
 }) {
   return (
     <div>
-      <h3
-        style={{
-          fontSize: TOKENS.fontSizes.md,
-          fontWeight: TOKENS.fontWeights.black,
-          textTransform: 'uppercase',
-          margin: `0 0 ${TOKENS.spacing[4]}px 0`,
-        }}
-      >
-        Configured Vaults ({vaults.length})
-      </h3>
+      <h3 style={styles.listTitle}>Configured Vaults ({vaults.length})</h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3] }}>
+      <div style={styles.vaultList}>
         {vaults.map((vault) => (
           <VaultCard
             key={vault.id}
@@ -627,99 +516,33 @@ function VaultCard({
   isDeleting: boolean
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: TOKENS.spacing[4],
-        background: TOKENS.colors.bgSidebar,
-        border: `1px solid ${TOKENS.colors.borderSubtle}`,
-        borderRadius: TOKENS.radius.lg,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[4] }}>
+    <div style={styles.vaultCard}>
+      <div style={styles.vaultCardLeft}>
         {vault.image && (
-          <img
-            src={vault.image}
-            alt={vault.name}
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: TOKENS.radius.md,
-              objectFit: 'cover',
-            }}
-          />
+          <img src={vault.image} alt={vault.name} style={styles.vaultImage} />
         )}
         <div>
-          <h4
-            style={{
-              fontSize: TOKENS.fontSizes.md,
-              fontWeight: TOKENS.fontWeights.bold,
-              margin: `0 0 ${TOKENS.spacing[2]}px 0`,
-            }}
-          >
-            {vault.name}
-          </h4>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[3],
-              fontSize: TOKENS.fontSizes.xs,
-              color: TOKENS.colors.textSecondary,
-              fontFamily: MONO,
-            }}
-          >
+          <h4 style={styles.vaultName}>{vault.name}</h4>
+          <div style={styles.vaultMeta}>
             <span>{vault.apr}% APR</span>
             <span>·</span>
             <span>Target: {vault.target}</span>
             <span>·</span>
             <span>Min: {fmtUsd(vault.minDeposit)}</span>
           </div>
-          <div
-            style={{
-              marginTop: TOKENS.spacing[2],
-              fontSize: TOKENS.fontSizes.micro,
-              color: TOKENS.colors.textGhost,
-              fontFamily: MONO,
-            }}
-          >
+          <div style={styles.vaultAddress}>
             {vault.vaultAddress.slice(0, 8)}...{vault.vaultAddress.slice(-6)}
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: TOKENS.spacing[2] }}>
-        <button
-          onClick={onEdit}
-          style={{
-            padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
-            background: 'transparent',
-            border: `1px solid ${TOKENS.colors.borderSubtle}`,
-            borderRadius: TOKENS.radius.md,
-            color: TOKENS.colors.textSecondary,
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.bold,
-            cursor: 'pointer',
-            textTransform: 'uppercase',
-          }}
-        >
-          Edit
-        </button>
+      <div style={styles.vaultActions}>
+        <button onClick={onEdit} style={styles.editButton}>Edit</button>
         <button
           onClick={onDelete}
           disabled={isDeleting}
           style={{
-            padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
-            background: 'transparent',
-            border: `1px solid #ef4444`,
-            borderRadius: TOKENS.radius.md,
-            color: '#ef4444',
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.bold,
-            cursor: isDeleting ? 'wait' : 'pointer',
-            textTransform: 'uppercase',
+            ...styles.deleteButton,
             opacity: isDeleting ? 0.5 : 1,
           }}
         >
@@ -732,148 +555,459 @@ function VaultCard({
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: `${TOKENS.spacing[12]}px`,
-        textAlign: 'center',
-      }}
-    >
-      <div
-        style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          background: TOKENS.colors.bgTertiary,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: TOKENS.spacing[4],
-          color: TOKENS.colors.textSecondary,
-        }}
-      >
+    <div style={styles.emptyState}>
+      <div style={styles.emptyIcon}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </div>
-      <h3
-        style={{
-          fontSize: TOKENS.fontSizes.lg,
-          fontWeight: TOKENS.fontWeights.bold,
-          margin: `0 0 ${TOKENS.spacing[2]}px 0`,
-        }}
-      >
-        No Vaults Configured
-      </h3>
-      <p
-        style={{
-          fontSize: TOKENS.fontSizes.sm,
-          color: TOKENS.colors.textSecondary,
-          margin: `0 0 ${TOKENS.spacing[4]}px 0`,
-          maxWidth: '400px',
-        }}
-      >
-        Create your first vault to enable deposits and yield generation in the app.
-      </p>
-      <button
-        onClick={onAdd}
-        style={{
-          padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[6]}px`,
-          background: TOKENS.colors.accent,
-          color: TOKENS.colors.black,
-          border: 'none',
-          borderRadius: TOKENS.radius.md,
-          fontSize: TOKENS.fontSizes.sm,
-          fontWeight: TOKENS.fontWeights.bold,
-          cursor: 'pointer',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-        }}
-      >
-        Create First Vault
-      </button>
+      <h3 style={styles.emptyTitle}>No Vaults Configured</h3>
+      <p style={styles.emptyText}>Create your first vault to enable deposits and yield generation in the app.</p>
+      <button onClick={onAdd} style={styles.emptyButton}>Create First Vault</button>
     </div>
   )
 }
 
 function LoadingState() {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: TOKENS.spacing[12],
-      }}
-    >
-      <div
-        style={{
-          width: '40px',
-          height: '40px',
-          border: `3px solid ${TOKENS.colors.bgTertiary}`,
-          borderTopColor: TOKENS.colors.accent,
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-        }}
-      />
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+    <div style={styles.loadingState}>
+      <div style={styles.spinner} />
     </div>
   )
 }
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: TOKENS.colors.bgApp,
-        color: TOKENS.colors.textPrimary,
-        fontFamily: TOKENS.fonts.sans,
-      }}
-    >
-      <header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${TOKENS.spacing[4]}px ${TOKENS.spacing[6]}px`,
-          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-          background: TOKENS.colors.bgSidebar,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[4] }}>
-          <a
-            href="/app"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[2],
-              color: TOKENS.colors.textSecondary,
-              textDecoration: 'none',
-              fontSize: TOKENS.fontSizes.sm,
-              fontWeight: TOKENS.fontWeights.bold,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            <span>←</span>
-            <span>Back to App</span>
-          </a>
-          <h1 style={{ fontSize: TOKENS.fontSizes.xl, fontWeight: TOKENS.fontWeights.black, textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
-            Admin
-          </h1>
-        </div>
-      </header>
-      <main>{children}</main>
+    <div style={styles.shell}>
+      {children}
     </div>
   )
+}
+
+// Styles
+const styles: Record<string, React.CSSProperties> = {
+  shell: {
+    minHeight: '100vh',
+    background: TOKENS.colors.bgApp,
+    color: TOKENS.colors.textPrimary,
+    fontFamily: TOKENS.fonts.sans,
+  },
+  centered: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+  },
+  spinner: {
+    width: TOKENS.spacing[10],
+    height: TOKENS.spacing[10],
+    border: `3px solid ${TOKENS.colors.bgTertiary}`,
+    borderTopColor: TOKENS.colors.accent,
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  loginContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    padding: TOKENS.spacing[6],
+  },
+  loginBox: {
+    width: '100%',
+    maxWidth: '400px',
+    background: TOKENS.colors.bgSidebar,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.lg,
+    padding: `${TOKENS.spacing[8]}px`,
+    boxSizing: 'border-box',
+  },
+  logoSection: {
+    textAlign: 'center',
+    marginBottom: TOKENS.spacing[6],
+  },
+  logo: {
+    height: TOKENS.spacing[10],
+    marginBottom: TOKENS.spacing[4],
+  },
+  loginTitle: {
+    fontSize: TOKENS.fontSizes.xl,
+    fontWeight: TOKENS.fontWeights.black,
+    textTransform: 'uppercase',
+    margin: `0 0 ${TOKENS.spacing[2]}px 0`,
+  },
+  loginSubtitle: {
+    fontSize: TOKENS.fontSizes.sm,
+    color: TOKENS.colors.textSecondary,
+    margin: 0,
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: `${TOKENS.spacing[4]}px`,
+    width: '100%',
+  },
+  fieldGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: `${TOKENS.spacing[2]}px`,
+    width: '100%',
+  },
+  label: {
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+    color: TOKENS.colors.textSecondary,
+  },
+  inputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    background: TOKENS.colors.bgTertiary,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    transition: 'all 0.15s ease-out',
+    height: '48px',
+  },
+  input: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    padding: `0 ${TOKENS.spacing[4]}px`,
+    background: 'transparent',
+    border: 'none',
+    color: TOKENS.colors.textPrimary,
+    fontSize: TOKENS.fontSizes.sm,
+    outline: 'none',
+    fontFamily: TOKENS.fonts.sans,
+  },
+  error: {
+    padding: TOKENS.spacing[3],
+    background: `${TOKENS.colors.danger}1A`,
+    border: `1px solid ${TOKENS.colors.danger}4D`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.danger,
+    fontSize: TOKENS.fontSizes.sm,
+  },
+  loginButton: {
+    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[6]}px`,
+    background: TOKENS.colors.accent,
+    color: TOKENS.colors.black,
+    border: 'none',
+    borderRadius: TOKENS.radius.md,
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+    marginTop: TOKENS.spacing[2],
+  },
+  backLink: {
+    textAlign: 'center',
+    marginTop: TOKENS.spacing[4],
+  },
+  link: {
+    color: TOKENS.colors.textSecondary,
+    fontSize: TOKENS.fontSizes.sm,
+    textDecoration: 'none',
+  },
+  adminContainer: {
+    minHeight: '100vh',
+    background: TOKENS.colors.bgApp,
+    color: TOKENS.colors.textPrimary,
+    fontFamily: TOKENS.fonts.sans,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: `${TOKENS.spacing[4]}px ${TOKENS.spacing[6]}px`,
+    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+    background: TOKENS.colors.bgSidebar,
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[4],
+  },
+  backToApp: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[2],
+    color: TOKENS.colors.textSecondary,
+    textDecoration: 'none',
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  headerTitle: {
+    fontSize: TOKENS.fontSizes.xl,
+    fontWeight: TOKENS.fontWeights.black,
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+    margin: 0,
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[3],
+  },
+  demoButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.accent}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.accent,
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  demoConfirm: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[2],
+  },
+  demoConfirmText: {
+    fontSize: TOKENS.fontSizes.xs,
+    color: TOKENS.colors.textSecondary,
+  },
+  demoConfirmYes: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    background: TOKENS.colors.accent,
+    border: 'none',
+    borderRadius: TOKENS.radius.sm,
+    color: TOKENS.colors.black,
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+  },
+  demoConfirmNo: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.sm,
+    color: TOKENS.colors.textSecondary,
+    fontSize: TOKENS.fontSizes.xs,
+    cursor: 'pointer',
+  },
+  logoutButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.textSecondary,
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  main: {
+    padding: TOKENS.spacing[6],
+  },
+  formContainer: {
+    background: TOKENS.colors.bgSidebar,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.lg,
+    padding: TOKENS.spacing[6],
+    marginBottom: TOKENS.spacing[6],
+  },
+  formTitle: {
+    fontSize: TOKENS.fontSizes.lg,
+    fontWeight: TOKENS.fontWeights.black,
+    textTransform: 'uppercase',
+    margin: `0 0 ${TOKENS.spacing[4]}px 0`,
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: TOKENS.spacing[4],
+  },
+  formActions: {
+    display: 'flex',
+    gap: TOKENS.spacing[3],
+    marginTop: TOKENS.spacing[6],
+    justifyContent: 'flex-end',
+  },
+  cancelButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.textSecondary,
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  saveButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+    background: TOKENS.colors.accent,
+    border: 'none',
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.black,
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: TOKENS.spacing[2],
+  },
+  fieldLabel: {
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+    color: TOKENS.colors.textSecondary,
+  },
+  required: {
+    color: TOKENS.colors.accent,
+  },
+  fieldInput: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    background: TOKENS.colors.bgTertiary,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.textPrimary,
+    fontSize: TOKENS.fontSizes.sm,
+    fontFamily: 'inherit',
+    outline: 'none',
+  },
+  fieldError: {
+    fontSize: TOKENS.fontSizes.xs,
+    color: TOKENS.colors.danger,
+  },
+  listTitle: {
+    fontSize: TOKENS.fontSizes.md,
+    fontWeight: TOKENS.fontWeights.black,
+    textTransform: 'uppercase',
+    margin: `0 0 ${TOKENS.spacing[4]}px 0`,
+  },
+  vaultList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: TOKENS.spacing[3],
+  },
+  vaultCard: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: TOKENS.spacing[4],
+    background: TOKENS.colors.bgSidebar,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.lg,
+  },
+  vaultCardLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[4],
+  },
+  vaultImage: {
+    width: TOKENS.spacing[12],
+    height: TOKENS.spacing[12],
+    borderRadius: TOKENS.radius.md,
+    objectFit: 'cover',
+  },
+  vaultName: {
+    fontSize: TOKENS.fontSizes.md,
+    fontWeight: TOKENS.fontWeights.bold,
+    margin: `0 0 ${TOKENS.spacing[2]}px 0`,
+  },
+  vaultMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: TOKENS.spacing[3],
+    fontSize: TOKENS.fontSizes.xs,
+    color: TOKENS.colors.textSecondary,
+    fontFamily: MONO,
+  },
+  vaultAddress: {
+    marginTop: TOKENS.spacing[2],
+    fontSize: TOKENS.fontSizes.micro,
+    color: TOKENS.colors.textGhost,
+    fontFamily: MONO,
+  },
+  vaultActions: {
+    display: 'flex',
+    gap: TOKENS.spacing[2],
+  },
+  editButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.textSecondary,
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+  },
+  deleteButton: {
+    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    background: 'transparent',
+    border: `1px solid ${TOKENS.colors.danger}`,
+    borderRadius: TOKENS.radius.md,
+    color: TOKENS.colors.danger,
+    fontSize: TOKENS.fontSizes.xs,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+  },
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: `${TOKENS.spacing[12]}px`,
+    textAlign: 'center',
+  },
+  emptyIcon: {
+    width: TOKENS.spacing[16],
+    height: TOKENS.spacing[16],
+    borderRadius: '50%',
+    background: TOKENS.colors.bgTertiary,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: TOKENS.spacing[4],
+    color: TOKENS.colors.textSecondary,
+  },
+  emptyTitle: {
+    fontSize: TOKENS.fontSizes.lg,
+    fontWeight: TOKENS.fontWeights.bold,
+    margin: `0 0 ${TOKENS.spacing[2]}px 0`,
+  },
+  emptyText: {
+    fontSize: TOKENS.fontSizes.sm,
+    color: TOKENS.colors.textSecondary,
+    margin: `0 0 ${TOKENS.spacing[4]}px 0`,
+    maxWidth: '400px',
+  },
+  emptyButton: {
+    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[6]}px`,
+    background: TOKENS.colors.accent,
+    color: TOKENS.colors.black,
+    border: 'none',
+    borderRadius: TOKENS.radius.md,
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: TOKENS.letterSpacing.normal,
+  },
+  loadingState: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: TOKENS.spacing[12],
+  },
 }

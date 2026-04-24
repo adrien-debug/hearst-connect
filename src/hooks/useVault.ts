@@ -3,9 +3,7 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { VAULT_ABI } from '@/config/abi/vault'
 import { formatUnits, type Address } from 'viem'
-
-// USDC has 6 decimals
-const USDC_DECIMALS = 6
+import { USDC_DECIMALS, POLL_INTERVAL_BLOCK, POLL_INTERVAL_SLOW, MS_PER_SECOND, BASIS_POINTS_DIVISOR } from '@/lib/constants'
 
 export interface VaultPosition {
   depositAmount: number
@@ -33,7 +31,7 @@ export function useVaultPosition(vaultAddress?: Address) {
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!vaultAddress && !!userAddress,
-      refetchInterval: 12000, // Poll every 12s (block time)
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
@@ -44,7 +42,7 @@ export function useVaultPosition(vaultAddress?: Address) {
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!vaultAddress && !!userAddress,
-      refetchInterval: 12000,
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
@@ -55,7 +53,7 @@ export function useVaultPosition(vaultAddress?: Address) {
     args: userAddress ? [userAddress] : undefined,
     query: {
       enabled: !!vaultAddress && !!userAddress,
-      refetchInterval: 12000,
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
@@ -63,7 +61,7 @@ export function useVaultPosition(vaultAddress?: Address) {
     ? {
         depositAmount: Number(formatUnits(userInfo[0], USDC_DECIMALS)),
         rewardDebt: Number(formatUnits(userInfo[1], USDC_DECIMALS)),
-        lockEnd: new Date(Number(userInfo[2]) * 1000),
+        lockEnd: new Date(Number(userInfo[2]) * MS_PER_SECOND),
         pendingRewards: Number(formatUnits(pendingRewards, USDC_DECIMALS)),
         canWithdraw: canWithdraw,
       }
@@ -91,7 +89,7 @@ export function useVaultGlobal(vaultAddress?: Address) {
     functionName: 'totalDeposits',
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 12000,
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
@@ -101,7 +99,7 @@ export function useVaultGlobal(vaultAddress?: Address) {
     functionName: 'monthlyAPR',
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 60000, // APR changes less frequently
+      refetchInterval: POLL_INTERVAL_SLOW, // APR changes less frequently
     },
   })
 
@@ -111,7 +109,7 @@ export function useVaultGlobal(vaultAddress?: Address) {
     functionName: 'getAnnualAPR',
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 60000,
+      refetchInterval: POLL_INTERVAL_SLOW,
     },
   })
 
@@ -121,7 +119,7 @@ export function useVaultGlobal(vaultAddress?: Address) {
     functionName: 'currentEpoch',
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 12000,
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
@@ -131,15 +129,15 @@ export function useVaultGlobal(vaultAddress?: Address) {
     functionName: 'shouldAdvanceEpoch',
     query: {
       enabled: !!vaultAddress,
-      refetchInterval: 12000,
+      refetchInterval: POLL_INTERVAL_BLOCK,
     },
   })
 
   const global: VaultGlobal | null = totalDeposits !== undefined && monthlyAPR !== undefined && annualAPR !== undefined
     ? {
         totalDeposits: Number(formatUnits(totalDeposits, USDC_DECIMALS)),
-        monthlyAPR: Number(monthlyAPR) / 100, // Assuming basis points
-        annualAPR: Number(annualAPR) / 100,
+        monthlyAPR: Number(monthlyAPR) / BASIS_POINTS_DIVISOR,
+        annualAPR: Number(annualAPR) / BASIS_POINTS_DIVISOR,
         currentEpoch: Number(currentEpoch || 0),
         shouldAdvanceEpoch: shouldAdvanceEpoch || false,
       }

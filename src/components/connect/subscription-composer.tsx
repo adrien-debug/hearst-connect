@@ -10,6 +10,7 @@ type Props = {
   vault: AvailableVault
   mode: SmartFitMode
   isLimit: boolean
+  isDemo?: boolean
   amount: string
   onAmountChange: (v: string) => void
   agreed: boolean
@@ -29,6 +30,7 @@ export function SubscriptionComposer({
   vault,
   mode,
   isLimit,
+  isDemo = false,
   amount,
   onAmountChange,
   agreed,
@@ -56,185 +58,170 @@ export function SubscriptionComposer({
     <div
       className="flex flex-col flex-1"
       style={{
-        gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+        gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
       }}
     >
       <div style={{
         display: 'grid',
-        gridTemplateColumns: isLimit ? '1fr' : '1fr 380px',
-        gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+        gridTemplateColumns: isLimit ? '1fr' : '1fr minmax(320px, 38%)',
+        gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
         flex: 1,
         minHeight: 0,
       }}>
-        {/* LEFT COLUMN: Product & Input */}
+        {/* LEFT COLUMN: Product Info & Description */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+          gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
           minHeight: 0,
         }}>
-          {/* Product Header */}
+          {/* Product Header - Compact */}
           <div style={{
             background: TOKENS.colors.black,
             border: `1px solid ${TOKENS.colors.borderSubtle}`,
             borderRadius: TOKENS.radius.lg,
-            padding: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+            padding: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[3] }),
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[4] }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3] }}>
               {vault.image && (
                 <img
                   src={vault.image}
                   alt={vault.name}
                   style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '48px',
+                    height: '48px',
                     borderRadius: TOKENS.radius.md,
                     objectFit: 'cover',
                   }}
                 />
               )}
-              <div>
-                <Label id="sub-kicker" tone="scene" variant="text">
-                  Subscription
-                </Label>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: TOKENS.fontSizes.xs,
+                  color: TOKENS.colors.textSecondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: TOKENS.letterSpacing.wide,
+                  marginBottom: TOKENS.spacing[1],
+                }}>
+                  {vault.strategy}
+                </div>
                 <h1
                   style={{
-                    margin: `${TOKENS.spacing[2]}px 0 0 0`,
-                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xxl, tight: TOKENS.fontSizes.xl, limit: TOKENS.fontSizes.lg }),
+                    margin: 0,
+                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xl, tight: TOKENS.fontSizes.lg, limit: TOKENS.fontSizes.md }),
                     fontWeight: TOKENS.fontWeights.black,
                     letterSpacing: TOKENS.letterSpacing.tight,
                     color: TOKENS.colors.textPrimary,
-                    lineHeight: 1,
+                    lineHeight: 1.2,
                     textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                   }}
                 >
                   {vault.name}
                 </h1>
-                <div style={{
-                  fontSize: TOKENS.fontSizes.sm,
-                  color: TOKENS.colors.textSecondary,
-                  marginTop: TOKENS.spacing[2],
-                }}>
-                  {vault.strategy}
-                </div>
               </div>
+            </div>
+
+            {/* Compact Metrics Row */}
+            <div style={{
+              display: 'flex',
+              gap: TOKENS.spacing[6],
+              marginTop: TOKENS.spacing[3],
+              paddingTop: TOKENS.spacing[3],
+              borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
+            }}>
+              <CompactMetric 
+                label="Min Entry" 
+                value={fmtUsd(vault.minDeposit)} 
+                mode={mode}
+              />
+              <CompactMetric 
+                label="Target" 
+                value={vault.target} 
+                mode={mode}
+                accent
+              />
+              <CompactMetric 
+                label="APY" 
+                value={`${vault.apr}%`} 
+                mode={mode}
+              />
+              <CompactMetric 
+                label="Lock" 
+                value={vault.lockPeriod} 
+                mode={mode}
+              />
             </div>
           </div>
 
-          {/* Input Area */}
+          {/* Product Description Area */}
           <div style={{
             flex: 1,
             background: TOKENS.colors.black,
             border: `1px solid ${TOKENS.colors.borderSubtle}`,
             borderRadius: TOKENS.radius.lg,
-            padding: fitValue(mode, { normal: TOKENS.spacing[8], tight: TOKENS.spacing[6], limit: TOKENS.spacing[4] }),
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
+            padding: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[3] }),
+            overflow: 'auto',
           }}>
-            <fieldset
-              className="min-w-0 shrink-0 border-0 p-0"
-              style={{ margin: 0 }}
-            >
-              <legend className="sr-only">Deployment amount in USDC</legend>
-              <label
-                htmlFor={idAmount}
-                id={idAmountHint}
-                style={{
-                  display: 'block',
-                  fontFamily: TOKENS.fonts.mono,
-                  fontSize: TOKENS.fontSizes.xs,
-                  fontWeight: TOKENS.fontWeights.bold,
-                  textTransform: 'uppercase',
-                  letterSpacing: TOKENS.letterSpacing.display,
-                  color: TOKENS.colors.textSecondary,
-                  marginBottom: TOKENS.spacing[3],
-                }}
-              >
-                Amount to deploy (USDC)
-              </label>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  borderBottom: `2px solid ${isValid && num > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
-                  paddingBottom: TOKENS.spacing[3],
-                  transition: 'border-color 0.2s ease',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.figure, tight: TOKENS.fontSizes.xxxl, limit: TOKENS.fontSizes.xxl }),
-                    fontWeight: TOKENS.fontWeights.black,
-                    color: num > 0 ? TOKENS.colors.textPrimary : TOKENS.colors.textGhost,
-                    marginRight: TOKENS.spacing[2],
-                  }}
-                >
-                  $
-                </span>
-                <input
-                  id={idAmount}
-                  name="amount"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => onAmountChange(e.target.value)}
-                  autoComplete="off"
-                  aria-invalid={showError}
-                  aria-describedby={[idAmountHint, num > 0 ? idAmountStatus : ''].filter(Boolean).join(' ') || undefined}
-                  style={{
-                    width: '100%',
-                    minWidth: 0,
-                    border: 0,
-                    background: 'transparent',
-                    fontWeight: TOKENS.fontWeights.black,
-                    color: TOKENS.colors.textPrimary,
-                    outline: 'none',
-                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.figure, tight: TOKENS.fontSizes.xxxl, limit: TOKENS.fontSizes.xxl }),
-                    fontFamily: TOKENS.fonts.sans,
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                  }}
+            <Label id="product-desc-label" tone="scene" variant="text">
+              Product Overview
+            </Label>
+            
+            <div style={{ marginTop: TOKENS.spacing[4], color: TOKENS.colors.textSecondary, lineHeight: 1.6 }}>
+              <p style={{ margin: `0 0 ${TOKENS.spacing[3]}px 0` }}>
+                This vault deploys capital into {vault.strategy.toLowerCase()} strategies 
+                with a {vault.lockPeriod} lock period. Designed for {vault.risk.toLowerCase()} risk appetite.
+              </p>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: TOKENS.spacing[3],
+                marginTop: TOKENS.spacing[4],
+              }}>
+                <InfoBlock 
+                  title="Strategy" 
+                  content={vault.strategy}
                 />
-                <span
-                  style={{
-                    fontWeight: TOKENS.fontWeights.bold,
-                    color: TOKENS.colors.textGhost,
-                    fontSize: fitValue(mode, { normal: TOKENS.fontSizes.xl, tight: TOKENS.fontSizes.lg, limit: TOKENS.fontSizes.md }),
-                    marginLeft: TOKENS.spacing[3],
-                  }}
-                  aria-hidden
-                >
-                  USDC
+                <InfoBlock 
+                  title="Risk Level" 
+                  content={vault.risk}
+                />
+                <InfoBlock 
+                  title="Lock Period" 
+                  content={vault.lockPeriod}
+                />
+                <InfoBlock 
+                  title="Management Fee" 
+                  content={vault.fees}
+                />
+              </div>
+
+              <div style={{ 
+                marginTop: TOKENS.spacing[4],
+                padding: TOKENS.spacing[3],
+                background: TOKENS.colors.bgTertiary,
+                borderRadius: TOKENS.radius.md,
+                fontSize: TOKENS.fontSizes.xs,
+              }}>
+                <strong style={{ color: TOKENS.colors.textPrimary }}>Important:</strong>{' '}
+                <span style={{ color: TOKENS.colors.textSecondary }}>
+                  Capital is locked for the duration. Early withdrawal is not available. 
+                  Target yield is cumulative over the lock period.
                 </span>
               </div>
-              <div
-                id={idAmountStatus}
-                role="status"
-                aria-live="polite"
-                style={{
-                  marginTop: TOKENS.spacing[3],
-                  minHeight: '20px',
-                  fontSize: TOKENS.fontSizes.xs,
-                  fontWeight: TOKENS.fontWeights.bold,
-                  color: showError ? TOKENS.colors.danger : showValidHint ? TOKENS.colors.accent : 'transparent',
-                }}
-              >
-                {showError && <span>Minimum deposit: {fmtUsd(vault.minDeposit)}</span>}
-                {showValidHint && !showError && <span>Deposit amount valid</span>}
-              </div>
-            </fieldset>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Order Summary */}
+        {/* RIGHT COLUMN: Order Summary with Amount Input */}
         <div style={{
           background: TOKENS.colors.black,
           border: `1px solid ${TOKENS.colors.borderSubtle}`,
           borderRadius: TOKENS.radius.lg,
-          padding: fitValue(mode, { normal: TOKENS.spacing[6], tight: TOKENS.spacing[4], limit: TOKENS.spacing[4] }),
+          padding: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[3] }),
           display: 'flex',
           flexDirection: 'column',
         }}>
@@ -245,24 +232,128 @@ export function SubscriptionComposer({
             letterSpacing: TOKENS.letterSpacing.display,
             textTransform: 'uppercase',
             color: TOKENS.colors.textSecondary,
-            marginBottom: TOKENS.spacing[6],
+            marginBottom: TOKENS.spacing[4],
           }}>
             Order Summary
           </span>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4], flex: 1 }}>
-            <SpecItem mode={mode} label="Unlock Timeline" value={vault.lockPeriod} />
-            <SpecItem mode={mode} label="Risk Profile" value={vault.risk} />
-            <SpecItem mode={mode} label="Management Fees" value={vault.fees} />
+          {/* Amount Input - Pixel Perfect */}
+          <div style={{ marginBottom: TOKENS.spacing[4] }}>
+            <label
+              htmlFor={idAmount}
+              id={idAmountHint}
+              style={{
+                display: 'block',
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                textTransform: 'uppercase',
+                letterSpacing: TOKENS.letterSpacing.display,
+                color: TOKENS.colors.textSecondary,
+                marginBottom: TOKENS.spacing[2],
+              }}
+            >
+              Amount to deploy
+            </label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: `${TOKENS.borders.thin} solid ${isValid && num > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.md,
+                padding: `0 ${TOKENS.spacing[3]}px`,
+                background: TOKENS.colors.bgTertiary,
+                transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
+                height: '48px',
+                boxShadow: isValid && num > 0 ? `0 0 0 1px ${TOKENS.colors.accent}20` : 'none',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: TOKENS.fontSizes.xl,
+                  fontWeight: TOKENS.fontWeights.black,
+                  color: num > 0 ? TOKENS.colors.textPrimary : TOKENS.colors.textGhost,
+                  marginRight: TOKENS.spacing[2],
+                  lineHeight: 1,
+                  flexShrink: 0,
+                }}
+              >
+                $
+              </span>
+              <input
+                id={idAmount}
+                name="amount"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => onAmountChange(e.target.value)}
+                autoComplete="off"
+                aria-invalid={showError}
+                aria-describedby={[idAmountHint, num > 0 ? idAmountStatus : ''].filter(Boolean).join(' ') || undefined}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  border: 0,
+                  background: 'transparent',
+                  fontWeight: TOKENS.fontWeights.black,
+                  color: TOKENS.colors.textPrimary,
+                  outline: 'none',
+                  fontSize: TOKENS.fontSizes.xl,
+                  fontFamily: TOKENS.fonts.sans,
+                  letterSpacing: VALUE_LETTER_SPACING,
+                  lineHeight: 1,
+                  padding: 0,
+                  height: '100%',
+                }}
+              />
+              <span
+                style={{
+                  fontWeight: TOKENS.fontWeights.bold,
+                  color: TOKENS.colors.textGhost,
+                  fontSize: TOKENS.fontSizes.xs,
+                  marginLeft: TOKENS.spacing[2],
+                  flexShrink: 0,
+                  lineHeight: 1,
+                }}
+                aria-hidden
+              >
+                USDC
+              </span>
+            </div>
+            <div
+              id={idAmountStatus}
+              role="status"
+              aria-live="polite"
+              style={{
+                marginTop: TOKENS.spacing[2],
+                minHeight: `${TOKENS.spacing[4]}px`,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                color: showError ? TOKENS.colors.danger : showValidHint ? TOKENS.colors.accent : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {showError && <span>Minimum: {fmtUsd(vault.minDeposit)}</span>}
+              {showValidHint && !showError && <span style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[1] }}><span>✓</span> Valid amount</span>}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2], flex: 1 }}>
+            <SpecItem label="Unlock Timeline" value={vault.lockPeriod} />
+            <SpecItem label="Risk Profile" value={vault.risk} />
+            <SpecItem label="Management Fees" value={vault.fees} />
             
             <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0` }} />
             
-            <ProjectionLine mode={mode} label="Est. Annual Yield" value={num > 0 ? `+${fmtUsd(yearlyYield)}` : '—'} highlight />
-            <ProjectionLine mode={mode} label="Target Yield" value={num > 0 ? `+${fmtUsd(totalYield)}` : '—'} highlight />
+            <ProjectionLine label="Est. Annual Yield" value={num > 0 ? `+${fmtUsd(yearlyYield)}` : '—'} highlight />
+            <ProjectionLine label="Target Yield" value={num > 0 ? `+${fmtUsd(totalYield)}` : '—'} highlight />
             
-            <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0`, flex: 1 }} />
+            <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0` }} />
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: TOKENS.spacing[6] }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <span style={{ 
                 fontSize: TOKENS.fontSizes.xs, 
                 fontWeight: TOKENS.fontWeights.bold,
@@ -273,30 +364,32 @@ export function SubscriptionComposer({
                 Total Value
               </span>
               <span style={{ 
-                fontSize: TOKENS.fontSizes.xl, 
+                fontSize: TOKENS.fontSizes.lg, 
                 fontWeight: TOKENS.fontWeights.black,
                 color: TOKENS.colors.textPrimary,
-                letterSpacing: '-0.02em',
+                letterSpacing: VALUE_LETTER_SPACING,
               }}>
                 {num > 0 ? fmtUsd(num + totalYield) : '—'}
               </span>
             </div>
 
             {/* Pre-flight Check */}
-            <PreFlightCheck 
-              vault={vault} 
-              depositAmount={amount}
-              onApprove={onApprove}
-              isApproving={isApproving}
-            />
+            <div style={{ marginTop: TOKENS.spacing[2] }}>
+              <PreFlightCheck 
+                vault={vault} 
+                depositAmount={amount}
+                onApprove={onApprove}
+                isApproving={isApproving}
+              />
+            </div>
 
             {/* Checkbox & CTA */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3], marginTop: TOKENS.spacing[2] }}>
               <fieldset id={idFieldsetTerms} className="m-0 border-0 p-0">
                 <legend className="sr-only">Terms confirmation</legend>
                 <label
                   htmlFor={idAgree}
-                  style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3], cursor: 'pointer' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2], cursor: 'pointer' }}
                 >
                   <input
                     id={idAgree}
@@ -305,8 +398,8 @@ export function SubscriptionComposer({
                     checked={agreed}
                     onChange={(e) => onAgreedChange(e.target.checked)}
                     style={{
-                      width: '20px',
-                      height: '20px',
+                      width: TOKENS.spacing[5],
+                      height: TOKENS.spacing[5],
                       accentColor: TOKENS.colors.accent,
                       cursor: 'pointer',
                     }}
@@ -331,18 +424,18 @@ export function SubscriptionComposer({
                 onClick={onDeposit}
                 style={{
                   width: '100%',
-                  padding: TOKENS.spacing[4],
+                  padding: `${TOKENS.spacing[3]}px`,
                   background: isReady ? TOKENS.colors.accent : TOKENS.colors.bgTertiary,
                   color: isReady ? TOKENS.colors.black : TOKENS.colors.textGhost,
                   border: 'none',
                   borderRadius: TOKENS.radius.md,
-                  fontSize: TOKENS.fontSizes.md,
+                  fontSize: TOKENS.fontSizes.sm,
                   fontWeight: TOKENS.fontWeights.black,
                   letterSpacing: TOKENS.letterSpacing.display,
                   textTransform: 'uppercase',
                   cursor: isReady && !isDepositing ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isReady ? `0 4px 16px ${TOKENS.colors.accent}40` : 'none',
+                  transition: 'all var(--transition-fast)',
+                  boxShadow: isReady ? `0 ${TOKENS.spacing[1]}px ${TOKENS.spacing[2]}px ${TOKENS.colors.accent}40` : 'none',
                   opacity: isDepositing ? 0.7 : 1,
                 }}
                 aria-label={isReady ? 'Confirm subscription' : 'Complete form to deploy'}
@@ -358,7 +451,35 @@ export function SubscriptionComposer({
   )
 }
 
-function SpecItem({ label, value, mode }: { label: string; value: string; mode: SmartFitMode }) {
+function InfoBlock({ title, content }: { title: string; content: string }) {
+  return (
+    <div style={{
+      padding: TOKENS.spacing[3],
+      background: TOKENS.colors.bgTertiary,
+      borderRadius: TOKENS.radius.md,
+    }}>
+      <div style={{
+        fontSize: TOKENS.fontSizes.micro,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
+        color: TOKENS.colors.textSecondary,
+        textTransform: 'uppercase',
+        marginBottom: TOKENS.spacing[2],
+      }}>
+        {title}
+      </div>
+      <div style={{
+        fontSize: TOKENS.fontSizes.sm,
+        fontWeight: TOKENS.fontWeights.bold,
+        color: TOKENS.colors.textPrimary,
+      }}>
+        {content}
+      </div>
+    </div>
+  )
+}
+
+function CompactMetric({ label, value, accent, mode }: { label: string; value: string; accent?: boolean; mode: SmartFitMode }) {
   return (
     <div>
       <div
@@ -367,17 +488,18 @@ function SpecItem({ label, value, mode }: { label: string; value: string; mode: 
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           color: TOKENS.colors.textSecondary,
-          marginBottom: TOKENS.spacing[2],
           textTransform: 'uppercase',
+          marginBottom: TOKENS.spacing[1],
         }}
       >
         {label}
       </div>
       <div
         style={{
-          fontSize: fitValue(mode, { normal: TOKENS.fontSizes.md, tight: TOKENS.fontSizes.sm, limit: TOKENS.fontSizes.sm }),
-          fontWeight: 900,
-          color: TOKENS.colors.textPrimary,
+          fontSize: fitValue(mode, { normal: TOKENS.fontSizes.sm, tight: TOKENS.fontSizes.xs, limit: TOKENS.fontSizes.xs }),
+          fontWeight: TOKENS.fontWeights.bold,
+          color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+          letterSpacing: VALUE_LETTER_SPACING,
         }}
       >
         {value}
@@ -386,24 +508,25 @@ function SpecItem({ label, value, mode }: { label: string; value: string; mode: 
   )
 }
 
-function ProjectionLine({ label, value, highlight, mode }: { label: string; value: string; highlight?: boolean; mode: SmartFitMode }) {
+function SpecItem({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className="flex items-baseline justify-between gap-4 border-b border-white/10 py-2"
-    >
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span
         style={{
-          fontSize: fitValue(mode, { normal: TOKENS.fontSizes.sm, tight: TOKENS.fontSizes.sm, limit: TOKENS.fontSizes.micro }),
+          fontSize: TOKENS.fontSizes.xs,
+          fontWeight: TOKENS.fontWeights.bold,
+          letterSpacing: TOKENS.letterSpacing.display,
           color: TOKENS.colors.textSecondary,
+          textTransform: 'uppercase',
         }}
       >
         {label}
       </span>
       <span
         style={{
-          fontSize: fitValue(mode, { normal: TOKENS.fontSizes.lg, tight: TOKENS.fontSizes.md, limit: TOKENS.fontSizes.sm }),
-          fontWeight: 900,
-          color: highlight ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+          fontSize: TOKENS.fontSizes.sm,
+          fontWeight: TOKENS.fontWeights.bold,
+          color: TOKENS.colors.textPrimary,
         }}
       >
         {value}
@@ -411,3 +534,38 @@ function ProjectionLine({ label, value, highlight, mode }: { label: string; valu
     </div>
   )
 }
+
+function ProjectionLine({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: `${TOKENS.spacing[1]}px 0`,
+        borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+      }}
+    >
+      <span
+        style={{
+          fontSize: TOKENS.fontSizes.xs,
+          color: TOKENS.colors.textSecondary,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: TOKENS.fontSizes.md,
+          fontWeight: TOKENS.fontWeights.black,
+          color: highlight ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
+          letterSpacing: VALUE_LETTER_SPACING,
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+const VALUE_LETTER_SPACING = '-0.02em'

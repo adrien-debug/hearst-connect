@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { MS_PER_MINUTE } from '@/lib/constants'
 
 const INITIAL_DAY = 12
 const INITIAL_DAYS_IN_MONTH = 30
@@ -16,7 +17,7 @@ export function useMonthProgress() {
       setDaysInMonth(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate())
     }
     update()
-    const id = setInterval(update, 60_000)
+    const id = setInterval(update, MS_PER_MINUTE)
     return () => clearInterval(id)
   }, [])
 

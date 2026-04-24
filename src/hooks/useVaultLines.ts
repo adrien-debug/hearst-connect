@@ -5,6 +5,7 @@ import type { VaultLine, ActiveVault, AvailableVault, Aggregate } from '@/compon
 import { useVaultRegistry } from './useVaultRegistry'
 import { useDemoPortfolio, useSystemVaults } from './useDemoPortfolio'
 import { useAppMode } from './useAppMode'
+import { DAYS_PER_YEAR } from '@/lib/constants'
 
 
 function calculateAggregate(vaults: VaultLine[]): Aggregate {
@@ -56,7 +57,7 @@ export function useVaultLines() {
           return activeVault
         }
 
-        const years = sysVault.meta.lockPeriodDays / 365
+        const years = sysVault.meta.lockPeriodDays / DAYS_PER_YEAR
         const lockLabel = years >= 1 ? `${Math.floor(years)} Years` : `${sysVault.meta.lockPeriodDays} Days`
         const termLabel = years >= 1 ? `${Math.floor(years)}Y` : `${sysVault.meta.lockPeriodDays}D`
 
@@ -103,7 +104,7 @@ export function useVaultLines() {
 
     // MODE BLOCKCHAIN: Live
     const configuredLines: AvailableVault[] = activeVaults.map((config) => {
-      const years = config.lockPeriodDays / 365
+      const years = config.lockPeriodDays / DAYS_PER_YEAR
       const lockLabel = years >= 1 ? `${Math.floor(years)} Years` : `${config.lockPeriodDays} Days`
       const termLabel = years >= 1 ? `${Math.floor(years)}Y` : `${config.lockPeriodDays}D`
       return {

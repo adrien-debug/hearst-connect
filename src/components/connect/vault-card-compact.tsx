@@ -17,7 +17,7 @@ interface VaultCardCompactProps {
   onExit?: () => void
 }
 
-const palette = [TOKENS.colors.accent, TOKENS.colors.white, 'rgba(255,255,255,0.45)', 'rgba(255,255,255,0.35)']
+const palette = [TOKENS.colors.accent, TOKENS.colors.white, TOKENS.colors.gray500, TOKENS.colors.textGhost]
 
 export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, onExit }: VaultCardCompactProps) {
   const color = palette[index % palette.length]
@@ -38,12 +38,12 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
         background: TOKENS.colors.black,
         borderRadius: TOKENS.radius.md,
         padding: mode === 'limit' ? `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}` : `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-        border: `1px solid ${isHovered ? TOKENS.colors.borderStrong : TOKENS.colors.borderSubtle}`,
+        border: `${TOKENS.borders.thin} solid ${isHovered ? TOKENS.colors.borderStrong : TOKENS.colors.borderSubtle}`,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 120ms ease-out',
         display: 'flex',
         alignItems: 'center',
-        gap: '12px',
+        gap: TOKENS.spacing[3],
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -52,9 +52,9 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
     >
       {/* Color dot */}
       <div style={{
-        width: '8px',
-        height: '8px',
-        borderRadius: '50%',
+        width: TOKENS.spacing[2],
+        height: TOKENS.spacing[2],
+        borderRadius: TOKENS.radius.full,
         background: color,
         flexShrink: 0,
       }} />
@@ -65,7 +65,7 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
         minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px',
+        gap: TOKENS.spacing[1],
         opacity: showActions ? 0.3 : 1,
         transition: 'opacity 150ms ease-out',
       }}>
@@ -73,10 +73,10 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '8px',
+          gap: TOKENS.spacing[2],
         }}>
           <span style={{
-            fontSize: mode === 'limit' ? '11px' : '12px',
+            fontSize: mode === 'limit' ? TOKENS.fontSizes.micro : TOKENS.fontSizes.xs,
             fontWeight: TOKENS.fontWeights.black,
             color: TOKENS.colors.textPrimary,
             textTransform: 'uppercase',
@@ -88,7 +88,7 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
             {formatVaultName(vault.name)}
           </span>
           <span style={{
-            fontSize: '12px',
+            fontSize: TOKENS.fontSizes.xs,
             fontWeight: TOKENS.fontWeights.black,
             color: TOKENS.colors.textPrimary,
             letterSpacing: VALUE_LETTER_SPACING,
@@ -102,33 +102,33 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: TOKENS.spacing[2],
         }}>
           <div style={{
             flex: 1,
-            height: '2px',
+            height: TOKENS.borders.thick,
             background: TOKENS.colors.bgTertiary,
-            borderRadius: '1px',
+            borderRadius: TOKENS.borders.thin,
             overflow: 'hidden',
           }}>
             <div style={{
               width: `${Math.min(100, vault.progress)}%`,
               height: '100%',
               background: vault.progress >= 100 ? TOKENS.colors.accent : color,
-              borderRadius: '1px',
+              borderRadius: TOKENS.borders.thin,
             }} />
           </div>
           <span style={{
-            fontSize: '10px',
+            fontSize: TOKENS.fontSizes.micro,
             fontWeight: TOKENS.fontWeights.bold,
             color: TOKENS.colors.textGhost,
-            letterSpacing: '0.1em',
+            letterSpacing: TOKENS.letterSpacing.wide,
             flexShrink: 0,
           }}>
             {vault.progress}%
           </span>
           <span style={{
-            fontSize: '10px',
+            fontSize: TOKENS.fontSizes.micro,
             color: daysToMaturity < 30 ? TOKENS.colors.accent : TOKENS.colors.textGhost,
             flexShrink: 0,
           }}>
@@ -145,7 +145,7 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
         transition: 'opacity 150ms ease-out',
       }}>
         <span style={{
-          fontSize: '10px',
+          fontSize: TOKENS.fontSizes.micro,
           fontWeight: TOKENS.fontWeights.bold,
           color: TOKENS.colors.accent,
         }}>
@@ -159,14 +159,14 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'rgba(0,0,0,0.85)',
+            background: TOKENS.colors.bgApp,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: TOKENS.spacing[2],
             padding: TOKENS.spacing[2],
             animation: 'fadeIn 150ms ease-out',
-            backdropFilter: 'blur(2px)',
+            backdropFilter: `blur(${TOKENS.spacing[1]})`,
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -210,4 +210,3 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
     </div>
   )
 }
-

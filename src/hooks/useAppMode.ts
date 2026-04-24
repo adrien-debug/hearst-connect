@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-
-const STORAGE_KEY = 'hearst:app-mode'
+import { STORAGE_KEYS } from '@/config/storage-keys'
 
 export function useAppMode() {
   const [mode, setMode] = useState<'demo' | 'live'>('demo')
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    const saved = localStorage.getItem(STORAGE_KEYS.APP_MODE)
     if (saved === 'demo' || saved === 'live') {
       setMode(saved)
     }
@@ -17,7 +16,7 @@ export function useAppMode() {
   const setAppMode = useCallback((newMode: 'demo' | 'live') => {
     setMode(newMode)
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, newMode)
+      localStorage.setItem(STORAGE_KEYS.APP_MODE, newMode)
       // Force reload to apply changes
       window.location.reload()
     }

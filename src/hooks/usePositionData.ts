@@ -5,6 +5,7 @@ import type { Address } from 'viem'
 import type { PositionData, PositionError } from '@/types/position'
 import { useVaultPosition, useVaultGlobal } from './useVault'
 import { useVaultById } from './useVaultRegistry'
+import { MS_PER_DAY, EPOCH_PROGRESS_NEAR_END, EPOCH_PROGRESS_DEFAULT } from '@/lib/constants'
 
 interface UsePositionDataOptions {
   vaultId: string
@@ -83,7 +84,7 @@ export function usePositionData({
     // Calculate days remaining from lockEnd
     const now = Date.now()
     const lockEndTime = position.lockEnd.getTime()
-    const daysRemaining = Math.max(0, Math.ceil((lockEndTime - now) / (1000 * 60 * 60 * 24)))
+    const daysRemaining = Math.max(0, Math.ceil((lockEndTime - now) / MS_PER_DAY))
 
     // Calculate progress to target (using APR and time elapsed)
     // This is a simplified calculation - the real target progress might need
@@ -109,8 +110,8 @@ export function usePositionData({
       },
       epoch: {
         currentEpoch: global.currentEpoch,
-        epochProgress: global.shouldAdvanceEpoch ? 95 : 50, // Approximate
-        epochEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // Placeholder
+        epochProgress: global.shouldAdvanceEpoch ? EPOCH_PROGRESS_NEAR_END : EPOCH_PROGRESS_DEFAULT,
+        epochEndsAt: new Date(Date.now() + 15 * MS_PER_DAY).toISOString(),
       },
       canWithdraw: position.canWithdraw,
       isTargetReached,

@@ -48,8 +48,16 @@ NEXT_PUBLIC_GOOGLE_ADS_ID=             # Optional — Google Ads
 
 Two modes (`hearst:app-mode` in localStorage; switching reloads the page):
 
-- **Demo** (default) — System vaults in `src/lib/demo-data.ts`, portfolio in localStorage. Header: **DÉMO** toggle (→ Live), **Reset**, link to **`/admin`**. Subscribe / vault detail without a registry row show a **read-only demo** panel instead of “vault not configured”.
-- **Live** — Registry-driven list + on-chain flows when addresses exist. Header: **no Admin link**, **no demo pill**; discreet **“Mode démo”** returns to demo. Missing registry → explicit empty state (`hasVaults: false`).
+- **Demo** — System vaults in `src/lib/demo-data.ts`, portfolio in localStorage. Accessible **only via Admin panel** (after email/password auth). Header: **DÉMO** toggle (→ Live, one-way), **Reset**.
+- **Live** (default) — Registry-driven list + on-chain flows when addresses exist. No demo entry in UI. Missing registry → explicit empty state (`hasVaults: false`).
+
+## Admin Access
+
+Navigate to `/admin` → email/password authentication required. Default: `admin@hearst.app` / `hearst2024`. Session stored in localStorage (24h).
+
+From Admin panel, authorized users can:
+- Manage vault registry (CRUD)
+- Enter Demo Mode via "Demo Mode" button
 
 ## UI / Design System (Cinematic Financial OS)
 
@@ -87,7 +95,8 @@ src/
 │   ├── useVault.ts          # Vault contract reads (position, global) + writes
 │   ├── useTokenAllowance.ts # ERC-20 approve flow
 │   ├── useTransaction.ts    # Transaction lifecycle
-│   └── useMonthProgress.ts  # Monthly yield gauge
+│   ├── useMonthProgress.ts  # Monthly yield gauge
+│   └── useAdminAuth.ts      # Admin authentication (email/password)
 ├── lib/
 │   ├── vault-math.ts              # Aggregate + monthly yield
 │   ├── projection-simulation.ts   # Scenario projection

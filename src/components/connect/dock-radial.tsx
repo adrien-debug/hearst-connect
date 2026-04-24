@@ -37,11 +37,6 @@ export function DockRadial({ selectedId, onSelect, isSimulation }: DockRadialPro
     }
   }, [onSelect])
 
-  const navItems = [
-    { id: 'available' as const, label: 'Available' },
-    { id: 'simulation' as const, label: 'Simulation' },
-  ]
-
   const isDashboardActive = currentState === 'dashboard'
 
   return (
@@ -49,14 +44,14 @@ export function DockRadial({ selectedId, onSelect, isSimulation }: DockRadialPro
       {/* Left Footer Info */}
       <div style={{
         position: 'fixed',
-        bottom: '32px',
-        left: '32px',
+        bottom: TOKENS.spacing[8],
+        left: TOKENS.spacing[8],
         zIndex: 40,
         fontFamily: TOKENS.fonts.mono,
-        fontSize: '10px',
+        fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
         color: TOKENS.colors.textGhost,
-        letterSpacing: '0.1em',
+        letterSpacing: TOKENS.letterSpacing.wide,
         textTransform: 'uppercase',
       }}>
         v1.0.42
@@ -65,14 +60,14 @@ export function DockRadial({ selectedId, onSelect, isSimulation }: DockRadialPro
       {/* Right Footer Info */}
       <div style={{
         position: 'fixed',
-        bottom: '32px',
-        right: '32px',
+        bottom: TOKENS.spacing[8],
+        right: TOKENS.spacing[8],
         zIndex: 40,
         fontFamily: TOKENS.fonts.mono,
-        fontSize: '10px',
+        fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
         color: TOKENS.colors.textGhost,
-        letterSpacing: '0.1em',
+        letterSpacing: TOKENS.letterSpacing.wide,
         textTransform: 'uppercase',
       }}>
         System Operational
@@ -82,113 +77,175 @@ export function DockRadial({ selectedId, onSelect, isSimulation }: DockRadialPro
       <div
         style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: TOKENS.spacing[6],
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 50,
           display: 'flex',
           alignItems: 'center',
-          background: TOKENS.colors.black,
-          border: `1px solid rgba(255, 255, 255, 0.1)`,
-          borderRadius: '32px',
-          padding: '6px',
-          gap: '8px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+          background: TOKENS.colors.bgApp,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: `1px solid ${TOKENS.colors.borderSubtle}`,
+          borderRadius: TOKENS.radius.xl,
+          padding: TOKENS.spacing[1],
+          gap: TOKENS.spacing[1],
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.02)',
         }}
       >
-      {/* Hearst Logo / Home Button */}
-      <button
-        onClick={() => handleNavClick('dashboard')}
-        onMouseEnter={() => setHoveredId('logo')}
-        onMouseLeave={() => setHoveredId(null)}
-        style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '50%',
-          background: isDashboardActive ? 'rgba(255, 255, 255, 0.1)' : hoveredId === 'logo' ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.2s ease',
-          position: 'relative',
-          padding: 0, // Ensure no padding interferes with centering
-        }}
-        title="Dashboard"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="572.6 466.87 129.26 142.86"
-          style={{
-            width: '20px',
-            height: '20px',
-            color: isDashboardActive ? TOKENS.colors.accent : TOKENS.colors.white,
-            transition: 'all 0.2s ease',
-            display: 'block', // Force block display to prevent flexbox squishing
-            margin: 'auto', // Ensure it centers perfectly
-          }}
-        >
-          <polygon fill="currentColor" points="601.74 466.87 572.6 466.87 572.6 609.73 601.74 609.73 601.74 549.07 633.11 579.43 665.76 579.43 601.74 517.46 601.74 466.87" />
-          <polygon fill="currentColor" points="672.72 466.87 672.72 528.12 644.63 500.93 611.98 500.93 672.72 559.72 672.72 609.73 701.86 609.73 701.86 466.87 672.72 466.87" />
-        </svg>
-      </button>
-
-      {/* Divider */}
-      <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.1)' }} />
-
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '4px' }}>
-        {navItems.map((item) => {
-          const isActive = currentState === item.id
-          const isItemHovered = hoveredId === item.id
+      <div style={{ display: 'flex', gap: TOKENS.spacing[1], alignItems: 'center' }}>
+        {/* Available */}
+        <NavButton
+          id="available"
+          label="Available"
+          isActive={currentState === 'available'}
+          hoveredId={hoveredId}
+          setHoveredId={setHoveredId}
+          onClick={() => handleNavClick('available')}
+        />
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              onMouseEnter={() => setHoveredId(item.id)}
-              onMouseLeave={() => setHoveredId(null)}
+        {/* Divider */}
+        <div style={{ width: TOKENS.borders.thin, height: '20px', background: TOKENS.colors.borderMain, margin: `0 ${TOKENS.spacing[1]}` }} />
+
+        {/* Hearst Logo / Home Button */}
+        <button
+          onClick={() => handleNavClick('dashboard')}
+          onMouseEnter={() => setHoveredId('logo')}
+          onMouseLeave={() => setHoveredId(null)}
+          style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: TOKENS.radius.full,
+            background: isDashboardActive
+              ? TOKENS.colors.accentSubtle
+              : hoveredId === 'logo'
+                ? TOKENS.colors.surfaceHover
+                : 'transparent',
+            border: isDashboardActive ? `1px solid ${TOKENS.colors.accent}` : '1px solid transparent',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            position: 'relative',
+            padding: 0,
+          }}
+          title="Dashboard"
+        >
+          {/* Simple accent dot indicator */}
+          {isDashboardActive && (
+            <span
               style={{
-                position: 'relative',
-                padding: '8px 16px',
-                background: isActive ? 'rgba(255, 255, 255, 0.1)' : isItemHovered ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
-                border: 'none',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
+                position: 'absolute',
+                bottom: '4px',
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: TOKENS.colors.accent,
               }}
-            >
-              {isActive && (
-                <span
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: TOKENS.colors.accent,
-                    boxShadow: `0 0 8px ${TOKENS.colors.accent}`,
-                  }}
-                />
-              )}
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: TOKENS.fontWeights.bold,
-                  letterSpacing: VALUE_LETTER_SPACING,
-                  color: isActive ? TOKENS.colors.white : TOKENS.colors.textSecondary,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {item.label}
-              </span>
-            </button>
-          )
-        })}
+            />
+          )}
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="572.6 466.87 129.26 142.86"
+            style={{
+              width: '20px',
+              height: '20px',
+              color: isDashboardActive ? TOKENS.colors.accent : hoveredId === 'logo' ? TOKENS.colors.white : TOKENS.colors.textSecondary,
+              transition: 'all 0.2s ease',
+              display: 'block',
+              margin: 'auto',
+            }}
+          >
+            <polygon fill="currentColor" points="601.74 466.87 572.6 466.87 572.6 609.73 601.74 609.73 601.74 549.07 633.11 579.43 665.76 579.43 601.74 517.46 601.74 466.87" />
+            <polygon fill="currentColor" points="672.72 466.87 672.72 528.12 644.63 500.93 611.98 500.93 672.72 559.72 672.72 609.73 701.86 609.73 701.86 466.87 672.72 466.87" />
+          </svg>
+        </button>
+
+        {/* Divider */}
+        <div style={{ width: TOKENS.borders.thin, height: '20px', background: TOKENS.colors.borderMain, margin: `0 ${TOKENS.spacing[1]}` }} />
+
+        {/* Simulation */}
+        <NavButton
+          id="simulation"
+          label="Simulation"
+          isActive={currentState === 'simulation'}
+          hoveredId={hoveredId}
+          setHoveredId={setHoveredId}
+          onClick={() => handleNavClick('simulation')}
+        />
       </div>
+
     </div>
     </>
+  )
+}
+
+interface NavButtonProps {
+  id: NavState
+  label: string
+  isActive: boolean
+  hoveredId: string | null
+  setHoveredId: (id: string | null) => void
+  onClick: () => void
+}
+
+function NavButton({ id, label, isActive, hoveredId, setHoveredId, onClick }: NavButtonProps) {
+  const isHovered = hoveredId === id
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHoveredId(id)}
+      onMouseLeave={() => setHoveredId(null)}
+      style={{
+        position: 'relative',
+        padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+        background: isActive
+          ? 'rgba(255, 255, 255, 0.08)'
+          : isHovered
+            ? TOKENS.colors.surfaceHover
+            : 'transparent',
+        border: 'none',
+        borderRadius: '20px',
+        cursor: 'pointer',
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: '90px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Simple accent dot indicator */}
+      {isActive && (
+        <span
+          style={{
+            position: 'absolute',
+            bottom: '4px',
+            width: '4px',
+            height: '4px',
+            borderRadius: '50%',
+            background: TOKENS.colors.accent,
+          }}
+        />
+      )}
+
+      {/* Label */}
+      <span
+        style={{
+          fontSize: TOKENS.fontSizes.micro,
+          fontWeight: isActive ? TOKENS.fontWeights.black : TOKENS.fontWeights.medium,
+          letterSpacing: VALUE_LETTER_SPACING,
+          color: isActive ? TOKENS.colors.accent : isHovered ? TOKENS.colors.textPrimary : TOKENS.colors.textSecondary,
+          textTransform: 'uppercase',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {label}
+      </span>
+    </button>
   )
 }
