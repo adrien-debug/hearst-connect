@@ -61,19 +61,17 @@
 }
 .intro-back:hover { color: #eef0f4; }
 
-/* ── Main: 50/50 grid ── */
+/* ── Main: left column only (right half is fixed video) ── */
 .intro-main {
   position: relative;
   z-index: 10;
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 5rem);
-  padding: clamp(2.5rem, 6vh, 5rem) clamp(2rem, 5vw, 4rem);
-  max-width: 1440px;
-  margin-inline: auto;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Occupy only the left 50% of the viewport */
+  width: 50%;
+  padding: clamp(2.5rem, 6vh, 5rem) clamp(2.5rem, 5vw, 5rem);
   box-sizing: border-box;
 }
 
@@ -214,28 +212,37 @@
   letter-spacing: 0.02em;
 }
 
-/* ── RIGHT — video card ── */
+/* ── RIGHT — video fills the full right half ── */
 .intro-right {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* Escape the grid cell and fill the entire right side of the viewport */
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Left-side gradient to blend with the dark background */
+.intro-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(8, 9, 10, 0.55) 0%,
+    rgba(8, 9, 10, 0.12) 30%,
+    transparent 65%
+  );
 }
 
 .intro-video-card {
   position: relative;
   width: 100%;
-  /* Enforce 16/9 aspect without cropping the video */
-  aspect-ratio: 9 / 16;
-  max-height: 78vh;
-  /* Constrain width so it respects max-height */
-  max-width: calc(78vh * 9 / 16);
-  border-radius: 2rem;
-  overflow: hidden;
-  background: #0a0a0a;
-  box-shadow:
-    0 40px 80px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 0 60px rgba(167, 251, 144, 0.06);
+  height: 100%;
 }
 
 .intro-video {
@@ -246,13 +253,18 @@
   display: block;
 }
 
-/* Inner vignette: soft frame around the video */
+/* Inner vignette */
 .intro-video-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 0 60px rgba(8, 9, 10, 0.45);
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 9, 10, 0.35) 0%,
+    transparent 15%,
+    transparent 80%,
+    rgba(8, 9, 10, 0.35) 100%
+  );
 }
 
 /* ── Footer ── */
@@ -273,9 +285,9 @@
 /* ── Mobile: stack vertically ── */
 @media (max-width: 860px) {
   .intro-main {
-    grid-template-columns: 1fr;
-    gap: clamp(2rem, 5vh, 3.5rem);
+    width: 100%;
     padding-inline: 1.5rem;
+    padding-block: 2.5rem 1.5rem;
     text-align: center;
   }
 
@@ -284,7 +296,6 @@
   .intro-subtitle { max-width: 100%; margin-inline: auto; }
 
   .intro-pillars {
-    align-items: flex-start;
     border-left: none;
     padding-left: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -293,14 +304,23 @@
 
   .intro-cta-group { align-items: center; }
 
-  .intro-video-card {
-    aspect-ratio: 16 / 10;
-    max-height: 55vw;
-    max-width: 100%;
-    border-radius: 1.25rem;
+  /* On mobile the right panel comes back into the flow */
+  .intro-right {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    height: 55vw;
+    min-height: 240px;
   }
 
-  .intro-right { order: -1; }
+  .intro-right::before {
+    background: linear-gradient(
+      to bottom,
+      rgba(8, 9, 10, 0.55) 0%,
+      transparent 40%
+    );
+  }
 }
 
 /* ── Reduced motion: hide video, plain background ── */
