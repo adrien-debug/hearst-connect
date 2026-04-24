@@ -58,7 +58,6 @@ const INVESTMENT_STRATEGY_SLIDES = [
   {
     type: 'video',
     src: '/view-1.mp4',
-    imgClass: 'slide-img-1',
     caption: 'Flagship — stable income',
     title: 'Hearst Prime Yield',
     desc: 'Target ~12% annual yield. $250K min, monthly USDC distributions, 3-year lock. Diversified mining income with volatility hedging for predictable returns.',
@@ -66,7 +65,6 @@ const INVESTMENT_STRATEGY_SLIDES = [
   {
     type: 'video',
     src: '/view-2.mp4',
-    imgClass: 'slide-img-2',
     caption: 'Growth — BTC upside',
     title: 'Hearst Growth',
     desc: 'Target 16–22% annual yield. $250K min, monthly distributions, 3-year lock. Forward BTC mining exposure plus spot price upside with USDC buffer.',
@@ -74,7 +72,6 @@ const INVESTMENT_STRATEGY_SLIDES = [
   {
     type: 'video',
     src: '/view-3.mp4',
-    imgClass: 'slide-img-3',
     caption: 'Yield mechanics',
     title: 'How yield is generated',
     desc: 'USDC is deployed into industrial mining operations. BTC rewards are converted via OTC desks. Net yield is distributed monthly, auditable end to end.',
@@ -102,227 +99,24 @@ const ICONS = [
   { name: 'Polkadot', src: `${CRYPTO_ICON_BASE}/dot.png` },
 ] as const;
 
-interface UseCarouselReturn {
-  trackRef: React.RefObject<HTMLDivElement | null>;
-  activeIndex: number;
-  scrollProgress: number;
-  scrollPrev: () => void;
-  scrollNext: () => void;
-  scrollTo: (index: number) => void;
-  isDragging: boolean;
-  dragHandlers: {
-    onMouseDown: (e: React.MouseEvent) => void;
-    onMouseMove: (e: React.MouseEvent) => void;
-    onMouseUp: () => void;
-    onMouseLeave: () => void;
-    onTouchStart: (e: React.TouchEvent) => void;
-    onTouchMove: (e: React.TouchEvent) => void;
-    onTouchEnd: () => void;
-  };
-}
-
-function useModernCarousel(itemCount: number): UseCarouselReturn {
-  const trackRef = useRef<HTMLDivElement>(null);
+function useAutoPlayTabs(itemCount: number, intervalMs = 5000) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const dragState = useRef({
-    isDragging: false,
-    startX: 0,
-    scrollLeft: 0,
-    velocity: 0,
-    lastX: 0,
-    lastTime: 0,
-  });
-
-  const scrollTo = useCallback((index: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    const slides = track.children;
-    if (index < 0 || index >= slides.length) return;
-
-    const slide = slides[index] as HTMLElement;
-    const trackRect = track.getBoundingClientRect();
-    const slideRect = slide.getBoundingClientRect();
-
-    const scrollLeft = track.scrollLeft + (slideRect.left - trackRect.left) - (trackRect.width - slideRect.width) / 2;
-
-    track.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-    setActiveIndex(index);
-  }, []);
-
-  const scrollPrev = useCallback(() => {
-    const newIndex = activeIndex === 0 ? itemCount - 1 : activeIndex - 1;
-    scrollTo(newIndex);
-  }, [activeIndex, itemCount, scrollTo]);
-
-  const scrollNext = useCallback(() => {
-    const newIndex = activeIndex === itemCount - 1 ? 0 : activeIndex + 1;
-    scrollTo(newIndex);
-  }, [activeIndex, itemCount, scrollTo]);
-
-  // Update active index and progress based on scroll position
   useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setActiveIndex((current) => (current + 1) % itemCount);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [isPaused, itemCount, intervalMs]);
 
-    const updateMetrics = () => {
-      const slides = Array.from(track.children) as HTMLElement[];
-      if (slides.length === 0) return;
-
-      const trackCenter = track.scrollLeft + track.clientWidth / 2;
-      let closestIndex = 0;
-      let closestDistance = Infinity;
-
-      slides.forEach((slide, index) => {
-        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-        const distance = Math.abs(trackCenter - slideCenter);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestIndex = index;
-        }
-      });
-
-      setActiveIndex(closestIndex);
-
-      // Calculate scroll progress (0 to 1)
-      const maxScroll = track.scrollWidth - track.clientWidth;
-      const progress = maxScroll > 0 ? track.scrollLeft / maxScroll : 0;
-      setScrollProgress(progress);
-    };
-
-    track.addEventListener('scroll', updateMetrics, { passive: true });
-    updateMetrics();
-
-    return () => track.removeEventListener('scroll', updateMetrics);
-  }, []);
-
-  // Drag handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    setIsDragging(true);
-    dragState.current = {
-      isDragging: true,
-      startX: e.pageX - track.offsetLeft,
-      scrollLeft: track.scrollLeft,
-      velocity: 0,
-      lastX: e.pageX,
-      lastTime: Date.now(),
-    };
-    track.style.cursor = 'grabbing';
-  }, []);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const track = trackRef.current;
-    if (!track || !dragState.current.isDragging) return;
-
-    e.preventDefault();
-    const x = e.pageX - track.offsetLeft;
-    const walk = (x - dragState.current.startX) * 1.2;
-    track.scrollLeft = dragState.current.scrollLeft - walk;
-
-    // Calculate velocity for momentum
-    const now = Date.now();
-    const dt = now - dragState.current.lastTime;
-    if (dt > 0) {
-      dragState.current.velocity = (e.pageX - dragState.current.lastX) / dt;
-    }
-    dragState.current.lastX = e.pageX;
-    dragState.current.lastTime = now;
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    dragState.current.isDragging = false;
-    setIsDragging(false);
-    track.style.cursor = 'grab';
-
-    // Snap to nearest slide based on velocity and position
-    const velocity = dragState.current.velocity;
-    if (Math.abs(velocity) > 0.5) {
-      // Momentum scrolling - go to next/prev based on direction
-      if (velocity > 0 && activeIndex > 0) {
-        scrollTo(activeIndex - 1);
-      } else if (velocity < 0 && activeIndex < itemCount - 1) {
-        scrollTo(activeIndex + 1);
-      }
-    }
-  }, [activeIndex, itemCount, scrollTo]);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    dragState.current = {
-      isDragging: true,
-      startX: e.touches[0].pageX - track.offsetLeft,
-      scrollLeft: track.scrollLeft,
-      velocity: 0,
-      lastX: e.touches[0].pageX,
-      lastTime: Date.now(),
-    };
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    const track = trackRef.current;
-    if (!track || !dragState.current.isDragging) return;
-
-    const x = e.touches[0].pageX - track.offsetLeft;
-    const walk = (x - dragState.current.startX) * 1.2;
-    track.scrollLeft = dragState.current.scrollLeft - walk;
-
-    const now = Date.now();
-    const dt = now - dragState.current.lastTime;
-    if (dt > 0) {
-      dragState.current.velocity = (e.touches[0].pageX - dragState.current.lastX) / dt;
-    }
-    dragState.current.lastX = e.touches[0].pageX;
-    dragState.current.lastTime = now;
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    dragState.current.isDragging = false;
-  }, []);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') scrollPrev();
-      if (e.key === 'ArrowRight') scrollNext();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [scrollPrev, scrollNext]);
-
-  return {
-    trackRef,
-    activeIndex,
-    scrollProgress,
-    scrollPrev,
-    scrollNext,
-    scrollTo,
-    isDragging,
-    dragHandlers: {
-      onMouseDown: handleMouseDown,
-      onMouseMove: handleMouseMove,
-      onMouseUp: handleMouseUp,
-      onMouseLeave: handleMouseUp,
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd,
-    },
-  };
+  return { activeIndex, setActiveIndex, isPaused, setIsPaused };
 }
 
 export default function HubPageClient() {
-  const { trackRef, activeIndex, scrollProgress, scrollPrev, scrollNext, scrollTo, isDragging, dragHandlers } = useModernCarousel(INVESTMENT_STRATEGY_SLIDES.length);
+  const { activeIndex, setActiveIndex, isPaused, setIsPaused } = useAutoPlayTabs(INVESTMENT_STRATEGY_SLIDES.length);
+
 
   useEffect(() => {
     const nav = document.getElementById('hub-site-nav');
@@ -555,113 +349,75 @@ export default function HubPageClient() {
           </p>
         </div>
 
-        <div className="hub-carousel-modern">
-          {/* Progress bar */}
-          <div className="hub-carousel-progress" aria-hidden="true">
-            <div
-              className="hub-carousel-progress-bar"
-              style={{ transform: `scaleX(${scrollProgress})` }}
-            />
-          </div>
-
-          {/* Track */}
-          <div
-            className={`hub-carousel-track-modern ${isDragging ? 'is-dragging' : ''}`}
-            ref={trackRef}
-            role="region"
-            lang="en"
-            aria-label="Vault strategies"
-            {...dragHandlers}
-          >
-            {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
-              <article
-                key={slide.title}
-                className={`hub-carousel-slide ${i === activeIndex ? 'is-active' : ''} ${Math.abs(i - activeIndex) === 1 ? 'is-adjacent' : ''}`}
-                aria-roledescription="slide"
-                aria-current={i === activeIndex}
-              >
-                <div className="hub-slide-card">
-                  <figure className={`hub-slide-media ${slide.imgClass}`}>
-                    {slide.type === 'video' ? (
-                      <video
-                        src={slide.src}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        draggable={false}
-                      />
-                    ) : (
-                      <img src={slide.src} alt="" draggable={false} />
-                    )}
-                    <div className="hub-slide-glow" />
-                  </figure>
-                  <div className="hub-slide-content">
-                    <span className="hub-slide-badge">
-                      {slide.caption}
-                    </span>
-                    <h3 className="hub-slide-title">{slide.title}</h3>
-                    <p className="hub-slide-desc">{slide.desc}</p>
-                    <a href={CTA_LINKS.viewOffering.href} className="hub-slide-cta">
-                      <span>{CTA_LINKS.viewOffering.label}</span>
-                      <svg className="hub-slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </a>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div className="hub-carousel-nav-modern">
-            <button
-              className="hub-carousel-btn"
-              onClick={scrollPrev}
-              aria-label="Previous slide"
-              type="button"
-              disabled={activeIndex === 0}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <div className="hub-carousel-indicators">
-              {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
+        <div 
+          className="hub-showcase"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
+          {/* Left: Tabs */}
+          <div className="hub-showcase-tabs" role="tablist" aria-label="Vault strategies">
+            {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => {
+              const isActive = i === activeIndex;
+              return (
                 <button
                   key={slide.title}
-                  className={`hub-carousel-indicator ${i === activeIndex ? 'is-active' : ''}`}
-                  onClick={() => scrollTo(i)}
-                  aria-label={`Go to slide ${i + 1}: ${slide.title}`}
-                  aria-current={i === activeIndex}
+                  className={`hub-showcase-tab ${isActive ? 'is-active' : ''}`}
+                  onClick={() => setActiveIndex(i)}
+                  aria-selected={isActive}
+                  role="tab"
                   type="button"
                 >
-                  <span className="indicator-dot" />
-                  <span className="indicator-label">{slide.caption}</span>
+                  <div className="hub-showcase-tab-content">
+                    <span className="hub-showcase-badge">{slide.caption}</span>
+                    <h3 className="hub-showcase-title">{slide.title}</h3>
+                    <div className="hub-showcase-desc-wrapper">
+                      <div className="hub-showcase-desc-inner">
+                        <p className="hub-showcase-desc">{slide.desc}</p>
+                        <a href={CTA_LINKS.viewOffering.href} className="hub-showcase-cta">
+                          <span>{CTA_LINKS.viewOffering.label}</span>
+                          <svg className="hub-slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hub-showcase-progress">
+                    <div 
+                      className="hub-showcase-progress-bar" 
+                      style={{ 
+                        animationDuration: isActive && !isPaused ? '5s' : '0s',
+                        animationPlayState: isPaused ? 'paused' : 'running'
+                      }} 
+                    />
+                  </div>
                 </button>
-              ))}
-            </div>
-
-            <button
-              className="hub-carousel-btn"
-              onClick={scrollNext}
-              aria-label="Next slide"
-              type="button"
-              disabled={activeIndex === INVESTMENT_STRATEGY_SLIDES.length - 1}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
+              );
+            })}
           </div>
 
-          {/* Slide counter */}
-          <div className="hub-carousel-counter" aria-live="polite" aria-atomic="true">
-            <span className="counter-current">{String(activeIndex + 1).padStart(2, '0')}</span>
-            <span className="counter-divider" />
-            <span className="counter-total">{String(INVESTMENT_STRATEGY_SLIDES.length).padStart(2, '0')}</span>
+          {/* Right: Media */}
+          <div className="hub-showcase-media-container">
+            {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
+              <figure
+                key={slide.title}
+                className={`hub-showcase-media ${i === activeIndex ? 'is-active' : ''}`}
+                aria-hidden={i !== activeIndex}
+              >
+                {slide.type === 'video' ? (
+                  <video
+                    src={slide.src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    draggable={false}
+                  />
+                ) : (
+                  <img src={slide.src} alt="" draggable={false} />
+                )}
+              </figure>
+            ))}
           </div>
         </div>
       </section>
