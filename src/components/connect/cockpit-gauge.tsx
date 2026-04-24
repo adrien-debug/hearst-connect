@@ -79,7 +79,7 @@ export function CockpitGauge({
         letterSpacing: VALUE_LETTER_SPACING,
         lineHeight: LINE_HEIGHT.tight,
         color: accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
-        fontFamily: primary ? TOKENS.fonts.mono : TOKENS.fonts.sans,
+        fontFamily: TOKENS.fonts.sans,
       }}>
         {displayValue}
       </div>
