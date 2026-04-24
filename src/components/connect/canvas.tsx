@@ -1,6 +1,7 @@
 'use client'
 
 import '@/styles/connect/dashboard-vars.css'
+import { useEffect, useState } from 'react'
 import { useConnectRouting } from './use-connect-routing'
 import { TOKENS, MONO } from './constants'
 import { PortfolioSummary } from './portfolio-summary'
@@ -13,17 +14,27 @@ import type { VaultLine, Aggregate, AvailableVault } from './data'
 import { SIMULATION_VIEW_ID, AVAILABLE_VAULTS_VIEW_ID } from './view-ids'
 import { DockRadial } from './dock-radial'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { useAppMode } from '@/hooks/useAppMode'
+import { useDemoPortfolio } from '@/hooks/useDemoPortfolio'
 
-const ON_DARK_GHOST = 'rgba(255,255,255,0.35)'
 
 export function Canvas() {
-  const { vaults, agg, selectedId, setSelectedId, selected, isSimulation, hasVaults, isLoading } = useConnectRouting()
+  const { vaults, agg, selectedId, setSelectedId, selected, isSimulation, isLoading } = useConnectRouting()
+  const { toggleMode, isDemo, setMode } = useAppMode()
+  const { actions: { reset } } = useDemoPortfolio()
+  const [confirmReset, setConfirmReset] = useState(false)
   const isAvailableVaultsList = selectedId === AVAILABLE_VAULTS_VIEW_ID
   const panelKey = isSimulation ? SIMULATION_VIEW_ID : isAvailableVaultsList ? AVAILABLE_VAULTS_VIEW_ID : selected?.id ?? 'portfolio'
 
   const handleSelect = (id: string | null) => {
     setSelectedId(id)
   }
+
+  useEffect(() => {
+    if (!confirmReset) return
+    const t = setTimeout(() => setConfirmReset(false), 3000)
+    return () => clearTimeout(t)
+  }, [confirmReset])
 
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
 
@@ -107,36 +118,155 @@ export function Canvas() {
               display: 'block',
             }}
           />
-          <a
-            href="/admin"
-            style={{
-              padding: `${TOKENS.spacing[2 as 2]}px ${TOKENS.spacing[3 as 3]}px`,
-              background: 'transparent',
-              border: `1px solid ${TOKENS.colors.borderSubtle}`,
-              borderRadius: TOKENS.radius.md,
-              color: TOKENS.colors.textGhost,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              textDecoration: 'none',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              transition: 'all 120ms ease-out',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = TOKENS.colors.accent
-              e.currentTarget.style.color = TOKENS.colors.accent
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
-              e.currentTarget.style.color = TOKENS.colors.textGhost
-            }}
-          >
-            Admin
-          </a>
+          {isDemo && (
+            <a
+              href="/admin"
+              style={{
+                padding: `${TOKENS.spacing[2 as 2]} ${TOKENS.spacing[3 as 3]}`,
+                background: 'transparent',
+                border: `1px solid ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.md,
+                color: TOKENS.colors.textGhost,
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                textDecoration: 'none',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                transition: 'all 120ms ease-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = TOKENS.colors.accent
+                e.currentTarget.style.color = TOKENS.colors.accent
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
+                e.currentTarget.style.color = TOKENS.colors.textGhost
+              }}
+            >
+              Admin
+            </a>
+          )}
         </div>
 
-        {/* Wallet / Connect Button - aligné à droite */}
-        <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+        {/* Live: wallet only + discreet demo entry. Demo: toggle + reset + wallet */}
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: TOKENS.spacing[3] }}>
+          {isDemo ? (
+            <>
+              <button
+                type="button"
+                onClick={toggleMode}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: TOKENS.spacing[2],
+                  padding: `4px 4px 4px ${TOKENS.spacing[3]}`,
+                  background: TOKENS.colors.accentDim,
+                  border: `1px solid ${TOKENS.colors.accentSubtle}`,
+                  borderRadius: TOKENS.radius.full,
+                  color: TOKENS.colors.accent,
+                  fontSize: TOKENS.fontSizes.micro,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease-out',
+                }}
+                title="Passer en mode Live (registre + chaîne)"
+              >
+                <span>DÉMO</span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    background: TOKENS.colors.accent,
+                    transition: 'all 200ms ease-out',
+                    boxShadow: `0 2px 8px ${TOKENS.colors.accentSubtle}`,
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={TOKENS.colors.black}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      transform: 'rotate(0deg)',
+                      transition: 'transform 200ms ease-out',
+                    }}
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmReset) {
+                    reset()
+                    setConfirmReset(false)
+                  } else {
+                    setConfirmReset(true)
+                  }
+                }}
+                style={{
+                  padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
+                  background: confirmReset ? TOKENS.colors.danger : `${TOKENS.colors.danger}26`,
+                  border: `1px solid ${confirmReset ? TOKENS.colors.danger : `${TOKENS.colors.danger}80`}`,
+                  borderRadius: TOKENS.radius.sm,
+                  color: confirmReset ? TOKENS.colors.white : TOKENS.colors.danger,
+                  fontSize: TOKENS.fontSizes.micro,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  cursor: 'pointer',
+                  transition: 'all 150ms ease-out',
+                }}
+                title="Réinitialiser le portefeuille démo"
+                onMouseEnter={(e) => {
+                  if (!confirmReset) {
+                    e.currentTarget.style.background = `${TOKENS.colors.danger}40`
+                    e.currentTarget.style.borderColor = `${TOKENS.colors.danger}CC`
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!confirmReset) {
+                    e.currentTarget.style.background = `${TOKENS.colors.danger}26`
+                    e.currentTarget.style.borderColor = `${TOKENS.colors.danger}80`
+                  }
+                }}
+              >
+                {confirmReset ? 'Confirmer ?' : 'Reset'}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setMode('demo')}
+              style={{
+                padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
+                background: 'transparent',
+                border: `1px solid ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.md,
+                color: TOKENS.colors.textGhost,
+                fontFamily: MONO,
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
+              title="Revenir au mode présentation (données simulées)"
+            >
+              Mode démo
+            </button>
+          )}
           <WalletButton />
         </div>
       </header>
@@ -212,9 +342,14 @@ function MainPanel({
 }
 
 function WalletButton() {
+  const [mounted, setMounted] = useState(false)
   const { address, isConnected } = useAccount()
   const { connect, connectors, isPending: isConnecting } = useConnect()
   const { disconnect } = useDisconnect()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 4)}…${addr.slice(-4)}`
@@ -225,16 +360,16 @@ function WalletButton() {
     if (connector) connect({ connector })
   }
 
-  if (!isConnected) {
+  if (!mounted || !isConnected) {
     return (
       <button
         onClick={handleConnect}
-        disabled={isConnecting}
+        disabled={!mounted || isConnecting}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: TOKENS.spacing[2],
-          padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
           background: TOKENS.colors.accent,
           color: TOKENS.colors.black,
           border: 'none',
@@ -244,22 +379,22 @@ function WalletButton() {
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
-          cursor: isConnecting ? 'wait' : 'pointer',
-          opacity: isConnecting ? 0.7 : 1,
+          cursor: !mounted ? 'default' : isConnecting ? 'wait' : 'pointer',
+          opacity: !mounted || isConnecting ? 0.7 : 1,
           transition: 'all 120ms ease-out',
         }}
         onMouseEnter={(e) => {
-          if (!isConnecting) e.currentTarget.style.opacity = '0.9'
+          if (mounted && !isConnecting) e.currentTarget.style.opacity = '0.9'
         }}
         onMouseLeave={(e) => {
-          if (!isConnecting) e.currentTarget.style.opacity = '1'
+          if (mounted && !isConnecting) e.currentTarget.style.opacity = '1'
         }}
       >
         <svg width={TOKENS.spacing[4]} height={TOKENS.spacing[4]} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M19 7H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2z" />
           <path d="M16 11h0" />
         </svg>
-        {isConnecting ? 'Connecting…' : 'Connect'}
+        {!mounted ? 'Connect' : isConnecting ? 'Connecting…' : 'Connect'}
       </button>
     )
   }
@@ -272,7 +407,7 @@ function WalletButton() {
           fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
-          color: ON_DARK_GHOST,
+          color: TOKENS.colors.textGhost,
           textTransform: 'uppercase',
         }}
       >
@@ -281,7 +416,7 @@ function WalletButton() {
       <button
         onClick={() => disconnect()}
         style={{
-          padding: `${TOKENS.spacing[2]}px`,
+          padding: TOKENS.spacing[2],
           background: 'transparent',
           border: `1px solid ${TOKENS.colors.borderSubtle}`,
           borderRadius: TOKENS.radius.md,

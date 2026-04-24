@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { SubscriptionComposer } from './subscription-composer'
-import { TOKENS, fmtUsd, fmtUsdCompact } from './constants'
+import { TOKENS, MONO, fmtUsd, fmtUsdCompact } from './constants'
 import type { AvailableVault } from './data'
 import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
 import { CockpitGauge } from './cockpit-gauge'
@@ -12,6 +12,8 @@ import { useVaultById } from '@/hooks/useVaultRegistry'
 import { useAccount } from 'wagmi'
 import { parseUnits } from 'viem'
 import { WalletNotConnected, VaultNotConfigured } from './empty-states'
+import { useAppMode } from '@/hooks/useAppMode'
+import { useDemoPortfolio } from '@/hooks/useDemoPortfolio'
 
 export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBack?: () => void }) {
   const { mode, isLimit } = useSmartFit({
@@ -27,8 +29,9 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
   const [isDepositing, setIsDepositing] = useState(false)
 
   const { address, isConnected } = useAccount()
+  const { isDemo } = useAppMode()
+  const { actions: demoActions } = useDemoPortfolio()
 
-  // Get vault config from registry for real addresses
   const vaultConfig = useVaultById(vault.id)
   const vaultAddress = vaultConfig?.vaultAddress
   const usdcAddress = vaultConfig?.usdcAddress
@@ -52,40 +55,45 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
 
   const handleApprove = async () => {
+    if (isDemo) return
     if (!amount) return
     await approve(amount)
   }
 
   const handleDeposit = async () => {
-    if (!isReady || !isVaultConfigured) return
+    if (!isReady) return
+    if (isDemo) {
+      setIsDepositing(true)
+      await new Promise((r) => setTimeout(r, 800))
+      demoActions.deposit(vault.id, num)
+      setAmount('')
+      setAgreed(false)
+      setIsDepositing(false)
+      onBack?.()
+      return
+    }
+    if (!isVaultConfigured) return
     try {
       setIsDepositing(true)
-      const amountBigInt = parseUnits(amount, 6) // USDC has 6 decimals
-
-      // Validate BigInt doesn't overflow
+      const amountBigInt = parseUnits(amount, 6)
       const maxSafe = BigInt(Number.MAX_SAFE_INTEGER)
       if (amountBigInt > maxSafe) {
         throw new Error('Amount too large. Please enter a smaller amount.')
       }
-
       await deposit(amountBigInt)
-      // Success - could show toast/redirect here
       setAmount('')
       setAgreed(false)
     } catch (err) {
-      // Error is logged and can be displayed via UI toast/modal in future
       console.error('[SubscribePanel] Deposit failed:', err)
     } finally {
       setIsDepositing(false)
     }
   }
 
-  // Calculate projection details
   const monthlyYield = num * (vault.apr / 100) / 12
   const dailyYield = monthlyYield / 30
 
-  // Show empty states if needed
-  if (!isVaultConfigured) {
+  if (!isDemo && !isVaultConfigured) {
     return (
       <div
         style={{
@@ -98,6 +106,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
       >
         <div style={{ marginBottom: TOKENS.spacing[4] }}>
           <button
+            type="button"
             onClick={onBack}
             style={{
               display: 'flex',
@@ -120,7 +129,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
     )
   }
 
-  if (!isConnected) {
+  if (!isDemo && !isConnected) {
     return (
       <div
         style={{
@@ -169,7 +178,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
         color: TOKENS.colors.textPrimary,
       }}
     >
-      {/* COCKPIT HEADER — Same structure as dashboard */}
+      {/* COCKPIT HEADER */}
       <div
         style={{
           padding: fitValue(mode, {
@@ -182,7 +191,6 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           background: TOKENS.colors.bgApp,
         }}
       >
-        {/* Top row — Context */}
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -196,11 +204,13 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
             letterSpacing: TOKENS.letterSpacing.display,
             textTransform: 'uppercase',
           }}>
+            {isDemo && (
+              <span style={{ color: TOKENS.colors.accent, marginRight: TOKENS.spacing[2] }}>DEMO</span>
+            )}
             {vault.lockPeriod} lock
           </div>
         </div>
 
-        {/* Main cockpit gauges — Min / Target / APY */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: fitValue(mode, {
@@ -270,12 +280,11 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
           yearlyYield={yearlyYield}
           totalYield={totalYield}
           onApprove={handleApprove}
-          isApproving={isApprovePending}
+          isApproving={isDemo ? false : isApprovePending}
           onDeposit={handleDeposit}
-          isDepositing={isDepositing || isDepositPending}
+          isDepositing={isDepositing || (!isDemo && isDepositPending)}
         />
       </div>
     </div>
   )
 }
-

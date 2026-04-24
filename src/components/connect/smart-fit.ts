@@ -1,14 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { SIDEBAR_WIDTH_PX, SIDEBAR_WIDTH_NARROW_PX, SHELL_PADDING, SHELL_GAP } from './constants'
+import { SHELL_PADDING, SHELL_GAP } from './constants'
 
 export type SmartFitMode = 'normal' | 'tight' | 'limit'
-
-/** Matches sidebar column in `sidebar.tsx` for header/main alignment. */
-export function getSidebarWidthPx(mode: SmartFitMode): number {
-  return mode === 'limit' ? SIDEBAR_WIDTH_NARROW_PX : SIDEBAR_WIDTH_PX
-}
 
 interface SmartFitOptions {
   tightHeight: number
@@ -126,12 +121,4 @@ export function useShellPadding(mode: SmartFitMode) {
     }),
     [mode]
   )
-}
-
-/** Unified shell style object for panels */
-export function getShellStyle(mode: SmartFitMode) {
-  return {
-    padding: `${SHELL_PADDING[mode]} ${SHELL_PADDING[mode]}`,
-    gap: SHELL_GAP[mode],
-  } as const
 }

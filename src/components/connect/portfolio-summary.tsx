@@ -1,9 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import '@/styles/ui/tokens.css'
-import { Label } from '@/components/ui/label'
-import { EmptyState } from './empty-state'
+import { useMemo, useState, useEffect } from 'react'
+import { EmptyState } from './empty-states'
 import { VaultCardCompact } from './vault-card-compact'
 import { TOKENS, fmtUsdCompact, fmtUsd, VALUE_LETTER_SPACING } from './constants'
 import { formatVaultName } from './formatting'
@@ -11,11 +9,9 @@ import { generateValueHistory } from './utils/mock-data'
 import { getDaysToMaturity } from './utils/date-utils'
 import { CHART_PALETTE } from './constants/theme'
 import { fitValue, type SmartFitMode, useSmartFit, useShellPadding } from './smart-fit'
-import { type VaultLine, type Aggregate, type ActiveVault, type AvailableVault, type Activity, MOCK_ACTIVITIES } from './data'
+import { type VaultLine, type Aggregate, type ActiveVault, type AvailableVault } from './data'
 
 import { CockpitGauge } from './cockpit-gauge'
-
-import { AVAILABLE_VAULTS_VIEW_ID } from './view-ids'
 
 export function PortfolioSummary({
   vaults,
@@ -36,18 +32,19 @@ export function PortfolioSummary({
     reserveHeight: 64,
     reserveWidth: 280,
   })
+  const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
   const activeVaults = vaults.filter((v): v is ActiveVault => v.type === 'active')
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
   const maturedByDate = activeVaults
-    .map(v => ({ ...v, maturityDate: new Date(v.maturity) }))
-    .filter(v => !Number.isNaN(v.maturityDate.getTime()))
-    .sort((a, b) => a.maturityDate.getTime() - b.maturityDate.getTime())
+    .map(v => ({ ...v, lockedUntilMs: v.lockedUntil }))
+    .sort((a, b) => a.lockedUntilMs - b.lockedUntilMs)
   const nextMaturity = maturedByDate[0]?.maturity ?? null
-  const daysToNextMaturity = maturedByDate[0]
-    ? getDaysToMaturity(maturedByDate[0].maturity)
-    : 0
-  const portfolioValue = agg.totalDeposited + agg.totalClaimable
-  const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
+  // Use client-only values to prevent hydration mismatch
+  const safeAgg = mounted ? agg : { totalDeposited: 0, totalClaimable: 0, avgApr: 0, activeVaults: 0 }
+  const portfolioValue = safeAgg.totalDeposited + safeAgg.totalClaimable
 
   // Memoized derived data — prevents recalculation on every render
   const valueHistory = useMemo(() => generateValueHistory(portfolioValue), [portfolioValue])
@@ -108,7 +105,7 @@ export function PortfolioSummary({
             label="Position Value"
             value={fmtUsd(portfolioValue)}
             valueCompact={fmtUsdCompact(portfolioValue)}
-            subtext={`${activeVaults.length} position${activeVaults.length !== 1 ? 's' : ''}`}
+            subtext={`${mounted ? activeVaults.length : 0} position${(mounted ? activeVaults.length : 0) !== 1 ? 's' : ''}`}
             mode={mode}
             primary
             align="center"
@@ -117,9 +114,9 @@ export function PortfolioSummary({
           {/* Accrued Yield — Accent */}
           <CockpitGauge
             label="Accrued Yield"
-            value={`+${fmtUsd(agg.totalClaimable)}`}
-            valueCompact={`+${fmtUsdCompact(agg.totalClaimable)}`}
-            subtext={`${agg.avgApr.toFixed(1)}% avg APY`}
+            value={`+${fmtUsd(safeAgg.totalClaimable)}`}
+            valueCompact={`+${fmtUsdCompact(safeAgg.totalClaimable)}`}
+            subtext={`${safeAgg.avgApr.toFixed(1)}% avg APY`}
             mode={mode}
             accent
             align="center"
@@ -128,8 +125,8 @@ export function PortfolioSummary({
           {/* Performance / Maturity */}
           <CockpitGauge
             label="Performance"
-            value={`${((agg.totalClaimable / (agg.totalDeposited || 1)) * 100).toFixed(1)}%`}
-            valueCompact={`${((agg.totalClaimable / (agg.totalDeposited || 1)) * 100).toFixed(1)}%`}
+            value={`${((safeAgg.totalClaimable / (safeAgg.totalDeposited || 1)) * 100).toFixed(1)}%`}
+            valueCompact={`${((safeAgg.totalClaimable / (safeAgg.totalDeposited || 1)) * 100).toFixed(1)}%`}
             subtext={nextMaturity ? `Next maturity: ${nextMaturity}` : 'All positions active'}
             mode={mode}
             align="center"
@@ -198,8 +195,8 @@ export function PortfolioSummary({
                   gap: TOKENS.spacing[3],
                   marginTop: TOKENS.spacing[2],
                 }}>
-                  <MiniStat label="Progress" value={`${Math.round(activeVaults.reduce((sum, v) => sum + v.progress, 0) / (activeVaults.length || 1))}%`} />
-                  <MiniStat label="Yield" value={`+${fmtUsdCompact(agg.totalClaimable)}`} accent />
+                  <MiniStat label="Progress" value={`${mounted ? Math.round(activeVaults.reduce((sum, v) => sum + v.progress, 0) / (activeVaults.length || 1)) : 0}%`} />
+                  <MiniStat label="Yield" value={`+${fmtUsdCompact(safeAgg.totalClaimable)}`} accent />
                 </div>
               </div>
 
@@ -321,24 +318,24 @@ export function PortfolioSummary({
                 textTransform: 'uppercase',
                 color: TOKENS.colors.textSecondary,
               }}>
-                Positions ({activeVaults.length})
+                Positions ({mounted ? activeVaults.length : 0})
               </span>
               <button
-                disabled={agg.totalClaimable === 0}
+                disabled={safeAgg.totalClaimable === 0}
                 style={{
                   padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-                  background: agg.totalClaimable > 0 ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
-                  border: `1px solid ${agg.totalClaimable > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
+                  background: safeAgg.totalClaimable > 0 ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
+                  border: `1px solid ${safeAgg.totalClaimable > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
                   borderRadius: TOKENS.radius.sm,
-                  color: agg.totalClaimable > 0 ? TOKENS.colors.accent : TOKENS.colors.textGhost,
+                  color: safeAgg.totalClaimable > 0 ? TOKENS.colors.accent : TOKENS.colors.textGhost,
                   fontSize: TOKENS.fontSizes.micro,
                   fontWeight: TOKENS.fontWeights.bold,
                   textTransform: 'uppercase',
-                  cursor: agg.totalClaimable > 0 ? 'pointer' : 'not-allowed',
-                  opacity: agg.totalClaimable > 0 ? 1 : 0.5,
+                  cursor: safeAgg.totalClaimable > 0 ? 'pointer' : 'not-allowed',
+                  opacity: safeAgg.totalClaimable > 0 ? 1 : 0.5,
                 }}
               >
-                Claim {agg.totalClaimable > 0 ? fmtUsdCompact(agg.totalClaimable) : 'All'}
+                Claim {safeAgg.totalClaimable > 0 ? fmtUsdCompact(safeAgg.totalClaimable) : 'All'}
               </button>
             </div>
 
@@ -370,7 +367,7 @@ export function PortfolioSummary({
                         key={vault.id}
                         vault={vault}
                         index={index}
-                        total={agg.totalDeposited}
+                        total={safeAgg.totalDeposited}
                         mode={mode}
                         onClick={() => onVaultSelect?.(vault.id)}
                         onClaim={() => onVaultSelect?.(vault.id)}
@@ -462,65 +459,6 @@ export function PortfolioSummary({
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-/** ActivityItem — Renders a single activity feed item */
-function ActivityItem({ activity }: { activity: Activity }) {
-  const isPositive = activity.type === 'claim'
-  const isNeutral = activity.type === 'system'
-  
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: TOKENS.spacing[3],
-      background: TOKENS.colors.bgTertiary,
-      borderRadius: TOKENS.radius.sm,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3] }}>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '50%',
-          background: TOKENS.colors.black,
-          border: `1px solid ${TOKENS.colors.borderSubtle}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: isPositive ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
-        }}>
-          {activity.type === 'claim' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
-          {activity.type === 'deposit' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>}
-          {activity.type === 'system' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={{ fontSize: TOKENS.fontSizes.sm, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textPrimary }}>
-            {activity.title}
-          </span>
-          <span style={{ fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textSecondary }}>
-            {activity.vaultName || 'System'}
-          </span>
-        </div>
-      </div>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-        {activity.amount && (
-          <span style={{ 
-            fontSize: TOKENS.fontSizes.sm, 
-            fontWeight: TOKENS.fontWeights.black, 
-            color: isPositive ? TOKENS.colors.accent : TOKENS.colors.textPrimary,
-            letterSpacing: VALUE_LETTER_SPACING
-          }}>
-            {isPositive ? '+' : ''}{fmtUsdCompact(activity.amount)}
-          </span>
-        )}
-        <span style={{ fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.micro, color: TOKENS.colors.textGhost }}>
-          {Math.floor((Date.now() / 1000 - activity.timestamp) / 86400)}d ago
-        </span>
       </div>
     </div>
   )

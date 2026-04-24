@@ -33,8 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning className={`antialiased ${inter.variable}`}>
       <head>
-        {/* Anti-flash theme script - must run before any stylesheets */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INLINE_SCRIPT }} />
+        {/* Inline in head: Next <Script> children warn in RSC; this runs before paint (FOUC). */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: THEME_INLINE_SCRIPT }}
+        />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap"

@@ -216,14 +216,6 @@ export function useVaultRegistry() {
   }
 }
 
-export function useVaultByAddress(vaultAddress?: Address) {
-  const { vaults } = useVaultRegistry()
-
-  return vaultAddress
-    ? vaults.find((v) => v.vaultAddress.toLowerCase() === vaultAddress.toLowerCase()) || null
-    : null
-}
-
 export function useVaultById(vaultId?: string) {
   const { vaults } = useVaultRegistry()
 

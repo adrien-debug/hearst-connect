@@ -11,13 +11,3 @@ export const CHART_PALETTE = [
   'rgba(255,255,255,0.35)',
   'rgba(255,255,255,0.25)',
 ] as const
-
-/**
- * Extended palette for larger datasets
- */
-export const CHART_PALETTE_EXTENDED = [
-  ...CHART_PALETTE,
-  'rgba(167,251,144,0.6)',
-  'rgba(167,251,144,0.4)',
-  'rgba(167,251,144,0.2)',
-] as const

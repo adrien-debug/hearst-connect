@@ -20,7 +20,9 @@ import { useVaultActions } from '@/hooks/useVault'
 import { useVaultById } from '@/hooks/useVaultRegistry'
 import { useTransaction } from '@/hooks/useTransaction'
 import { Skeleton } from './skeleton'
-import { WalletNotConnected, NoPosition, VaultNotConfigured, OnChainError } from './empty-states'
+import { WalletNotConnected, VaultNotConfigured, OnChainError } from './empty-states'
+import { useAppMode } from '@/hooks/useAppMode'
+import { useDemoPortfolio } from '@/hooks/useDemoPortfolio'
 
 type ModalType = 'claim' | 'manage' | 'exit' | null
 
@@ -32,6 +34,8 @@ export function VaultDetailPanel({
   onBack?: () => void
 }) {
   const { address: connectedAddress, isConnected } = useAccount()
+  const { isDemo } = useAppMode()
+  const { positions, actions: demoActions } = useDemoPortfolio()
   const { mode, isLimit } = useSmartFit({
     tightHeight: 760,
     limitHeight: 680,
@@ -42,10 +46,8 @@ export function VaultDetailPanel({
   })
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
 
-  // Get vault config from registry
   const vaultConfig = useVaultById(vault.id)
 
-  // Get real on-chain position data
   const {
     data: positionData,
     isLoading,
@@ -59,7 +61,6 @@ export function VaultDetailPanel({
     walletAddress: connectedAddress,
   })
 
-  // Get vault actions
   const { claim, withdraw, isPending: isActionPending } = useVaultActions(
     isVaultConfigured ? vaultAddress : undefined
   )
@@ -67,8 +68,7 @@ export function VaultDetailPanel({
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const transaction = useTransaction()
 
-  // Show empty states if needed
-  if (!isVaultConfigured) {
+  if (!isDemo && !isVaultConfigured) {
     return (
       <div
         style={{
@@ -81,6 +81,7 @@ export function VaultDetailPanel({
       >
         <div style={{ marginBottom: TOKENS.spacing[4] }}>
           <button
+            type="button"
             onClick={onBack}
             style={{
               display: 'flex',
@@ -103,7 +104,7 @@ export function VaultDetailPanel({
     )
   }
 
-  if (!isWalletConnected) {
+  if (!isDemo && !isWalletConnected) {
     return (
       <div
         style={{
@@ -138,37 +139,50 @@ export function VaultDetailPanel({
     )
   }
 
-  // Use on-chain data when available, fallback to vault data for UI skeleton
-  const capitalDeployed = positionData?.capitalDeployed ?? 0
-  const accruedYield = positionData?.accruedYield ?? 0
-  const currentValue = positionData?.positionValue ?? 0
-  const daysRemaining = positionData?.unlockTimeline.daysRemaining ?? vaultConfig?.lockPeriodDays ?? 0
-  const progressToTarget = positionData?.unlockTimeline.progressPercent ?? 0
+  const demoPosition = isDemo ? positions.find((p) => p.vaultId === vault.id && p.state !== 'withdrawn') : null
+
+  const capitalDeployed = isDemo ? vault.deposited : (positionData?.capitalDeployed ?? 0)
+  const accruedYield = isDemo ? vault.claimable : (positionData?.accruedYield ?? 0)
+  const currentValue = isDemo ? (vault.deposited + vault.claimable) : (positionData?.positionValue ?? 0)
+  const demoDaysRemaining = isDemo && 'lockedUntil' in vault
+    ? Math.max(0, Math.ceil((vault.lockedUntil - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0
+  const daysRemaining = isDemo ? demoDaysRemaining : (positionData?.unlockTimeline.daysRemaining ?? vaultConfig?.lockPeriodDays ?? 0)
+  const progressToTarget = isDemo ? vault.progress : (positionData?.unlockTimeline.progressPercent ?? 0)
   const isMatured = vault.type === 'matured'
   const unlockDays = Math.max(0, daysRemaining)
-  const isTargetReached = positionData?.isTargetReached ?? false
-  const isPositionReadyForExit = positionData?.canWithdraw ?? false
-  const statusLabel = isPositionReadyForExit ? 'Ready for exit' : 'Active'
+  const isTargetReached = isDemo ? (vault.progress >= 100) : (positionData?.isTargetReached ?? false)
+  const canWithdrawVault = 'canWithdraw' in vault ? vault.canWithdraw : false
+  const isPositionReadyForExit = isDemo ? canWithdrawVault : (positionData?.canWithdraw ?? false)
+  const statusLabel = isPositionReadyForExit ? 'Ready for exit' : (isDemo ? 'Demo' : 'Active')
 
   const totalTargetYield = capitalDeployed * (parseFloat(vault.target) / 100)
   const remainingToTarget = Math.max(0, totalTargetYield - accruedYield)
 
-  // Check if user has a position
-  const hasPosition = capitalDeployed > 0
-
-  // Real claim handler
   const handleClaim = async () => {
+    if (isDemo && demoPosition) {
+      await transaction.execute(
+        async () => {
+          await new Promise((r) => setTimeout(r, 600))
+          const ok = demoActions.claim(demoPosition.id)
+          if (!ok) throw new Error('Nothing to claim')
+        },
+        {
+          pending: 'Processing claim...',
+          success: `Claimed ${fmtUsdCompact(accruedYield)} successfully!`,
+          error: 'Nothing to claim right now.',
+        }
+      )
+      return
+    }
     if (!claim) {
       console.error('[VaultDetailPanel] Claim function not available')
       return
     }
-
     await transaction.execute(
       async () => {
         await claim()
-        // Wait for transaction confirmation (simplified)
         await new Promise((resolve) => setTimeout(resolve, 2000))
-        // Refresh data after claim
         refresh()
       },
       {
@@ -179,21 +193,31 @@ export function VaultDetailPanel({
     )
   }
 
-  // Real exit handler
   const handleExit = async () => {
+    if (isDemo && demoPosition) {
+      await transaction.execute(
+        async () => {
+          await new Promise((r) => setTimeout(r, 600))
+          const ok = demoActions.withdraw(demoPosition.id)
+          if (!ok) throw new Error('Position not matured yet')
+        },
+        {
+          pending: 'Processing exit...',
+          success: 'Position exited successfully!',
+          error: 'Position not matured yet — cannot exit.',
+        }
+      )
+      return
+    }
     if (!withdraw) {
       console.error('[VaultDetailPanel] Withdraw function not available')
       return
     }
-
-    const withdrawAmount = BigInt(Math.floor(capitalDeployed * 1e6)) // Convert to USDC decimals
-
+    const withdrawAmount = BigInt(Math.floor(capitalDeployed * 1e6))
     await transaction.execute(
       async () => {
         await withdraw(withdrawAmount)
-        // Wait for transaction confirmation (simplified)
         await new Promise((resolve) => setTimeout(resolve, 3000))
-        // Refresh data after exit
         refresh()
       },
       {
@@ -204,8 +228,7 @@ export function VaultDetailPanel({
     )
   }
 
-  // Show error state if there's an on-chain error
-  if (error && error.code !== 'WALLET_NOT_CONNECTED' && error.code !== 'VAULT_NOT_FOUND') {
+  if (!isDemo && error && error.code !== 'WALLET_NOT_CONNECTED' && error.code !== 'VAULT_NOT_FOUND') {
     return (
       <div
         style={{
@@ -1042,4 +1065,5 @@ function ManageOption({
     </button>
   )
 }
+
 

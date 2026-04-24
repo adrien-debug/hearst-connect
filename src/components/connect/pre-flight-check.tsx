@@ -7,48 +7,6 @@ import { useVaultById } from '@/hooks/useVaultRegistry'
 import { TOKENS, MONO } from './constants'
 import type { AvailableVault } from './data'
 
-type PreFlightStatus = {
-  wallet: 'connected' | 'disconnected'
-  network: 'valid' | 'invalid' | 'unknown'
-  allowance: 'sufficient' | 'insufficient' | 'checking'
-  epoch: 'active' | 'ending' | 'unknown'
-}
-
-export function usePreFlightCheck(vault: AvailableVault, depositAmount: string): PreFlightStatus {
-  const { address, isConnected } = useAccount()
-  const chainId = useChainId()
-
-  // Get vault addresses from registry
-  const vaultConfig = useVaultById(vault.id)
-  const usdcAddress = vaultConfig?.usdcAddress
-  const vaultAddress = vaultConfig?.vaultAddress
-
-  const { hasAllowance, isLoading: isAllowanceLoading } = useTokenAllowance(
-    usdcAddress,
-    address,
-    vaultAddress
-  )
-
-  const { global } = useVaultGlobal(vaultAddress)
-  
-  const status: PreFlightStatus = {
-    wallet: isConnected ? 'connected' : 'disconnected',
-    network: chainId === 1 ? 'valid' : chainId ? 'invalid' : 'unknown',
-    allowance: isAllowanceLoading 
-      ? 'checking' 
-      : hasAllowance(depositAmount) 
-        ? 'sufficient' 
-        : 'insufficient',
-    epoch: global?.shouldAdvanceEpoch 
-      ? 'ending' 
-      : global?.currentEpoch 
-        ? 'active' 
-        : 'unknown',
-  }
-  
-  return status
-}
-
 export function PreFlightCheck({
   vault,
   depositAmount,
@@ -82,7 +40,7 @@ export function PreFlightCheck({
   }
   
   const allGood = isConnected && 
-    chainId === 1 && 
+    chainId === 8453 && 
     hasAllowance(depositAmount) && 
     global?.currentEpoch && 
     !global?.shouldAdvanceEpoch
@@ -118,9 +76,9 @@ export function PreFlightCheck({
         
         {/* Network */}
         <CheckItem 
-          status={chainId === 1 ? 'success' : chainId ? 'warning' : 'error'}
+          status={chainId === 8453 ? 'success' : chainId ? 'warning' : 'error'}
           label="Network"
-          value={chainId === 1 ? '✓ Ethereum Mainnet' : chainId ? '⚠ Switch to Mainnet' : '✗ Unknown network'}
+          value={chainId === 8453 ? '✓ Base' : chainId ? '⚠ Switch to Base' : '✗ Unknown network'}
         />
         
         {/* Allowance */}
