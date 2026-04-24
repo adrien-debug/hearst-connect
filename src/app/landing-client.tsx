@@ -103,19 +103,25 @@ function useAutoCarousel(itemCount: number, intervalMs = 5000) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  const scrollNext = useCallback(() => {
+    setActiveIndex((current) => (current + 1) % itemCount);
+  }, [itemCount]);
+
+  const scrollPrev = useCallback(() => {
+    setActiveIndex((current) => (current === 0 ? itemCount - 1 : current - 1));
+  }, [itemCount]);
+
   useEffect(() => {
     if (isPaused) return;
-    const timer = setInterval(() => {
-      setActiveIndex((current) => (current + 1) % itemCount);
-    }, intervalMs);
+    const timer = setInterval(scrollNext, intervalMs);
     return () => clearInterval(timer);
-  }, [isPaused, itemCount, intervalMs]);
+  }, [isPaused, intervalMs, scrollNext]);
 
-  return { activeIndex, setActiveIndex, isPaused, setIsPaused };
+  return { activeIndex, setActiveIndex, isPaused, setIsPaused, scrollNext, scrollPrev };
 }
 
 export default function HubPageClient() {
-  const { activeIndex, setActiveIndex, isPaused, setIsPaused } = useAutoCarousel(INVESTMENT_STRATEGY_SLIDES.length);
+  const { activeIndex, setActiveIndex, isPaused, setIsPaused, scrollNext, scrollPrev } = useAutoCarousel(INVESTMENT_STRATEGY_SLIDES.length);
 
   useEffect(() => {
     const nav = document.getElementById('hub-site-nav');
@@ -395,6 +401,26 @@ export default function HubPageClient() {
               </article>
             ))}
           </div>
+
+          
+          <button 
+            className="hub-carousel-arrow hub-carousel-arrow-prev" 
+            onClick={scrollPrev} 
+            aria-label="Previous slide"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button 
+            className="hub-carousel-arrow hub-carousel-arrow-next" 
+            onClick={scrollNext} 
+            aria-label="Next slide"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
 
           <div className="hub-carousel-auto-indicators">
             {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (

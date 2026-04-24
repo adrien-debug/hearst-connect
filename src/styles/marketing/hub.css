@@ -1948,22 +1948,25 @@ a.welcome-btn:focus-visible {
 @media (min-width: 768px) {
   .hub-slide-card {
     flex-direction: row;
-    height: 500px;
+    min-height: 450px;
   }
 }
 
 .hub-slide-media {
   position: relative;
-  flex: 1.2;
+  flex: 1.5;
   min-height: 250px;
   background: #0A0A0A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hub-slide-media img,
 .hub-slide-media video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .hub-slide-content {
@@ -2084,15 +2087,52 @@ a.welcome-btn:focus-visible {
   line-height: 1.6;
 }
 
-/* ─── Slide media ─── */
-.hub-slide-media {
-  position: relative;
-  overflow: hidden;
+
+/* Arrows */
+.hub-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.2s ease, background 0.2s ease;
+  color: #0A0A0A;
 }
 
-.hub-slide-media img,
-.hub-slide-media video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+@media (max-width: 768px) {
+  .hub-carousel-arrow {
+    display: none;
+  }
+}
+
+.hub-carousel-auto:hover .hub-carousel-arrow {
+  opacity: 1;
+}
+
+.hub-carousel-arrow:hover {
+  transform: translateY(-50%) scale(1.05);
+  background: #FFFFFF;
+}
+
+.hub-carousel-arrow svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.hub-carousel-arrow-prev {
+  left: 2rem;
+}
+
+.hub-carousel-arrow-next {
+  right: 2rem;
 }
