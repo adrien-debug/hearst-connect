@@ -97,3 +97,136 @@
 .connect-scope .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   APP ACCESS GATE — Wallet connection requirement screen
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.app-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050505;
+}
+
+.app-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #a7fb90;
+  border-radius: 50%;
+  animation: app-spin 1s linear infinite;
+}
+
+@keyframes app-spin {
+  to { transform: rotate(360deg); }
+}
+
+.app-access-denied {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050505;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(167, 251, 144, 0.06) 0%, transparent 70%);
+  padding: 2rem;
+}
+
+.app-access-card {
+  max-width: 420px;
+  width: 100%;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.app-access-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a7fb90;
+  background: rgba(167, 251, 144, 0.1);
+  border-radius: 50%;
+}
+
+.app-access-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #eef0f4;
+  margin: 0;
+}
+
+.app-access-desc {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(220, 226, 234, 0.7);
+  margin: 0;
+}
+
+.app-access-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.app-access-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.app-access-btn--primary {
+  background: #a7fb90;
+  color: #050a05;
+}
+
+.app-access-btn--primary:hover {
+  background: #c4ffa8;
+  transform: translateY(-1px);
+}
+
+.app-access-btn--ghost {
+  background: transparent;
+  color: rgba(220, 226, 234, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-access-btn--ghost:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #eef0f4;
+}
+
+@media (max-width: 480px) {
+  .app-access-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .app-access-title {
+    font-size: 1.25rem;
+  }
+}

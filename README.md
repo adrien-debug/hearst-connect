@@ -7,11 +7,19 @@ Onchain access to institutional Bitcoin mining cash flows.
 | Route | Description |
 |-------|-------------|
 | `/` | Landing page — marketing, investment strategies carousel (copy overlaid on media + gradient scrim), CTA |
-| `/app` | Cinematic Financial OS — portfolio, vaults, subscription & projection |
+| `/vaults` | **Product page** — browse available vaults without wallet connection. Connect wallet here to unlock platform access. |
+| `/app` | **Cinematic Financial OS** — portfolio dashboard, vault subscription & projection. Requires wallet connection or demo mode. |
 | `/admin` | Vault registry management (add/edit/remove vaults) |
-| `/intro` | Intro / onboarding |
 
-> **Redirects:** `/launch-app`, `/hub`, and `/vault` all redirect to their canonical routes.
+> **Redirects:** `/launch-app` → `/vaults`, `/intro` → `/vaults`, `/hub` → `/`, `/vault` → `/vaults`.
+
+## User Flow
+
+1. **Landing** (`/`) → "Launch App" button
+2. **Product Page** (`/vaults`) → Browse vaults, connect wallet
+3. **Dashboard** (`/app`) → Full platform access after wallet connection
+
+The flow follows DeFi best practices: users can explore products before committing to wallet connection.
 
 ## Tech Stack
 
@@ -73,9 +81,10 @@ From Admin panel, authorized users can:
 src/
 ├── app/
 │   ├── page.tsx, landing-client.tsx, layout.tsx, not-found.tsx
-│   ├── app/           # /app route — Cinematic OS shell
+│   ├── app/           # /app route — Cinematic OS shell (wallet required)
+│   ├── vaults/        # /vaults route — Product page (public)
 │   ├── admin/         # /admin route — vault registry
-│   └── intro/         # /intro route — onboarding
+│   └── intro/         # /intro route — (redirects to /vaults)
 ├── components/
 │   ├── connect/       # Canvas, panels, constants.ts (TOKENS + chart palette), utils/portfolio-chart-utils
 │   ├── ui/            # Label, click-ripple
