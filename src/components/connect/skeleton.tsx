@@ -39,12 +39,12 @@ export function Skeleton({ mode }: SkeletonProps) {
           <div style={{ ...basePulse, width: TOKENS.spacing[20], height: TOKENS.spacing[5] }} />
           <div style={{ ...basePulse, width: TOKENS.spacing[16], height: TOKENS.spacing[5] }} />
         </div>
-        <div style={{ ...basePulse, width: '70%', height: '40px', marginBottom: TOKENS.spacing[4] }} />
+        <div style={{ ...basePulse, width: '70%', height: TOKENS.control.heightLg, marginBottom: TOKENS.spacing[4] }} />
         <div
           style={{
-            height: '4px',
+            height: TOKENS.spacing[1],
             background: TOKENS.colors.black,
-            borderRadius: TOKENS.radius.sm,
+            borderRadius: TOKENS.radius.full,
             marginBottom: TOKENS.spacing[2],
           }}
         >

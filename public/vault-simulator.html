@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hearst — Vault Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--accent:#6c5ce7;
+  --green:#00b894;--red:#d63031;--orange:#fdcb6e;--blue:#74b9ff;
+  --text:#e0e0e0;--muted:#888;--white:#fff;
+}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;padding:20px}
+h1{font-size:1.5rem;font-weight:700;color:var(--white);margin-bottom:2px}
+h2{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:10px}
+.subtitle{color:var(--muted);font-size:.8rem;margin-bottom:20px}
+.max-w{max-width:1400px;margin:0 auto}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+
+/* Live banner */
+.live-bar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.live-item{display:flex;flex-direction:column}
+.live-item .ll{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.live-item .lv{font-size:1rem;font-weight:700;color:var(--white)}
+.live-item .lv.pos{color:var(--green)}.live-item .lv.neg{color:var(--red)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.fear-bar{width:80px;height:6px;border-radius:3px;background:#1a1a28;overflow:hidden;margin-top:2px}
+.fear-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+/* Inputs */
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:3px}
+.field input,.field select{width:100%;background:#1a1a28;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-size:.85rem}
+.field input:focus{outline:none;border-color:var(--accent)}
+.range-row{display:flex;align-items:center;gap:8px}
+.range-row input[type=range]{flex:1;-webkit-appearance:none;height:6px;background:#1a1a28;border-radius:3px;border:none;padding:0}
+.range-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
+.range-val{font-size:.8rem;color:var(--accent);min-width:40px;text-align:right;font-weight:600}
+.alloc-bar{height:8px;border-radius:4px;display:flex;overflow:hidden;margin:6px 0 4px}
+.alloc-bar div{height:100%;transition:width .3s}
+.alloc-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.7rem}
+.alloc-legend span{display:flex;align-items:center;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* Presets */
+.preset-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.preset-btn{padding:6px 12px;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s}
+.preset-btn:hover{border-color:var(--accent);color:var(--white)}
+.preset-btn.active{border-color:var(--accent);background:rgba(108,92,231,.15);color:var(--white)}
+
+/* Profit table */
+.profit-table{width:100%;font-size:.75rem;border-collapse:collapse}
+.profit-table th{text-align:left;padding:5px;color:var(--muted);border-bottom:1px solid var(--border)}
+.profit-table td{padding:5px;border-bottom:1px solid var(--border)}
+.profit-table input{width:55px;background:#1a1a28;border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem;text-align:center}
+.profit-table select{background:#1a1a28;border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{padding:7px 14px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s}
+.tab.active{border-color:var(--accent);color:var(--white);background:rgba(108,92,231,.12)}
+.tab.bear.active{border-color:var(--red);color:var(--red);background:rgba(214,48,49,.1)}
+.tab.bull.active{border-color:var(--green);color:var(--green);background:rgba(0,184,148,.1)}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#1a1a28;border-radius:10px;padding:12px}
+.kpi .label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .value{font-size:1.15rem;font-weight:700;color:var(--white);margin-top:1px}
+.pos{color:var(--green)}.neg{color:var(--red)}
+
+/* Charts */
+.chart-container{position:relative;height:240px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.charts-row{grid-template-columns:1fr}}
+
+/* Pocket rows */
+.pocket-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.pocket-row:last-child{border:none}
+.pocket-name{flex:1;font-weight:600;font-size:.8rem}
+.pocket-val{font-weight:600;font-size:.85rem}
+.pocket-pct{color:var(--muted);font-size:.75rem;min-width:55px;text-align:right}
+
+/* Yields live */
+.yield-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.yield-card{background:#1a1a28;border-radius:8px;padding:10px}
+.yield-card .yl{font-size:.65rem;color:var(--muted);text-transform:uppercase}
+.yield-card .yv{font-size:1rem;font-weight:700;color:var(--green);margin-top:1px}
+.yield-card .ys{font-size:.65rem;color:var(--muted)}
+
+/* Table comp */
+table.comp{width:100%;border-collapse:collapse;font-size:.78rem}
+table.comp th{text-align:left;padding:6px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:600}
+table.comp td{padding:6px;border-bottom:1px solid var(--border)}
+
+.btn{padding:8px 16px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;transition:.2s}
+.btn-primary{background:var(--accent);color:var(--white)}.btn-primary:hover{background:#5b4bd5}
+.btn-sm{padding:5px 10px;font-size:.7rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer}
+.btn-sm:hover{border-color:var(--accent);color:var(--white)}
+
+.loading{color:var(--muted);font-size:.8rem;padding:20px;text-align:center}
+.src{font-size:.6rem;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="max-w">
+
+<h1>Hearst — Vault Simulator</h1>
+<p class="subtitle">Data live · Scénarios auto-calculés · Produit structuré crypto</p>
+
+<!-- LIVE BAR -->
+<div class="live-bar" id="liveBar">
+  <div style="display:flex;align-items:center;gap:6px"><div class="live-dot"></div><span style="font-size:.7rem;color:var(--green);font-weight:600">LIVE</span></div>
+  <div class="live-item"><span class="ll">BTC/USD</span><span class="lv" id="liveBtc">—</span></div>
+  <div class="live-item"><span class="ll">24h</span><span class="lv" id="liveBtc24h">—</span></div>
+  <div class="live-item"><span class="ll">Yield USDC (Aave)</span><span class="lv pos" id="liveUsdc">—</span></div>
+  <div class="live-item"><span class="ll">Yield USDT (Aave)</span><span class="lv pos" id="liveUsdt">—</span></div>
+  <div class="live-item"><span class="ll">Fear & Greed</span><span class="lv" id="liveFg">—</span><div class="fear-bar"><div class="fear-fill" id="fgFill"></div></div></div>
+  <div class="live-item"><span class="ll">Hashprice</span><span class="lv" id="liveHash">—</span></div>
+</div>
+
+<div class="layout">
+
+<!-- ====== LEFT: INPUTS ====== -->
+<div>
+
+  <!-- Capital + duration -->
+  <div class="card">
+    <h2>Investissement</h2>
+    <div class="field"><label>Capital ($)</label><input type="number" id="capital" value="100000" min="1000" step="1000"></div>
+    <div class="field"><label>Durée (mois)</label><input type="number" id="duration" value="36" min="1" max="120"></div>
+    <div class="field"><label>Frais annuels (%)</label><input type="number" id="fees" value="2" min="0" max="10" step="0.1"></div>
+  </div>
+
+  <!-- Presets -->
+  <div class="card">
+    <h2>Profil</h2>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="applyPreset('conservative')">Conservateur</button>
+      <button class="preset-btn active" onclick="applyPreset('balanced')">Équilibré</button>
+      <button class="preset-btn" onclick="applyPreset('growth')">Growth</button>
+      <button class="preset-btn" onclick="applyPreset('aggressive')">Agressif</button>
+      <button class="preset-btn" onclick="applyPreset('barbell')">Barbell</button>
+    </div>
+
+    <div class="field"><label>BTC Spot</label>
+      <div class="range-row"><input type="range" id="allocBtc" min="0" max="100" value="30"><span class="range-val" id="allocBtcVal">30%</span></div>
+    </div>
+    <div class="field"><label>Mining</label>
+      <div class="range-row"><input type="range" id="allocMining" min="0" max="100" value="30"><span class="range-val" id="allocMiningVal">30%</span></div>
+    </div>
+    <div class="field"><label>Stablecoins</label>
+      <div class="range-row"><input type="range" id="allocStable" min="0" max="100" value="30"><span class="range-val" id="allocStableVal">30%</span></div>
+    </div>
+    <div class="field"><label>Réserve</label>
+      <div class="range-row"><input type="range" id="allocReserve" min="0" max="100" value="10"><span class="range-val" id="allocReserveVal">10%</span></div>
+    </div>
+    <div class="alloc-bar" id="allocBar"></div>
+    <div class="alloc-legend">
+      <span><span class="dot" style="background:var(--orange)"></span>BTC</span>
+      <span><span class="dot" style="background:var(--accent)"></span>Mining</span>
+      <span><span class="dot" style="background:var(--blue)"></span>Stable</span>
+      <span><span class="dot" style="background:var(--muted)"></span>Réserve</span>
+    </div>
+    <div id="allocWarn" style="color:var(--red);font-size:.7rem;margin-top:3px"></div>
+  </div>
+
+  <!-- Yields live -->
+  <div class="card">
+    <h2>Yields live <span style="font-size:.65rem;color:var(--muted)">(auto-fetched)</span></h2>
+    <div class="yield-grid">
+      <div class="yield-card"><span class="yl">Mining net/an</span><div class="yv" id="yMining">10%</div><div class="ys">Hashprice-based</div></div>
+      <div class="yield-card"><span class="yl">USDC DeFi</span><div class="yv" id="yUsdc">5%</div><div class="ys">Aave v3</div></div>
+      <div class="yield-card"><span class="yl">USDT DeFi</span><div class="yv" id="yUsdt">5%</div><div class="ys">Aave v3</div></div>
+      <div class="yield-card"><span class="yl">BTC yield</span><div class="yv" id="yBtc">1%</div><div class="ys">Lending</div></div>
+    </div>
+    <div class="field"><label>Override mining yield (%)</label><input type="number" id="miningOverride" value="" placeholder="Auto"></div>
+  </div>
+
+  <!-- Profit levels -->
+  <div class="card">
+    <h2>Prise de profit BTC</h2>
+    <table class="profit-table">
+      <thead><tr><th>Prix $</th><th>% vendu</th><th>Dest.</th><th></th></tr></thead>
+      <tbody id="profitRows"></tbody>
+    </table>
+    <button class="btn-sm" style="margin-top:6px" onclick="addProfitRow()">+ Palier</button>
+  </div>
+
+</div>
+
+<!-- ====== RIGHT: OUTPUTS ====== -->
+<div>
+
+  <div class="tabs">
+    <button class="tab bear" data-s="bear" onclick="switchTab('bear',this)">Bear</button>
+    <button class="tab active" data-s="base" onclick="switchTab('base',this)">Base</button>
+    <button class="tab bull" data-s="bull" onclick="switchTab('bull',this)">Bull</button>
+  </div>
+
+  <div class="kpi-grid" id="kpis"></div>
+
+  <div class="charts-row">
+    <div class="card"><h2>Valeur finale</h2><div class="chart-container"><canvas id="cAlloc"></canvas></div></div>
+    <div class="card"><h2>Contribution P&L</h2><div class="chart-container"><canvas id="cContrib"></canvas></div></div>
+  </div>
+
+  <div class="card"><h2>Rendement par prix BTC</h2><div class="chart-container"><canvas id="cSensitivity"></canvas></div></div>
+
+  <div class="card">
+    <h2>Détail par poche</h2>
+    <div id="pocketDetail"></div>
+  </div>
+
+  <div class="card">
+    <h2>Comparaison scénarios</h2>
+    <table class="comp"><thead><tr><th></th><th>Bear</th><th>Base</th><th>Bull</th></tr></thead><tbody id="compBody"></tbody></table>
+  </div>
+
+  <div class="card">
+    <h2>Libération BTC</h2>
+    <div id="profitWaterfall"></div>
+  </div>
+
+</div>
+</div>
+
+<p class="src" style="margin-top:20px;text-align:center">Sources: CoinGecko · DeFiLlama · Alternative.me · Données indicatives, non contractuelles.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:0}).format(n);
+const fmtPct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
+const fmtUsd=n=>'$'+fmt(n);
+
+// ========== LIVE DATA ==========
+let LIVE={btcPrice:95000,btc24h:0,usdcApy:5,usdtApy:5,btcApy:1,miningNet:10,fearGreed:50,fearLabel:'Neutral',hashprice:null};
+
+async function fetchLiveData(){
+  const results=await Promise.allSettled([
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true').then(r=>r.json()),
+    fetch('https://yields.llama.fi/pools').then(r=>r.json()),
+    fetch('https://api.alternative.me/fng/?limit=1').then(r=>r.json()),
+  ]);
+
+  // BTC price
+  if(results[0].status==='fulfilled'){
+    const d=results[0].value.bitcoin;
+    LIVE.btcPrice=d.usd;
+    LIVE.btc24h=d.usd_24h_change||0;
+    $('liveBtc').textContent=fmtUsd(d.usd);
+    $('liveBtc24h').textContent=fmtPct(d.usd_24h_change||0);
+    $('liveBtc24h').className='lv '+(d.usd_24h_change>=0?'pos':'neg');
+  }
+
+  // DeFi yields from DeFiLlama
+  if(results[1].status==='fulfilled'){
+    const pools=results[1].value.data||[];
+    const findPool=(symbol,project)=>pools.find(p=>p.symbol===symbol&&p.project===project&&p.chain==='Ethereum');
+    const aaveUsdc=findPool('USDC','aave-v3');
+    const aaveUsdt=findPool('USDT','aave-v3');
+    const aaveWbtc=findPool('WBTC','aave-v3');
+    if(aaveUsdc){LIVE.usdcApy=aaveUsdc.apy;$('liveUsdc').textContent=aaveUsdc.apy.toFixed(2)+'%';$('yUsdc').textContent=aaveUsdc.apy.toFixed(2)+'%'}
+    if(aaveUsdt){LIVE.usdtApy=aaveUsdt.apy;$('liveUsdt').textContent=aaveUsdt.apy.toFixed(2)+'%';$('yUsdt').textContent=aaveUsdt.apy.toFixed(2)+'%'}
+    if(aaveWbtc){LIVE.btcApy=aaveWbtc.apy;$('yBtc').textContent=aaveWbtc.apy.toFixed(2)+'%'}
+  }
+
+  // Fear & Greed
+  if(results[2].status==='fulfilled'){
+    const fg=results[2].value.data?.[0];
+    if(fg){
+      LIVE.fearGreed=+fg.value;
+      LIVE.fearLabel=fg.value_classification;
+      $('liveFg').textContent=fg.value+' — '+fg.value_classification;
+      const hue=fg.value*1.2;
+      $('fgFill').style.width=fg.value+'%';
+      $('fgFill').style.background=`hsl(${hue},70%,50%)`;
+    }
+  }
+
+  // Mining estimate — derive from BTC price heuristic (no free hashprice API)
+  // ~$50/PH/day at $95k BTC gives ~10-12% net on hosted mining
+  const miningBase=10;
+  const btcRatio=LIVE.btcPrice/95000;
+  LIVE.miningNet=Math.round(miningBase*btcRatio*10)/10;
+  $('yMining').textContent=LIVE.miningNet.toFixed(1)+'%';
+  $('liveHash').textContent='~$'+(48*btcRatio).toFixed(0)+'/PH/day';
+
+  simulate();
+}
+
+// ========== PRESETS ==========
+const PRESETS={
+  conservative:{alloc:[10,25,45,20],profits:[{price:1.15,pct:30,dest:'usdc'},{price:1.30,pct:30,dest:'usdc'},{price:1.50,pct:30,dest:'reserve'}]},
+  balanced:    {alloc:[30,30,30,10],profits:[{price:1.15,pct:15,dest:'usdc'},{price:1.35,pct:20,dest:'usdc'},{price:1.55,pct:20,dest:'reserve'},{price:1.80,pct:20,dest:'usdc'}]},
+  growth:      {alloc:[35,30,25,10],profits:[{price:1.20,pct:15,dest:'usdc'},{price:1.40,pct:20,dest:'usdc'},{price:1.60,pct:15,dest:'reserve'},{price:1.90,pct:20,dest:'usdc'}]},
+  aggressive:  {alloc:[50,20,20,10],profits:[{price:1.25,pct:10,dest:'usdc'},{price:1.50,pct:15,dest:'usdc'},{price:1.80,pct:15,dest:'reserve'},{price:2.10,pct:20,dest:'usdc'}]},
+  barbell:     {alloc:[20,0,60,20],profits:[{price:1.25,pct:20,dest:'usdc'},{price:1.55,pct:20,dest:'usdc'},{price:1.90,pct:20,dest:'reserve'},{price:2.10,pct:20,dest:'usdc'}]},
+};
+
+function applyPreset(id){
+  const p=PRESETS[id];if(!p)return;
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.preset-btn[onclick*="${id}"]`).classList.add('active');
+  const ids=['allocBtc','allocMining','allocStable','allocReserve'];
+  p.alloc.forEach((v,i)=>{$(ids[i]).value=v;$(ids[i]+'Val').textContent=v+'%'});
+  updateAllocBar();
+  profitLevels.length=0;
+  p.profits.forEach(r=>profitLevels.push({...r}));
+  renderProfitRows();
+  simulate();
+}
+
+// ========== ALLOCATION (dynamic gauges, always 100%) ==========
+const allocIds=['allocBtc','allocMining','allocStable','allocReserve'];
+const allocColors=['var(--orange)','var(--accent)','var(--blue)','var(--muted)'];
+
+function rebalanceAlloc(changedId){
+  const newVal=+$(changedId).value;
+  const others=allocIds.filter(id=>id!==changedId);
+  const othersSum=others.reduce((s,id)=>s+ +$(id).value,0);
+  const remaining=100-newVal;
+
+  if(othersSum===0){
+    const each=Math.floor(remaining/others.length);
+    let leftover=remaining-each*others.length;
+    others.forEach(id=>{$(id).value=each+(leftover-->0?1:0)});
+  }else{
+    let distributed=0;
+    others.forEach((id,i)=>{
+      if(i===others.length-1){
+        $(id).value=remaining-distributed;
+      }else{
+        const share=Math.round((+$(id).value/othersSum)*remaining);
+        $(id).value=share;
+        distributed+=share;
+      }
+    });
+  }
+
+  allocIds.forEach(id=>{
+    const v=Math.max(0,Math.min(100,+$(id).value));
+    $(id).value=v;
+    $(id+'Val').textContent=v+'%';
+  });
+  updateAllocBar();
+  simulate();
+}
+
+allocIds.forEach(id=>{
+  $(id).addEventListener('input',()=>rebalanceAlloc(id));
+});
+
+function updateAllocBar(){
+  const vals=allocIds.map(id=>+$(id).value);
+  $('allocBar').innerHTML=vals.map((v,i)=>`<div style="width:${v}%;background:${allocColors[i]}"></div>`).join('');
+  $('allocWarn').textContent='';
+}
+updateAllocBar();
+
+// ========== PROFIT LEVELS (relative to entry) ==========
+let profitLevels=[
+  {price:1.15,pct:15,dest:'usdc'},
+  {price:1.35,pct:20,dest:'usdc'},
+  {price:1.55,pct:20,dest:'reserve'},
+  {price:1.80,pct:20,dest:'usdc'},
+];
+
+function renderProfitRows(){
+  const tb=$('profitRows');tb.innerHTML='';
+  profitLevels.forEach((r,i)=>{
+    const absPrice=Math.round(LIVE.btcPrice*r.price);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="number" value="${absPrice}" step="5000" data-i="${i}" data-f="price" title="x${r.price.toFixed(2)}"></td>
+      <td><input type="number" value="${r.pct}" min="0" max="100" data-i="${i}" data-f="pct">%</td>
+      <td><select data-i="${i}" data-f="dest">
+        <option value="usdc" ${r.dest==='usdc'?'selected':''}>USDC</option>
+        <option value="reserve" ${r.dest==='reserve'?'selected':''}>Réserve</option>
+        <option value="mining" ${r.dest==='mining'?'selected':''}>Mining</option>
+      </select></td>
+      <td><button class="btn-sm" onclick="profitLevels.splice(${i},1);renderProfitRows();simulate()">✕</button></td>`;
+    tr.querySelectorAll('input,select').forEach(el=>el.addEventListener('change',()=>{
+      const idx=+el.dataset.i,f=el.dataset.f;
+      if(f==='price') profitLevels[idx].price=+el.value/LIVE.btcPrice;
+      else if(f==='pct') profitLevels[idx].pct=+el.value;
+      else profitLevels[idx].dest=el.value;
+      simulate();
+    }));
+    tb.appendChild(tr);
+  });
+}
+function addProfitRow(){
+  const last=profitLevels.length?profitLevels[profitLevels.length-1].price:1.5;
+  profitLevels.push({price:last+0.2,pct:10,dest:'usdc'});
+  renderProfitRows();simulate();
+}
+renderProfitRows();
+
+// ========== SIMULATION ==========
+let results={};
+let activeTab='base';
+
+function getYields(scenario){
+  const override=+$('miningOverride').value;
+  const mNet=override||LIVE.miningNet;
+  const stableY=(LIVE.usdcApy+LIVE.usdtApy)/2;
+  const btcY=LIVE.btcApy;
+  const mult={bear:0.5,base:1,bull:1.5};
+  const m=mult[scenario];
+  return{
+    miningNet:Math.round(mNet*m*10)/10,
+    stableYield:Math.round(stableY*(0.6+m*0.4)*10)/10,
+    btcYield:Math.round(btcY*m*10)/10,
+    btcExit:Math.round(LIVE.btcPrice*{bear:0.7,base:1.5,bull:2.1}[scenario])
+  };
+}
+
+function calcPocket(params){
+  const{capital,months,btcEntry,btcExit,allocBtc,allocMining,allocStable,allocReserve,
+    miningNet,stableYield,btcYield,fees,profitLvls}=params;
+  const years=months/12;
+
+  let btcCap=capital*allocBtc/100;
+  const btcAmt=btcCap/btcEntry;
+  let btcRem=btcAmt,btcSecured=0;
+  const profitLog=[];
+  const levels=[...profitLvls].sort((a,b)=>a.price-b.price);
+
+  levels.forEach(lv=>{
+    const absPrice=btcEntry*lv.price;
+    if(btcExit>=absPrice&&btcRem>0){
+      const sold=btcAmt*(lv.pct/100);
+      const actual=Math.min(sold,btcRem);
+      const rev=actual*absPrice;
+      btcSecured+=rev;btcRem-=actual;
+      profitLog.push({price:absPrice,sold:actual,revenue:rev,dest:lv.dest,pctSold:lv.pct});
+    }
+  });
+
+  const btcHeld=btcRem*btcExit;
+  const btcYieldVal=btcHeld*(btcYield/100)*years;
+  const btcTotal=btcHeld+btcSecured+btcYieldVal;
+  const btcPnl=btcTotal-btcCap;
+
+  const mCap=capital*allocMining/100;
+  const mTotal=mCap*Math.pow(1+miningNet/100,years);
+  const mPnl=mTotal-mCap;
+
+  const sCap=capital*allocStable/100;
+  const sTotal=sCap*Math.pow(1+stableYield/100/12,months);
+  const sPnl=sTotal-sCap;
+
+  const rCap=capital*allocReserve/100;
+  const rTotal=rCap*(1+3/100*years);
+  const rPnl=rTotal-rCap;
+
+  const gross=btcTotal+mTotal+sTotal+rTotal;
+  const totalFees=capital*(fees/100)*years;
+  const net=gross-totalFees;
+  const pnl=net-capital;
+  const ret=pnl/capital*100;
+  const ann=(Math.pow(net/capital,1/years)-1)*100;
+
+  return{capital,btcCap,mCap:mCap,sCap,rCap,btcTotal,mTotal,sTotal,rTotal,
+    btcPnl,mPnl,sPnl,rPnl,gross,totalFees,net,pnl,ret,ann,
+    btcSecured,btcHeld,btcYieldVal,btcExpo:btcHeld/net*100,
+    profitLog,years,
+    btcContrib:btcPnl/(pnl||1)*100,mContrib:mPnl/(pnl||1)*100,
+    sContrib:sPnl/(pnl||1)*100,rContrib:rPnl/(pnl||1)*100};
+}
+
+function simulate(){
+  const capital=+$('capital').value;
+  const months=+$('duration').value;
+  const fees=+$('fees').value;
+  const allocs=allocIds.map(id=>+$(id).value);
+
+  results={};
+  ['bear','base','bull'].forEach(s=>{
+    const y=getYields(s);
+    results[s]=calcPocket({capital,months,btcEntry:LIVE.btcPrice,btcExit:y.btcExit,
+      allocBtc:allocs[0],allocMining:allocs[1],allocStable:allocs[2],allocReserve:allocs[3],
+      miningNet:y.miningNet,stableYield:y.stableYield,btcYield:y.btcYield,
+      fees,profitLvls:profitLevels});
+  });
+
+  renderOutputs();
+  renderComp();
+  renderSensitivity();
+}
+
+function switchTab(s,el){
+  activeTab=s;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderOutputs();
+}
+
+// ========== RENDER ==========
+let cAlloc,cContrib,cSens;
+function destroyCharts(){[cAlloc,cContrib,cSens].forEach(c=>{if(c)c.destroy()})}
+
+function renderOutputs(){
+  const r=results[activeTab];if(!r)return;
+  const cc=v=>v>=0?'pos':'neg';
+  const y=getYields(activeTab);
+
+  $('kpis').innerHTML=`
+    <div class="kpi"><div class="label">Capital</div><div class="value">${fmtUsd(r.capital)}</div></div>
+    <div class="kpi"><div class="label">Valeur finale</div><div class="value">${fmtUsd(r.net)}</div></div>
+    <div class="kpi"><div class="label">P&L</div><div class="value ${cc(r.pnl)}">${fmtUsd(r.pnl)}</div></div>
+    <div class="kpi"><div class="label">Rendement total</div><div class="value ${cc(r.ret)}">${fmtPct(r.ret)}</div></div>
+    <div class="kpi"><div class="label">Rendement / an</div><div class="value ${cc(r.ann)}">${fmtPct(r.ann)}</div></div>
+    <div class="kpi"><div class="label">BTC cible</div><div class="value">${fmtUsd(y.btcExit)}</div></div>
+    <div class="kpi"><div class="label">BTC sécurisé</div><div class="value">${fmtUsd(r.btcSecured)}</div></div>
+    <div class="kpi"><div class="label">Expo BTC</div><div class="value">${r.btcExpo.toFixed(1)}%</div></div>`;
+
+  const pockets=[
+    {name:'BTC Spot',color:'#fdcb6e',cap:r.btcCap,val:r.btcTotal,pnl:r.btcPnl},
+    {name:'Mining',color:'#6c5ce7',cap:r.mCap,val:r.mTotal,pnl:r.mPnl},
+    {name:'Stablecoins',color:'#74b9ff',cap:r.sCap,val:r.sTotal,pnl:r.sPnl},
+    {name:'Réserve',color:'#636e72',cap:r.rCap,val:r.rTotal,pnl:r.rPnl},
+  ];
+  $('pocketDetail').innerHTML=pockets.map(p=>`
+    <div class="pocket-row">
+      <div class="dot" style="background:${p.color}"></div>
+      <div class="pocket-name">${p.name}</div>
+      <div class="pocket-val ${p.pnl>=0?'pos':'neg'}">${fmtUsd(p.val)}</div>
+      <div class="pocket-pct ${p.pnl>=0?'pos':'neg'}">${p.cap>0?fmtPct(p.pnl/p.cap*100):'—'}</div>
+    </div>`).join('');
+
+  if(r.profitLog.length){
+    $('profitWaterfall').innerHTML=`<table class="comp"><thead><tr><th>Prix</th><th>Vendu</th><th>Revenu</th><th>Dest.</th></tr></thead><tbody>`+
+      r.profitLog.map(p=>`<tr><td>${fmtUsd(p.price)}</td><td>${p.sold.toFixed(4)} BTC</td><td>${fmtUsd(p.revenue)}</td><td>${p.dest.toUpperCase()}</td></tr>`).join('')+
+      `</tbody></table>`;
+  }else{
+    $('profitWaterfall').innerHTML='<p style="color:var(--muted);font-size:.8rem">Aucun palier atteint.</p>';
+  }
+
+  destroyCharts();
+  const dOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:10}}}}};
+  cAlloc=new Chart($('cAlloc'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:[r.btcTotal,r.mTotal,r.sTotal,r.rTotal],backgroundColor:['#fdcb6e','#6c5ce7','#74b9ff','#636e72'],borderWidth:0}]},options:dOpts});
+  const cd=[r.btcContrib,r.mContrib,r.sContrib,r.rContrib].map(v=>Math.max(v,0));
+  cContrib=new Chart($('cContrib'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:cd,backgroundColor:['#fdcb6e','#6c5ce7','#74b9ff','#636e72'],borderWidth:0}]},options:dOpts});
+}
+
+function renderComp(){
+  const rows=[
+    ['BTC cible',s=>fmtUsd(getYields(s).btcExit)],
+    ['Valeur finale',s=>fmtUsd(results[s].net)],
+    ['P&L',s=>`<span class="${results[s].pnl>=0?'pos':'neg'}">${fmtUsd(results[s].pnl)}</span>`],
+    ['Rendement',s=>`<span class="${results[s].ret>=0?'pos':'neg'}">${fmtPct(results[s].ret)}</span>`],
+    ['Annualisé',s=>`<span class="${results[s].ann>=0?'pos':'neg'}">${fmtPct(results[s].ann)}</span>`],
+    ['BTC sécurisé',s=>fmtUsd(results[s].btcSecured)],
+    ['P&L Mining',s=>`<span class="pos">${fmtUsd(results[s].mPnl)}</span>`],
+    ['P&L Stable',s=>`<span class="pos">${fmtUsd(results[s].sPnl)}</span>`],
+  ];
+  $('compBody').innerHTML=rows.map(([l,fn])=>`<tr><td style="font-weight:600">${l}</td><td>${fn('bear')}</td><td>${fn('base')}</td><td>${fn('bull')}</td></tr>`).join('');
+}
+
+function renderSensitivity(){
+  const capital=+$('capital').value,months=+$('duration').value,fees=+$('fees').value;
+  const allocs=allocIds.map(id=>+$(id).value);
+  const btcEntry=LIVE.btcPrice;
+  const mults=[0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0];
+  const prices=mults.map(m=>Math.round(btcEntry*m));
+  const baseY=getYields('base');
+
+  const perf=prices.map(p=>{
+    const r=calcPocket({capital,months,btcEntry,btcExit:p,allocBtc:allocs[0],allocMining:allocs[1],allocStable:allocs[2],allocReserve:allocs[3],
+      miningNet:baseY.miningNet,stableYield:baseY.stableYield,btcYield:baseY.btcYield,fees,profitLvls:profitLevels});
+    return r.ret;
+  });
+
+  if(cSens)cSens.destroy();
+  cSens=new Chart($('cSensitivity'),{type:'bar',data:{
+    labels:prices.map(p=>'$'+fmt(p)),
+    datasets:[{data:perf,backgroundColor:perf.map(v=>v>=0?'rgba(0,184,148,.6)':'rgba(214,48,49,.6)'),borderRadius:4}]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'#888',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#888',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}});
+}
+
+// ========== INIT ==========
+['capital','duration','fees','miningOverride'].forEach(id=>$(id).addEventListener('change',simulate));
+
+fetchLiveData();
+setInterval(fetchLiveData,60000);
+</script>
+</body>
+</html>

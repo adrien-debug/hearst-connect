@@ -172,4 +172,165 @@
   /* App integration aliases (Next.js shell; keep HTML preview minimal) */
   --dashboard-font-display: 'Bricolage Grotesque', var(--font-sans);
   --dashboard-terminal-green: var(--dashboard-terminal-accent);
+
+  /* ─── ASSET / PRODUCT COLOR TOKENS ───────────────────────────────────── */
+  --dashboard-color-btc: #F7931A;
+  --dashboard-color-btc-bg: rgba(247, 147, 26, 0.10);
+  --dashboard-color-btc-border: rgba(247, 147, 26, 0.20);
+  --dashboard-color-mining: #4ADE80;
+  --dashboard-color-mining-bg: rgba(74, 222, 128, 0.10);
+  --dashboard-color-mining-border: rgba(74, 222, 128, 0.20);
+  --dashboard-color-stablecoin: #3B82F6;
+  --dashboard-color-stablecoin-bg: rgba(59, 130, 246, 0.10);
+  --dashboard-color-stablecoin-border: rgba(59, 130, 246, 0.20);
+  --dashboard-color-reserve: #A78BFA;
+  --dashboard-color-reserve-bg: rgba(167, 139, 250, 0.10);
+  --dashboard-color-reserve-border: rgba(167, 139, 250, 0.20);
+
+  /* Product vault accents */
+  --dashboard-color-product-growth: var(--dashboard-color-btc);
+  --dashboard-color-product-prime: var(--dashboard-color-stablecoin);
+  --dashboard-color-product-recovery: var(--dashboard-color-mining);
+
+  /* Scenario colors */
+  --dashboard-color-scenario-bear: var(--dashboard-error);
+  --dashboard-color-scenario-base: var(--dashboard-accent);
+  --dashboard-color-scenario-bull: #60A5FA;
+
+  /* ─── TYPOGRAPHY TOKENS (semantic names for brief) ────────────────────── */
+  --dashboard-font-size-xs: 11px;
+  --dashboard-font-size-sm: 12px;
+  --dashboard-font-size-md: 14px;
+  --dashboard-font-size-base: 16px;
+  --dashboard-font-size-lg: 20px;
+  --dashboard-font-size-xl: 24px;
+  --dashboard-font-size-2xl: 40px;
+  --dashboard-font-size-3xl: 56px;
+
+  --dashboard-font-weight-regular: 400;
+  --dashboard-font-weight-medium: 500;
+  --dashboard-font-weight-semibold: 600;
+  --dashboard-font-weight-bold: 700;
+  --dashboard-font-weight-black: 800;
+
+  --dashboard-line-height-tight: 1.05;
+  --dashboard-line-height-normal: 1.45;
+
+  --dashboard-letter-spacing-value: -0.02em;
+  --dashboard-letter-spacing-label: 0.2em;
+  --dashboard-letter-spacing-title: 0.08em;
+
+  /* ─── CHART TOKENS ────────────────────────────────────────────────────── */
+  --dashboard-chart-height-sm: 120px;
+  --dashboard-chart-height-md: 200px;
+  --dashboard-chart-height-lg: 280px;
+  --dashboard-chart-donut-size-sm: 120px;
+  --dashboard-chart-donut-size-md: 160px;
+  --dashboard-chart-donut-size-lg: 200px;
+  --dashboard-chart-line-stroke: 3px;
+  --dashboard-chart-dot-radius: 6px;
+  --dashboard-chart-dot-stroke: 3px;
+  --dashboard-chart-stroke-hover-boost: 3px;
+  --dashboard-chart-padding-x: 10px;
+  --dashboard-chart-padding-y: 20px;
+
+  /* ─── TABLE TOKENS ────────────────────────────────────────────────────── */
+  --dashboard-table-row-height: 48px;
+  --dashboard-table-cell-padding-x: 16px;
+  --dashboard-table-cell-padding-y: 12px;
+  --dashboard-table-header-border-width: 6px;
+  --dashboard-table-header-color: var(--dashboard-text-muted);
+  --dashboard-table-row-border: var(--dashboard-border);
+  --dashboard-table-row-hover-bg: var(--dashboard-overlay-04);
+
+  /* ─── LAYOUT TOKENS ───────────────────────────────────────────────────── */
+  --dashboard-layout-max-width: 1280px;
+  --dashboard-layout-sidebar-width: 280px;
+  --dashboard-layout-header-height: 56px;
+  --dashboard-layout-card-min-height: 200px;
+  --dashboard-layout-grid-gap: 16px;
+  --dashboard-layout-section-gap: 32px;
+  --dashboard-layout-panel-padding: 24px;
+
+  /* ─── CARD STRUCTURAL TOKENS ──────────────────────────────────────────── */
+  --dashboard-card-padding: 24px;
+  --dashboard-card-padding-tight: 16px;
+  --dashboard-card-padding-limit: 12px;
+  --dashboard-card-header-height: 48px;
+  --dashboard-card-border-width: 1px;
+  --dashboard-card-border-accent-width: 3px;
+
+  /* ─── CONTROL / INPUT TOKENS ──────────────────────────────────────────── */
+  --dashboard-control-height-sm: 32px;
+  --dashboard-control-height-md: 40px;
+  --dashboard-control-height-lg: 48px;
+  --dashboard-control-height-xl: 56px;
+  --dashboard-input-height: var(--dashboard-control-height-md);
+  --dashboard-button-height-sm: var(--dashboard-control-height-sm);
+  --dashboard-button-height-md: var(--dashboard-control-height-md);
+  --dashboard-button-height-lg: var(--dashboard-control-height-lg);
+
+  /* ─── RADIUS TOKENS (corrected to match CSS) ──────────────────────────── */
+  --dashboard-radius-xs: 4px;
+  --dashboard-radius-dot: 9999px;
+
+  /* ─── SHADOW TOKENS (semantic) ────────────────────────────────────────── */
+  --dashboard-shadow-card: var(--dashboard-shadow-md);
+  --dashboard-shadow-card-hover: var(--dashboard-shadow-lg);
+  --dashboard-shadow-panel: var(--dashboard-shadow-lg);
+  --dashboard-shadow-glow-accent: var(--dashboard-glow-accent-medium);
+  --dashboard-shadow-glow-danger: 0 0 15px rgba(239, 68, 68, 0.40);
+
+  /* ─── ICON TOKENS ─────────────────────────────────────────────────────── */
+  --dashboard-icon-size-xs: 12px;
+  --dashboard-icon-size-sm: 16px;
+  --dashboard-icon-size-md: 20px;
+  --dashboard-icon-size-lg: 24px;
+  --dashboard-icon-size-xl: 32px;
+
+  /* ─── INDICATOR / DOT TOKENS ──────────────────────────────────────────── */
+  --dashboard-dot-size-sm: 8px;
+  --dashboard-dot-size-md: 12px;
+  --dashboard-dot-size-lg: 16px;
+
+  /* ─── ANIMATION TOKENS ────────────────────────────────────────────────── */
+  --dashboard-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --dashboard-ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ─── GLOW ORB TOKENS (vault card visual) ─────────────────────────────── */
+  --dashboard-vault-header-height: 72px;
+  --dashboard-vault-glow-size: 80px;
+  --dashboard-vault-glow-offset: -20px;
+  --dashboard-vault-glow-blur: 32px;
+  --dashboard-vault-glow-opacity: 0.15;
+  --dashboard-vault-grid-size: 12px;
+  --dashboard-vault-grid-opacity: 0.05;
+  --dashboard-vault-icon-size: 32px;
+  --dashboard-vault-icon-gem-size: 12px;
+  --dashboard-vault-icon-gem-border-radius: 2px;
+
+  /* ─── TOOLTIP TOKENS ──────────────────────────────────────────────────── */
+  --dashboard-tooltip-min-width: 144px;
+  --dashboard-tooltip-offset: 12px;
+
+  /* ─── SPARKLINE GEOMETRY ──────────────────────────────────────────────── */
+  --dashboard-sparkline-width: 600;
+  --dashboard-sparkline-height: 240;
+  --dashboard-sparkline-padding-top: 20px;
+  --dashboard-sparkline-padding-right: 10px;
+  --dashboard-sparkline-padding-bottom: 24px;
+  --dashboard-sparkline-padding-left: 70px;
+  --dashboard-sparkline-grid-dash: 4px;
+  --dashboard-sparkline-end-dot-radius: 6px;
+  --dashboard-sparkline-end-dot-stroke: 3px;
+
+  /* ─── ACTIVITY ROW TOKENS ─────────────────────────────────────────────── */
+  --dashboard-activity-icon-col: 16px;
+  --dashboard-activity-row-font-micro: 10px;
+
+  /* ─── DOCK TOKENS ──────────────────────────────────────────────────────── */
+  --dashboard-dock-button-size: 52px;
+  --dashboard-dock-logo-size: 26px;
+  --dashboard-dock-dot-size: 4px;
+  --dashboard-dock-dot-offset: 5px;
 }

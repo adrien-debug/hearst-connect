@@ -106,16 +106,16 @@ export function VaultCardCompact({ vault, index, total, mode, onClick, onClaim, 
         }}>
           <div style={{
             flex: 1,
-            height: '12px',
+            height: TOKENS.dot.md,
             background: TOKENS.colors.black,
-            borderRadius: TOKENS.borders.thin,
+            borderRadius: TOKENS.radius.full,
             overflow: 'hidden',
           }}>
             <div style={{
               width: `${Math.min(100, vault.progress)}%`,
               height: '100%',
               background: vault.progress >= 100 ? TOKENS.colors.accent : color,
-              borderRadius: TOKENS.borders.thin,
+              borderRadius: TOKENS.radius.full,
             }} />
           </div>
           <span style={{

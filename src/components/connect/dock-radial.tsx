@@ -52,8 +52,8 @@ export function DockRadial({ onSelect }: DockRadialProps) {
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 50,
-          width: '52px',
-          height: '52px',
+          width: TOKENS.dock.buttonSize,
+          height: TOKENS.dock.buttonSize,
           borderRadius: TOKENS.radius.full,
           background: TOKENS.colors.accentSubtle,
           border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
@@ -70,10 +70,10 @@ export function DockRadial({ onSelect }: DockRadialProps) {
           aria-hidden
           style={{
             position: 'absolute',
-            bottom: '5px',
-            width: '4px',
-            height: '4px',
-            borderRadius: '50%',
+            bottom: TOKENS.dock.dotOffset,
+            width: TOKENS.dock.dotSize,
+            height: TOKENS.dock.dotSize,
+            borderRadius: TOKENS.radius.dot,
             background: TOKENS.colors.accent,
           }}
         />
@@ -83,8 +83,8 @@ export function DockRadial({ onSelect }: DockRadialProps) {
           viewBox="572.6 466.87 129.26 142.86"
           aria-hidden
           style={{
-            width: '26px',
-            height: '26px',
+            width: TOKENS.dock.logoSize,
+            height: TOKENS.dock.logoSize,
             color: TOKENS.colors.accent,
             display: 'block',
           }}

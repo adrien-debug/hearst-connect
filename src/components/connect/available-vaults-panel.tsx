@@ -197,8 +197,8 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
               src={vault.image}
               alt={vault.name}
               style={{
-                width: '48px',
-                height: '48px',
+          width: TOKENS.icon.xl,
+          height: TOKENS.icon.xl,
                 borderRadius: TOKENS.radius.md,
                 objectFit: 'cover',
               }}
@@ -217,7 +217,7 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
             <div style={{
               fontSize: TOKENS.fontSizes.xs,
               color: TOKENS.colors.textSecondary,
-              marginTop: '2px',
+              marginTop: TOKENS.spacing[1],
             }}>
               {vault.strategy}
             </div>
@@ -278,16 +278,16 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
           </span>
         </div>
         <div style={{
-          height: '4px',
+          height: TOKENS.spacing[1],
           background: TOKENS.colors.black,
-          borderRadius: TOKENS.radius.sm,
+          borderRadius: TOKENS.radius.full,
           overflow: 'hidden',
         }}>
           <div style={{
             width: '0%',
             height: '100%',
             background: accentColor,
-            borderRadius: TOKENS.radius.sm,
+            borderRadius: TOKENS.radius.full,
           }} />
         </div>
         <div style={{

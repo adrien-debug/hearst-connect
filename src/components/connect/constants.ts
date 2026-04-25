@@ -30,24 +30,39 @@ export const TOKENS = {
     sidebarTextGhost: 'var(--hc-text-ghost)',
     surfaceHover: 'var(--hc-accent-dim)',
     surfaceActive: 'var(--hc-border-subtle)',
-    danger: 'var(--color-error, #EF4444)',
+    danger: 'var(--dashboard-error, #EF4444)',
+    success: 'var(--dashboard-success, #2DC558)',
+    warning: 'var(--dashboard-warning, #F59E0B)',
+    info: 'var(--dashboard-info, #3B82F6)',
+    /** Asset / product colors */
+    btc: 'var(--dashboard-color-btc)',
+    mining: 'var(--dashboard-color-mining)',
+    stablecoin: 'var(--dashboard-color-stablecoin)',
+    reserve: 'var(--dashboard-color-reserve)',
+    productGrowth: 'var(--dashboard-color-product-growth)',
+    productPrime: 'var(--dashboard-color-product-prime)',
+    productRecovery: 'var(--dashboard-color-product-recovery)',
+    /** Scenario colors */
+    scenarioBear: 'var(--dashboard-color-scenario-bear)',
+    scenarioBase: 'var(--dashboard-color-scenario-base)',
+    scenarioBull: 'var(--dashboard-color-scenario-bull)',
   },
   fonts: {
-    sans: "'Satoshi Variable', Inter, -apple-system, sans-serif",
-    mono: "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace",
+    sans: 'var(--font-sans)',
+    mono: 'var(--font-mono)',
   },
   fontSizes: {
     /** Caption / register */
-    micro: '11px',
-    xs: '12px',
+    micro: 'var(--dashboard-font-size-xs)',
+    xs: 'var(--dashboard-font-size-sm)',
     /** Body */
-    sm: '14px',
-    md: '16px',
+    sm: 'var(--dashboard-font-size-md)',
+    md: 'var(--dashboard-font-size-base)',
     /** Title / section */
-    lg: '20px',
-    xl: '24px',
-    xxl: '40px',
-    xxxl: '48px',
+    lg: 'var(--dashboard-font-size-lg)',
+    xl: 'var(--dashboard-font-size-xl)',
+    xxl: 'var(--dashboard-font-size-2xl)',
+    xxxl: 'var(--dashboard-font-size-3xl)',
     display: 'clamp(32px, 4vw, 48px)',
     figure: 'clamp(28px, 4vh, 44px)',
   },
@@ -61,8 +76,8 @@ export const TOKENS = {
   letterSpacing: {
     tight: '-0.06em',
     normal: '0',
-    wide: '0.12em',
-    display: '0.2em',
+    wide: 'var(--dashboard-letter-spacing-title)',
+    display: 'var(--dashboard-letter-spacing-label)',
   },
   spacing: {
     0: '0px',
@@ -88,17 +103,101 @@ export const TOKENS = {
     heavy: '6px',
   },
   radius: {
-    sm: '4px',
-    md: '8px',
-    lg: '12px',
-    xl: '16px',
-    full: '9999px',
+    xs: 'var(--dashboard-radius-xs)',
+    sm: 'var(--dashboard-radius-sm)',
+    md: 'var(--dashboard-radius-card)',
+    lg: 'var(--dashboard-radius-box)',
+    xl: '20px',
+    full: 'var(--dashboard-radius-badge)',
+    dot: 'var(--dashboard-radius-dot)',
+  },
+  chart: {
+    heightSm: 'var(--dashboard-chart-height-sm)',
+    heightMd: 'var(--dashboard-chart-height-md)',
+    heightLg: 'var(--dashboard-chart-height-lg)',
+    donutSizeSm: 'var(--dashboard-chart-donut-size-sm)',
+    donutSizeMd: 'var(--dashboard-chart-donut-size-md)',
+    donutSizeLg: 'var(--dashboard-chart-donut-size-lg)',
+    lineStroke: 3,
+    dotRadius: 6,
+    dotStroke: 3,
+    strokeHoverBoost: 3,
+  },
+  table: {
+    rowHeight: 'var(--dashboard-table-row-height)',
+    cellPaddingX: 'var(--dashboard-table-cell-padding-x)',
+    cellPaddingY: 'var(--dashboard-table-cell-padding-y)',
+    headerBorderWidth: 'var(--dashboard-table-header-border-width)',
+    headerColor: 'var(--dashboard-table-header-color)',
+    rowBorder: 'var(--dashboard-table-row-border)',
+  },
+  control: {
+    heightSm: 'var(--dashboard-control-height-sm)',
+    heightMd: 'var(--dashboard-control-height-md)',
+    heightLg: 'var(--dashboard-control-height-lg)',
+    heightXl: 'var(--dashboard-control-height-xl)',
+  },
+  icon: {
+    xs: 'var(--dashboard-icon-size-xs)',
+    sm: 'var(--dashboard-icon-size-sm)',
+    md: 'var(--dashboard-icon-size-md)',
+    lg: 'var(--dashboard-icon-size-lg)',
+    xl: 'var(--dashboard-icon-size-xl)',
+  },
+  dot: {
+    sm: 'var(--dashboard-dot-size-sm)',
+    md: 'var(--dashboard-dot-size-md)',
+    lg: 'var(--dashboard-dot-size-lg)',
+  },
+  animation: {
+    durationFast: 'var(--dashboard-duration-fast)',
+    durationNormal: 'var(--dashboard-duration)',
+    durationSlow: 'var(--dashboard-duration-slow)',
+    easeSpring: 'var(--dashboard-ease-spring)',
+    easeSharp: 'var(--dashboard-ease-sharp)',
+    easeDefault: 'var(--dashboard-ease)',
+  },
+  vault: {
+    headerHeight: 'var(--dashboard-vault-header-height)',
+    glowSize: 'var(--dashboard-vault-glow-size)',
+    glowOffset: 'var(--dashboard-vault-glow-offset)',
+    glowBlur: 'var(--dashboard-vault-glow-blur)',
+    glowOpacity: 0.15,
+    gridSize: 'var(--dashboard-vault-grid-size)',
+    gridOpacity: 0.05,
+    iconSize: 'var(--dashboard-vault-icon-size)',
+    gemSize: 'var(--dashboard-vault-icon-gem-size)',
+    gemBorderRadius: 'var(--dashboard-vault-icon-gem-border-radius)',
+  },
+  shadow: {
+    card: 'var(--dashboard-shadow-card)',
+    cardHover: 'var(--dashboard-shadow-card-hover)',
+    panel: 'var(--dashboard-shadow-panel)',
+    glowAccent: 'var(--dashboard-shadow-glow-accent)',
+    glowDanger: 'var(--dashboard-shadow-glow-danger)',
+  },
+  tooltip: {
+    minWidth: 'var(--dashboard-tooltip-min-width)',
+    offset: 'var(--dashboard-tooltip-offset)',
+  },
+  activity: {
+    iconCol: 'var(--dashboard-activity-icon-col)',
+    microFont: 'var(--dashboard-activity-row-font-micro)',
+  },
+  dock: {
+    buttonSize: 'var(--dashboard-dock-button-size)',
+    logoSize: 'var(--dashboard-dock-logo-size)',
+    dotSize: 'var(--dashboard-dock-dot-size)',
+    dotOffset: 'var(--dashboard-dock-dot-offset)',
   },
 }
 
 export const MONO = TOKENS.fonts.mono
 
-/** Shell padding values by responsive mode (px) */
+/**
+ * VALUE_LETTER_SPACING — tighter tracking for financial figures.
+ * Mapped to CSS token for consistency.
+ */
 export const SHELL_PADDING: Record<'normal' | 'tight' | 'limit', number> = {
   normal: 24,
   tight: 16,
@@ -113,13 +212,13 @@ export const SHELL_GAP: Record<'normal' | 'tight' | 'limit', number> = {
 }
 
 export const LINE_HEIGHT = {
-  tight: 1.05,
+  tight: 'var(--dashboard-line-height-tight)',
   display: 1.1,
   title: 1.2,
-  body: 1.45,
+  body: 'var(--dashboard-line-height-normal)',
 } as const
 
-export const VALUE_LETTER_SPACING = '-0.02em'
+export const VALUE_LETTER_SPACING = 'var(--dashboard-letter-spacing-value)'
 
 /** Donut / timeline / position charts — keep in sync with connect visuals */
 export const CHART_PALETTE = [

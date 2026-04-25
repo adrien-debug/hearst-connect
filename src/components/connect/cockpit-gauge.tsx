@@ -87,7 +87,7 @@ export function CockpitGauge({
         fontSize: TOKENS.fontSizes.xs,
         fontWeight: TOKENS.fontWeights.bold,
         color: TOKENS.colors.textGhost,
-        letterSpacing: '0.02em',
+        letterSpacing: TOKENS.letterSpacing.normal,
       }}>
         {subtext}
       </div>

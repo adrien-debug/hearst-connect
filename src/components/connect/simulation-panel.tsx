@@ -220,15 +220,18 @@ export function SimulationPanel() {
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'baseline',
+                alignItems: 'center',
                 marginBottom: TOKENS.spacing[4],
+                height: 'var(--dashboard-card-header-height)',
               }}>
                 <span style={{
                   fontFamily: TOKENS.fonts.mono,
-                  fontSize: TOKENS.fontSizes.micro,
+                  fontSize: TOKENS.fontSizes.xs,
                   fontWeight: TOKENS.fontWeights.bold,
                   letterSpacing: TOKENS.letterSpacing.display,
                   textTransform: 'uppercase',
+                  borderLeft: `var(--dashboard-card-border-accent-width) solid ${TOKENS.colors.accent}`,
+                  paddingLeft: TOKENS.spacing[3],
                   color: TOKENS.colors.textSecondary,
                 }}>
                   Projected Path
@@ -396,17 +399,26 @@ export function SimulationPanel() {
             flexDirection: 'column',
             minHeight: 0,
           }}>
-            <span style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              color: TOKENS.colors.textSecondary,
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: 'var(--dashboard-card-header-height)',
               marginBottom: TOKENS.spacing[4],
+              flexShrink: 0,
             }}>
-              Projection Recap
-            </span>
+              <span style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                borderLeft: `var(--dashboard-card-border-accent-width) solid ${TOKENS.colors.accent}`,
+                paddingLeft: TOKENS.spacing[3],
+                color: TOKENS.colors.textSecondary,
+              }}>
+                Projection Recap
+              </span>
+            </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3], flex: 1, minHeight: 0, overflowY: 'auto' }} className="hide-scrollbar">
               <RecapRow label="Initial Deposit" value={fmtUsd(500000)} />
@@ -426,7 +438,7 @@ export function SimulationPanel() {
                   <span>Principal</span>
                   <span>Yield</span>
                 </div>
-                <div style={{ display: 'flex', height: '6px', borderRadius: TOKENS.radius.sm, overflow: 'hidden', background: TOKENS.colors.bgTertiary }}>
+                <div style={{ display: 'flex', height: TOKENS.dot.sm, borderRadius: TOKENS.radius.full, overflow: 'hidden', background: TOKENS.colors.bgTertiary }}>
                   <div style={{ width: `${(500000 / active.totalValue) * 100}%`, background: TOKENS.colors.white }} />
                   <div style={{ width: `${(active.cumulativeYield / active.totalValue) * 100}%`, background: TOKENS.colors.accent }} />
                 </div>

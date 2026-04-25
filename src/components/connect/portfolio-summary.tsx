@@ -11,6 +11,7 @@ import { type VaultLine, type Aggregate, type ActiveVault, type AvailableVault }
 import { useUserData } from '@/hooks/useUserData'
 
 import { CockpitGauge } from './cockpit-gauge'
+import { CardAction } from './card'
 
 export function PortfolioSummary({
   vaults,
@@ -262,9 +263,9 @@ export function PortfolioSummary({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: `0 0 0`,
         marginBottom: TOKENS.spacing[8],
         flexShrink: 0,
+        height: 'var(--dashboard-card-header-height)',
       }}>
         <span style={{
           fontFamily: TOKENS.fonts.mono,
@@ -272,7 +273,7 @@ export function PortfolioSummary({
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
-          borderLeft: `3px solid ${TOKENS.colors.accent}`,
+          borderLeft: `var(--dashboard-card-border-accent-width) solid ${TOKENS.colors.accent}`,
           paddingLeft: TOKENS.spacing[3],
           color: TOKENS.colors.textSecondary,
         }}>
@@ -292,6 +293,7 @@ export function PortfolioSummary({
                   textTransform: 'uppercase',
                   cursor: safeAgg.totalClaimable > 0 && !isClaimingAll ? 'pointer' : 'not-allowed',
                   opacity: (safeAgg.totalClaimable > 0 && !isClaimingAll) ? 1 : 0.5,
+                  height: 'var(--dashboard-control-height-sm)',
                 }}
               >
                 {isClaimingAll ? 'Claiming...' : `Claim ${safeAgg.totalClaimable > 0 ? fmtUsdCompact(safeAgg.totalClaimable) : 'All'}`}
@@ -440,6 +442,7 @@ function AllocationDonut({
   const size = compact
     ? fitValue(mode, { normal: 140, tight: 120, limit: 100 })
     : fitValue(mode, { normal: 200, tight: 160, limit: 140 })
+  const strokeHoverBoost = TOKENS.chart.strokeHoverBoost
   const strokeWidth = compact
     ? fitValue(mode, { normal: 18, tight: 16, limit: 14 })
     : fitValue(mode, { normal: 24, tight: 20, limit: 16 })
@@ -507,7 +510,7 @@ function AllocationDonut({
                 r={radius}
                 fill="none"
                 stroke={seg.color}
-                strokeWidth={isHovered ? strokeWidth + 3 : strokeWidth}
+                strokeWidth={isHovered ? strokeWidth + strokeHoverBoost : strokeWidth}
                 strokeDasharray={`${seg.dash} ${seg.gap}`}
                 strokeDashoffset={seg.offset}
                 strokeLinecap="round"
@@ -603,18 +606,18 @@ function AllocationDonut({
           <div
             style={{
               position: 'absolute',
-              bottom: 'calc(100% + 12px)',
+              bottom: `calc(100% + ${TOKENS.tooltip.offset})`,
               left: '50%',
               transform: 'translateX(-50%)',
               background: TOKENS.colors.bgTertiary,
               border: `1px solid ${TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.md,
               padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
-              boxShadow: 'var(--hc-shadow-lg)',
+              boxShadow: TOKENS.shadow.panel,
               zIndex: 10,
               pointerEvents: 'none',
               animation: 'fadeIn 150ms ease-out',
-              minWidth: TOKENS.spacing[18],
+              minWidth: TOKENS.tooltip.minWidth,
             }}
           >
             <div style={{
@@ -723,7 +726,7 @@ function MiniStat({ label, value, accent = false }: { label: string; value: stri
       <div style={{
         fontSize: TOKENS.fontSizes.micro,
         fontWeight: TOKENS.fontWeights.bold,
-        letterSpacing: '0.1em',
+        letterSpacing: TOKENS.letterSpacing.wide,
         textTransform: 'uppercase',
         color: TOKENS.colors.textSecondary,
       }}>
@@ -742,50 +745,84 @@ function MiniStat({ label, value, accent = false }: { label: string; value: stri
 }
 
 /** LineChartArea — Full area chart with gradient fill */
-function LineChartArea({ data, portfolioValue, mode }: { data: number[]; portfolioValue: number; mode: SmartFitMode }) {
-  const isFlat = data.every(v => v === data[0])
-  const min = Math.min(...data)
-  const max = Math.max(...data)
-  const range = max - min || 1
-  const startValue = data[0]
-  const change = startValue > 0 ? ((portfolioValue - startValue) / startValue) * 100 : 0
+function LineChartArea({ 
+  data, 
+  portfolioValue, 
+  totalDeposited,
+  mode 
+}: { 
+  data: number[]; 
+  portfolioValue: number; 
+  totalDeposited: number;
+  mode: SmartFitMode 
+}) {
+  const baseValue = totalDeposited > 0 ? totalDeposited : (data[0] || 0)
+  // Ensure max is strictly > baseValue to draw a visible range, give it 5% headroom
+  const maxVal = Math.max(...data, baseValue * 1.05)
+  const range = maxVal - baseValue || baseValue * 0.1 || 1
+
+  const change = baseValue > 0 ? ((portfolioValue - baseValue) / baseValue) * 100 : 0
   const isPositive = change >= 0
 
-  const width = 400
-  const height = 120
-  const padding = { top: 10, right: 10, bottom: 20, left: 60 }
+  const width = 600
+  const height = 240
+  const padding = { top: 20, right: 10, bottom: 24, left: 70 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
 
-  const points = data.map((value, i) => ({
-    x: padding.left + (i / (data.length - 1)) * chartWidth,
-    y: isFlat
-      ? padding.top + chartHeight * 0.3
-      : padding.top + chartHeight - ((value - min) / range) * chartHeight,
-  }))
+  const points = data.map((value, i) => {
+    // Clamp value to baseValue at minimum
+    const clampedValue = Math.max(baseValue, value)
+    return {
+      x: padding.left + (i / (Math.max(1, data.length - 1))) * chartWidth,
+      y: padding.top + chartHeight - ((clampedValue - baseValue) / range) * chartHeight,
+    }
+  })
 
+  // Smooth cubic bezier curves
+  const buildCurve = (pts: {x: number, y: number}[]) => {
+    return pts.map((p, i) => {
+      if (i === 0) return `M ${p.x} ${p.y}`
+      const prev = pts[i - 1]
+      const cp1x = prev.x + (p.x - prev.x) / 2
+      const cp1y = prev.y
+      const cp2x = prev.x + (p.x - prev.x) / 2
+      const cp2y = p.y
+      return `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p.x} ${p.y}`
+    }).join(' ')
+  }
+
+  const linePath = buildCurve(points)
+  
   const areaPath = [
     `M ${points[0].x} ${padding.top + chartHeight}`,
-    ...points.map((p) => `L ${p.x} ${p.y}`),
+    ...points.map((p, i) => {
+      if (i === 0) return `L ${p.x} ${p.y}`
+      const prev = points[i - 1]
+      const cp1x = prev.x + (p.x - prev.x) / 2
+      const cp1y = prev.y
+      const cp2x = prev.x + (p.x - prev.x) / 2
+      const cp2y = p.y
+      return `C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p.x} ${p.y}`
+    }),
     `L ${points[points.length - 1].x} ${padding.top + chartHeight}`,
     'Z',
   ].join(' ')
 
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-
-  const yLabels = isFlat
-    ? [fmtUsdCompact(portfolioValue)]
-    : [fmtUsdCompact(min), fmtUsdCompact((min + max) / 2), fmtUsdCompact(max)]
-  const yRatios = isFlat ? [0.7] : [0, 0.5, 1]
+  const ticks = [
+    { label: fmtUsdCompact(baseValue), ratio: 0 },
+    { label: fmtUsdCompact(baseValue + range / 2), ratio: 0.5 },
+    { label: fmtUsdCompact(maxVal), ratio: 1 },
+  ]
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'baseline',
-        padding: `0 0 0`,
-        marginBottom: TOKENS.spacing[8],
+        marginBottom: TOKENS.spacing[6],
+        flexShrink: 0,
       }}>
         <span style={{
           fontFamily: TOKENS.fonts.mono,
@@ -793,7 +830,7 @@ function LineChartArea({ data, portfolioValue, mode }: { data: number[]; portfol
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
-          borderLeft: `3px solid ${TOKENS.colors.accent}`,
+          borderLeft: `var(--dashboard-card-border-accent-width) solid ${TOKENS.colors.accent}`,
           paddingLeft: TOKENS.spacing[3],
           color: TOKENS.colors.textSecondary,
         }}>
@@ -801,78 +838,86 @@ function LineChartArea({ data, portfolioValue, mode }: { data: number[]; portfol
         </span>
         {change !== 0 && (
           <span style={{
-            fontSize: TOKENS.fontSizes.micro,
+            fontSize: TOKENS.fontSizes.xs,
             fontWeight: TOKENS.fontWeights.bold,
             color: isPositive ? TOKENS.colors.accent : TOKENS.colors.danger,
             fontFamily: TOKENS.fonts.mono,
+            background: isPositive ? `${TOKENS.colors.accent}14` : `${TOKENS.colors.danger}14`,
+            padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
+            borderRadius: TOKENS.radius.full,
           }}>
             {isPositive ? '+' : ''}{change.toFixed(1)}%
           </span>
         )}
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto' }}>
-        <defs>
-          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={TOKENS.colors.accent} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={TOKENS.colors.accent} stopOpacity="0" />
-          </linearGradient>
-        </defs>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }} preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={TOKENS.colors.accent} stopOpacity="0.4" />
+              <stop offset="100%" stopColor={TOKENS.colors.accent} stopOpacity="0" />
+            </linearGradient>
+          </defs>
 
-        {yRatios.map((ratio, i) => (
-          <line
-            key={i}
-            x1={padding.left}
-            y1={padding.top + chartHeight * ratio}
-            x2={width - padding.right}
-            y2={padding.top + chartHeight * ratio}
-            stroke={TOKENS.colors.borderMain}
-            strokeWidth="0.5"
-            strokeDasharray="2,2"
+          {ticks.map((tick, i) => {
+            const yPos = padding.top + chartHeight * (1 - tick.ratio)
+            return (
+              <g key={i}>
+                <line
+                  x1={padding.left}
+                  y1={yPos}
+                  x2={width - padding.right}
+                  y2={yPos}
+                  stroke={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.borderMain}
+                  strokeWidth={tick.ratio === 0 ? "1" : "0.5"}
+                  strokeDasharray={tick.ratio === 0 ? "none" : "4,4"}
+                />
+                <text
+                  x={padding.left - 12}
+                  y={yPos + 4}
+                  textAnchor="end"
+                  fill={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.textGhost}
+                  fontSize="11"
+                  fontFamily={TOKENS.fonts.mono}
+                  fontWeight={tick.ratio === 0 ? TOKENS.fontWeights.bold : TOKENS.fontWeights.regular}
+                >
+                  {tick.label}
+                </text>
+              </g>
+            )
+          })}
+
+          <path d={areaPath} fill="url(#areaGradient)" />
+
+          <path
+            d={linePath}
+            fill="none"
+            stroke={TOKENS.colors.accent}
+            strokeWidth={TOKENS.chart.lineStroke}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ filter: `drop-shadow(0 4px 6px ${TOKENS.colors.accent}40)` }}
           />
-        ))}
 
-        {yRatios.map((ratio, i) => (
-          <text
-            key={i}
-            x={padding.left - 5}
-            y={padding.top + chartHeight * (1 - ratio) + 3}
-            textAnchor="end"
-            fill={TOKENS.colors.textGhost}
-            fontSize="7"
-            fontFamily={TOKENS.fonts.mono}
-          >
-            {yLabels[i]}
+          <circle
+            cx={points[points.length - 1].x}
+            cy={points[points.length - 1].y}
+            r={TOKENS.chart.dotRadius}
+            fill={TOKENS.colors.accent}
+            stroke={TOKENS.colors.black}
+            strokeWidth={TOKENS.chart.dotStroke}
+            style={{ filter: `drop-shadow(0 0 8px ${TOKENS.colors.accent})` }}
+          />
+
+          <text x={padding.left} y={height - 2} fill={TOKENS.colors.textGhost} fontSize="10" fontFamily={TOKENS.fonts.mono} textAnchor="start">
+            Start
           </text>
-        ))}
-
-        <path d={areaPath} fill="url(#areaGradient)" />
-
-        <path
-          d={linePath}
-          fill="none"
-          stroke={TOKENS.colors.accent}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        <circle
-          cx={points[points.length - 1].x}
-          cy={points[points.length - 1].y}
-          r="4"
-          fill={TOKENS.colors.accent}
-          stroke={TOKENS.colors.black}
-          strokeWidth="2"
-        />
-
-        <text x={padding.left} y={height - 5} fill={TOKENS.colors.textGhost} fontSize="7" fontFamily={TOKENS.fonts.mono}>
-          Start
-        </text>
-        <text x={width - padding.right} y={height - 5} textAnchor="end" fill={TOKENS.colors.textGhost} fontSize="7" fontFamily={TOKENS.fonts.mono}>
-          Today
-        </text>
-      </svg>
+          <text x={width - padding.right} y={height - 2} textAnchor="end" fill={TOKENS.colors.textGhost} fontSize="10" fontFamily={TOKENS.fonts.mono}>
+            Today
+          </text>
+        </svg>
+      </div>
     </div>
   )
 }
@@ -972,6 +1017,8 @@ function DashboardSideCard({
         padding: `${pad}px ${pad}px 0`,
         marginBottom: TOKENS.spacing[8],
         flexShrink: 0,
+        height: 'var(--dashboard-card-header-height)',
+        boxSizing: 'content-box',
       }}>
         <span style={{
           fontFamily: TOKENS.fonts.mono,
@@ -979,30 +1026,14 @@ function DashboardSideCard({
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
-          borderLeft: `3px solid ${TOKENS.colors.accent}`,
+          borderLeft: `var(--dashboard-card-border-accent-width) solid ${TOKENS.colors.accent}`,
           paddingLeft: TOKENS.spacing[3],
           color: TOKENS.colors.textSecondary,
         }}>
           {title}
         </span>
         {actionLabel ? (
-          <button
-            type="button"
-            onClick={onAction}
-            style={{
-              padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-              background: 'transparent',
-              border: `1px solid ${TOKENS.colors.borderSubtle}`,
-              borderRadius: TOKENS.radius.md,
-              color: TOKENS.colors.textGhost,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              textTransform: 'uppercase',
-              cursor: onAction ? 'pointer' : 'default',
-            }}
-          >
-            {actionLabel}
-          </button>
+          <CardAction label={actionLabel} onClick={onAction} />
         ) : null}
       </div>
       <div
@@ -1069,7 +1100,7 @@ function ActivityRow({
         alignItems: 'center',
         justifyContent: 'center',
         color: accentColor,
-        fontSize: '10px',
+        fontSize: TOKENS.activity.microFont,
         fontWeight: TOKENS.fontWeights.bold,
       }}>
         {activityGlyph(type)}
@@ -1187,7 +1218,7 @@ function AvailableVaultTeaser({
         if (onClick) {
           e.currentTarget.style.borderColor = accentColor
           e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = `0 8px 24px ${accentColor}1A`
+          e.currentTarget.style.boxShadow = TOKENS.shadow.glowAccent
         }
       }}
       onMouseLeave={(e) => {
@@ -1198,7 +1229,7 @@ function AvailableVaultTeaser({
     >
       {/* Graphic Header */}
       <div style={{
-        height: '72px',
+        height: TOKENS.vault.headerHeight,
         background: headerBg,
         borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
         display: 'flex',
@@ -1210,31 +1241,31 @@ function AvailableVaultTeaser({
         {/* Glow orb */}
         <div style={{
           position: 'absolute',
-          top: '-20px',
-          right: '-20px',
-          width: '80px',
-          height: '80px',
+          top: TOKENS.vault.glowOffset,
+          right: TOKENS.vault.glowOffset,
+          width: TOKENS.vault.glowSize,
+          height: TOKENS.vault.glowSize,
           background: accentColor,
-          filter: 'blur(32px)',
-          opacity: 0.15,
-          borderRadius: '50%',
+          filter: `blur(${TOKENS.vault.glowBlur})`,
+          opacity: TOKENS.vault.glowOpacity,
+          borderRadius: TOKENS.radius.dot,
         }} />
 
         {/* Subtle grid pattern overlay */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          opacity: 0.05,
+          opacity: TOKENS.vault.gridOpacity,
           backgroundImage: `linear-gradient(${accentColor} 1px, transparent 1px), linear-gradient(90deg, ${accentColor} 1px, transparent 1px)`,
-          backgroundSize: '12px 12px',
+          backgroundSize: `${TOKENS.vault.gridSize} ${TOKENS.vault.gridSize}`,
           backgroundPosition: 'center',
         }} />
 
         {/* Central Icon */}
         <div style={{
-          width: TOKENS.spacing[8],
-          height: TOKENS.spacing[8],
-          borderRadius: TOKENS.radius.sm,
+          width: TOKENS.vault.iconSize,
+          height: TOKENS.vault.iconSize,
+          borderRadius: TOKENS.radius.xs,
           background: `linear-gradient(135deg, ${TOKENS.colors.bgApp} 0%, ${TOKENS.colors.black} 100%)`,
           border: `1px solid ${accentColor}40`,
           display: 'flex',
@@ -1242,12 +1273,12 @@ function AvailableVaultTeaser({
           justifyContent: 'center',
           zIndex: 1,
           transform: 'rotate(45deg)',
-          boxShadow: `0 4px 12px rgba(0,0,0,0.5)`,
+          boxShadow: TOKENS.shadow.card,
         }}>
           <div style={{
-            width: TOKENS.spacing[3],
-            height: TOKENS.spacing[3],
-            borderRadius: '2px',
+            width: TOKENS.vault.gemSize,
+            height: TOKENS.vault.gemSize,
+            borderRadius: TOKENS.vault.gemBorderRadius,
             background: accentColor,
             boxShadow: `0 0 12px ${accentColor}`,
             transform: 'rotate(-45deg)',

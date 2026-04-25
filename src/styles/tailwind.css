@@ -49,7 +49,7 @@
 /*
  * ─── CONNECT SCOPE — Design System Lock ───────────────────────────────────────
  * Isole l'app Connect des tokens marketing (dark, Satoshi, radius arrondis).
- * Source de vérité : vault-ui-system.html + src/components/connect/constants.ts
+ * Source de vérité : src/generated/dashboard-vars.css + src/components/connect/constants.ts
  * ──────────────────────────────────────────────────────────────────────────────
  */
 .connect-scope {
@@ -67,14 +67,17 @@
   --dashboard-accent:         var(--hc-accent);
   --dashboard-accent-hover:   var(--hc-accent);
 
-  --dashboard-radius-box:     0px;
-  --dashboard-radius-card:    0px;
-  --dashboard-radius-input:   0px;
-  --dashboard-radius-sm:      0px;
-  --dashboard-radius-button:  0px;
-  --dashboard-radius-badge:   0px;
+  /* Cinematic radius — sharp but not zero. Cards: 12px, boxes: 16px. */
+  --dashboard-radius-xs:      4px;
+  --dashboard-radius-sm:      8px;
+  --dashboard-radius-card:    12px;
+  --dashboard-radius-box:     16px;
+  --dashboard-radius-input:   8px;
+  --dashboard-radius-button:  9999px;
+  --dashboard-radius-badge:   9999px;
+  --dashboard-radius-dot:     9999px;
 
-  font-family: 'Satoshi Variable', Inter, -apple-system, sans-serif;
+  font-family: var(--font-sans, 'Satoshi Variable', Inter, -apple-system, sans-serif);
   background-color: var(--hc-bg-app);
   color: var(--hc-text-primary);
   -webkit-font-smoothing: antialiased;
@@ -82,21 +85,22 @@
 
 .connect-scope,
 .connect-scope * {
-  font-family: 'Satoshi Variable', Inter, -apple-system, sans-serif;
+  font-family: var(--font-sans, 'Satoshi Variable', Inter, -apple-system, sans-serif);
 }
 
-/* Cinematic: radius utilitaires 8–12px; pas de “pill” systématique */
+/* Legacy aliases */
 .connect-scope {
-  --radius-cinematic-sm: 8px;
-  --radius-cinematic-md: 12px;
+  --radius-cinematic-sm: var(--dashboard-radius-sm);
+  --radius-cinematic-md: var(--dashboard-radius-card);
 }
 
-/* Mono pour les éléments de données — appliqué via inline styles dans les composants */
+/* Buttons — focus-visible only, no outline reset */
 .connect-scope button {
   outline: none;
   border-radius: 0;
 }
 .connect-scope button:focus-visible {
-  outline: none;
-  outline-offset: 0;
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 2px;
+  border-radius: var(--dashboard-radius-sm);
 }

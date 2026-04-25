@@ -46,7 +46,7 @@ export function ActionButton({
     fontSize: TOKENS.fontSizes.micro,
     fontWeight: TOKENS.fontWeights.black,
     textTransform: 'uppercase',
-    letterSpacing: '0.1em',
+    letterSpacing: TOKENS.letterSpacing.wide,
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'all 100ms ease-out',
     whiteSpace: 'nowrap',
