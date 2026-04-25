@@ -3,11 +3,9 @@
 import { useMemo, useState, useEffect } from 'react'
 import { EmptyState } from './empty-states'
 import { VaultCardCompact } from './vault-card-compact'
-import { TOKENS, fmtUsdCompact, fmtUsd, VALUE_LETTER_SPACING } from './constants'
+import { TOKENS, fmtUsdCompact, fmtUsd, VALUE_LETTER_SPACING, CHART_PALETTE } from './constants'
 import { formatVaultName } from './formatting'
-import { generateValueHistory } from './utils/mock-data'
-import { getDaysToMaturity } from './utils/date-utils'
-import { CHART_PALETTE } from './constants/theme'
+import { generateValueHistory, getDaysToMaturity } from './utils/portfolio-chart-utils'
 import { fitValue, type SmartFitMode, useSmartFit, useShellPadding } from './smart-fit'
 import { type VaultLine, type Aggregate, type ActiveVault, type AvailableVault } from './data'
 

@@ -77,7 +77,7 @@ src/
 │   ├── admin/         # /admin route — vault registry
 │   └── intro/         # /intro route — onboarding
 ├── components/
-│   ├── connect/       # Canvas, panels, constants.ts (TOKENS), dock, gauges
+│   ├── connect/       # Canvas, panels, constants.ts (TOKENS + chart palette), utils/portfolio-chart-utils
 │   ├── ui/            # Label, click-ripple
 │   ├── layout/        # Analytics scripts
 │   ├── providers/     # Web3Provider (wagmi)

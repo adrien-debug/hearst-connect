@@ -146,41 +146,6 @@ export function WalletNotConnected({ onConnect }: { onConnect?: () => void }) {
   )
 }
 
-export function NoPosition({ vaultName }: { vaultName?: string }) {
-  return (
-    <EmptyState
-      title="No Active Position"
-      description={
-        vaultName
-          ? `You don't have an active position in ${vaultName} yet. Make a deposit to start earning yield.`
-          : "You don't have an active position in this vault yet. Make a deposit to start earning yield."
-      }
-      icon={
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      }
-    />
-  )
-}
-
-export function NoVaultsAvailable() {
-  return (
-    <EmptyState
-      title="No Vaults Available"
-      description="There are currently no active vaults. Please check back later or contact support."
-      icon={
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-          <line x1="9" y1="9" x2="15" y2="15" />
-          <line x1="15" y1="9" x2="9" y2="15" />
-        </svg>
-      }
-    />
-  )
-}
-
 export function LoadingState() {
   return (
     <div

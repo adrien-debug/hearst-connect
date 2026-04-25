@@ -32,8 +32,77 @@
   z-index: 20;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1.25rem 2.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.intro-header-wallet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.intro-wallet-address {
+  font-family: ui-monospace, 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(230, 234, 240, 0.45);
+}
+
+.intro-btn-wallet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+a.intro-btn-wallet {
+  text-decoration: none;
+}
+
+.intro-btn-wallet:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.intro-btn-wallet--primary {
+  background: #a7fb90;
+  color: #050a05;
+}
+
+.intro-btn-wallet--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(238, 240, 244, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.intro-btn-wallet--accent-outline {
+  background: transparent;
+  color: #a7fb90;
+  border: 1px solid rgba(167, 251, 144, 0.45);
+}
+
+.intro-connect-error {
+  font-size: 0.7rem;
+  color: #f87171;
+  max-width: 16rem;
+  text-align: right;
+  line-height: 1.35;
 }
 
 .intro-back {
@@ -196,6 +265,63 @@
   letter-spacing: 0.02em;
 }
 
+/* Programs list */
+.intro-programs {
+  margin-top: 0.25rem;
+}
+
+.intro-programs-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(167, 251, 144, 0.85);
+  margin: 0 0 0.75rem 0;
+}
+
+.intro-programs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: min(38vh, 280px);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.intro-program-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.intro-program-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #eef0f4;
+  letter-spacing: 0.02em;
+}
+
+.intro-program-meta {
+  font-size: 0.72rem;
+  color: rgba(190, 198, 210, 0.65);
+  line-height: 1.45;
+}
+
+.intro-programs-empty {
+  font-size: 0.78rem;
+  color: rgba(190, 198, 210, 0.55);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 36ch;
+}
+
 /* ── RIGHT — video fills 70% right of viewport ── */
 .intro-right {
   position: fixed;
@@ -286,6 +412,20 @@
   }
 
   .intro-cta-group { align-items: center; }
+
+  .intro-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .intro-header-wallet {
+    justify-content: center;
+  }
+
+  .intro-connect-error {
+    text-align: center;
+    max-width: 100%;
+  }
 
   /* On mobile the right panel comes back into the flow */
   .intro-right {

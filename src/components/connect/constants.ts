@@ -129,6 +129,15 @@ export const LINE_HEIGHT = {
 
 export const VALUE_LETTER_SPACING = '-0.02em'
 
+/** Donut / timeline / position charts — keep in sync with connect visuals */
+export const CHART_PALETTE = [
+  TOKENS.colors.accent,
+  TOKENS.colors.white,
+  'rgba(255,255,255,0.45)',
+  'rgba(255,255,255,0.35)',
+  'rgba(255,255,255,0.25)',
+] as const
+
 export function fmtUsd(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }

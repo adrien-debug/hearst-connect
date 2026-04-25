@@ -418,7 +418,7 @@ export function VaultDetailPanel({
         )}
 
         {/* Loading state */}
-        {isLoading && <Skeleton mode={mode} variant="card" />}
+        {isLoading && <Skeleton mode={mode} />}
 
         {/* Error state */}
         {error && (
