@@ -6,7 +6,7 @@ Onchain access to institutional Bitcoin mining cash flows.
 
 | Route | Description |
 |-------|-------------|
-| `/` | Landing page — marketing, investment strategies carousel, CTA |
+| `/` | Landing — hero *Turning bitcoin mining into structured yield.*, full-width features + sticky tablet (`public/marketing/hearst-dashboard-tablet.png`), two-strategy carousel (HashVault Prime / Growth), CTA |
 | `/app` | **Dashboard** — portfolio, vault subscription. Requires SIWE authentication. |
 | `/admin` | Admin panel — vault registry management, activity logs, settings |
 
@@ -30,7 +30,8 @@ Streamlined DeFi flow: landing → wallet connect → SIWE auth → platform.
 - **wagmi v3** + **viem** — wallet connection & on-chain vault interactions (Base chain)
 - **TanStack React Query** — async state management
 - **jose** — JWT library for SIWE session management
-- **better-sqlite3** — SQLite database for users, vaults, positions, activity
+- **better-sqlite3** — SQLite database for users, vaults, positions, activity, market snapshots, signals
+- **@anthropic-ai/sdk** — Claude intelligence for agent analysis and insights
 - **Vitest** — unit tests for vault math, projection, and database repositories (`npm test`)
 - **Satoshi Variable** (brand font) + **IBM Plex Mono** (data) + **Inter** (fallback)
 
@@ -58,12 +59,40 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=                   # WalletConnect project 
 # OPTIONAL - Analytics
 NEXT_PUBLIC_GA_ID=                                      # Google Analytics
 NEXT_PUBLIC_GOOGLE_ADS_ID=                              # Google Ads
+
+# AGENTS (Railway services)
+ANTHROPIC_API_KEY=                                       # Anthropic Claude API key
+HEARST_API_URL=https://your-app.vercel.app               # Backend URL for agents
+AGENT_WEBHOOK_KEY=                                       # Key for agent webhook auth
+SLACK_WEBHOOK_URL=                                       # Slack incoming webhook
+BTC_ENTRY_PRICE=95000                                    # BTC entry price for profit levels
 ```
 
 **Production requirements:**
 - `JWT_SECRET` is mandatory (32+ character secret key)
 - `ADMIN_ADDRESSES` should be set to authorized wallet addresses
 - The app will throw an error if `JWT_SECRET` is missing in production
+
+## Rebalancing Agents
+
+Three autonomous agents (deploy on Railway) monitor markets and generate rebalancing signals:
+
+| Agent | Role | Interval |
+|-------|------|----------|
+| **Watcher** | Collects BTC price, DeFi yields, Fear & Greed, hashprice | 60s / 5min / 15min |
+| **Strategy** | Generates signals: TAKE_PROFIT, REBALANCE, YIELD_ROTATE, INCREASE_BTC, REDUCE_RISK | 5min |
+| **Audit** | Validates signals, blocks risky ones, daily risk report | 2min + daily |
+
+**Flow:** Agents → `POST /api/agents/webhook` → DB → Admin panel `/admin` (Signals section) → Approve/Reject → Execute
+
+**Data sources:** CoinGecko (BTC price), DeFiLlama (Aave v3 yields), Alternative.me (Fear & Greed)
+
+```bash
+# Run agents locally
+ANTHROPIC_API_KEY=sk-... HEARST_API_URL=http://localhost:8100 npx tsx src/agents/watcher/index.ts
+npx tsx src/agents/strategy/index.ts
+npx tsx src/agents/audit/index.ts
+```
 
 ## Authentication (SIWE)
 
@@ -84,7 +113,7 @@ NEXT_PUBLIC_GOOGLE_ADS_ID=                              # Google Ads
 - Admin addresses configured via `ADMIN_ADDRESSES` env variable
 - JWT session includes `isAdmin` flag for admin wallets
 - Admin API routes check `requireAdminAccess()` (JWT admin OR `x-admin-key` header)
-- `/admin` panel shows: Dashboard, Vaults, Activity, Settings
+- `/admin` panel shows: Dashboard, Vaults, **Signals**, **Market**, Activity, Settings
 
 **Security Features:**
 - HTTP-only cookies (XSS protection)

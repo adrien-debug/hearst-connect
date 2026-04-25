@@ -170,7 +170,7 @@ function ActivityStat({ label, value, accent = false }: { label: string; value: 
 function SourceBadge({ source }: { source: 'system' | 'live' }) {
   const colors: Record<string, string> = {
     system: TOKENS.colors.textSecondary,
-    live: '#4A9EFF',
+    live: 'var(--color-info)',
   }
 
   return (
@@ -314,8 +314,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '28px',
-    height: '28px',
+    width: TOKENS.spacing[6],
+    height: TOKENS.spacing[6],
     background: TOKENS.colors.bgTertiary,
     borderRadius: TOKENS.radius.sm,
     color: TOKENS.colors.accent,
@@ -359,11 +359,11 @@ const styles: Record<string, React.CSSProperties> = {
     color: TOKENS.colors.textGhost,
   },
   spinner: {
-    width: '20px',
-    height: '20px',
-    border: `2px solid ${TOKENS.colors.bgTertiary}`,
+    width: TOKENS.spacing[5],
+    height: TOKENS.spacing[5],
+    border: `${TOKENS.borders.thick} solid ${TOKENS.colors.bgTertiary}`,
     borderTopColor: TOKENS.colors.accent,
-    borderRadius: '50%',
+    borderRadius: TOKENS.radius.full,
     animation: 'spin 1s linear infinite',
   },
   pagination: {

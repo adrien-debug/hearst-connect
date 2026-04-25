@@ -6,8 +6,7 @@ import '@/styles/marketing/intro.css';
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ThemeToggle } from '@/components/theme/theme-toggle'
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { NAV_LINKS, CTA_LINKS, HUB_MAILTO_SALES, HEARST_EMAIL } from '@/config/navigation';
 
 function MenuIcon() {
@@ -24,6 +23,27 @@ function CloseIcon() {
       <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
+}
+
+/** Crossfade premier plan → seconde capture dans la tablette. */
+function updateTabletScrollBlend(layers: HTMLElement): void {
+  const section2 = document.getElementById('feature-agents');
+  if (!section2) return;
+
+  const r = section2.getBoundingClientRect();
+  const vh = window.innerHeight;
+  
+  // Le fondu commence quand l'article "Transparent reporting" entre dans le bas de l'écran (85% vh)
+  // Et se termine quand il arrive vers le milieu (45% vh)
+  const startFade = vh * 0.85;
+  const endFade = vh * 0.45;
+  
+  let t = (startFade - r.top) / Math.max(startFade - endFade, 1);
+  t = Math.max(0, Math.min(1, t));
+  
+  // Ease-in-out
+  const s = t * t * (3 - 2 * t);
+  layers.style.setProperty('--tablet-front-opacity', (1 - s).toFixed(4));
 }
 
 /** Scroll-driven fade + parallax for `.hub-chapter` nodes (reliable vs CSS view timelines). */
@@ -75,27 +95,44 @@ const FEATURE_PILLARS = [
   },
 ] as const;
 
-const INVESTMENT_STRATEGY_SLIDES = [
+/** HB monogram (matches brand mark in `public/logos/hearst-logo.svg`). */
+function HearstMonogram({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="572 466 130 144" width={36} height={40} aria-hidden focusable="false">
+      <polygon fill="currentColor" points="601.7 466.9 572.6 466.9 572.6 609.7 601.7 609.7 601.7 549.1 633.1 579.4 665.8 579.4 601.7 517.5 601.7 466.9" />
+      <polygon fill="currentColor" points="672.7 466.9 672.7 528.1 644.6 500.9 612 500.9 672.7 559.7 672.7 609.7 701.9 609.7 701.9 466.9 672.7 466.9" />
+    </svg>
+  );
+}
+
+const VAULT_PRODUCT_SLIDES = [
   {
-    type: 'video',
-    src: '/videos/view-1.mp4',
-    caption: 'Flagship — stable income',
-    title: 'Hearst Prime Yield',
-    desc: 'Target ~12% annual yield. $250K min, monthly USDC distributions, 3-year lock. Diversified mining income with volatility hedging for predictable returns.',
+    id: 'hashvault-prime',
+    brandLine: 'Hearst Premier',
+    variant: 'prime' as const,
+    productName: 'HashVault Prime',
+    bgVideo: '/videos/bg-prime.mp4',
+    apy: '12% APY',
+    tagline: 'Stable yield, engineered for consistency.',
+    description:
+      'Mining-backed cashflow, stablecoin income, and hedged BTC exposure combine to smooth volatility and deliver daily yield until 36% target or maturity.',
+    lock: '3 years',
+    minDeposit: '$500,000',
+    risk: 'Moderate',
   },
   {
-    type: 'video',
-    src: '/videos/view-2.mp4',
-    caption: 'Growth — BTC upside',
-    title: 'Hearst Growth',
-    desc: 'Target 16–22% annual yield. $250K min, monthly distributions, 3-year lock. Forward BTC mining exposure plus spot price upside with USDC buffer.',
-  },
-  {
-    type: 'video',
-    src: '/videos/view-3.mp4',
-    caption: 'Yield mechanics',
-    title: 'How yield is generated',
-    desc: 'USDC is deployed into industrial mining operations. BTC rewards are converted via OTC desks. Net yield is distributed monthly, auditable end to end.',
+    id: 'hashvault-growth',
+    brandLine: 'Hearst Growth',
+    variant: 'growth' as const,
+    productName: 'HashVault Growth',
+    bgVideo: '/videos/bg-growth.mp4',
+    apy: '15% APY',
+    tagline: 'Bitcoin upside, supported by mining yield.',
+    description:
+      'Spot BTC captures upside while mining cashflow cushions drawdowns, with dynamic allocation and daily yield until 45% target or maturity.',
+    lock: '3 years',
+    minDeposit: '$250,000',
+    risk: 'Growth',
   },
 ] as const;
 
@@ -138,7 +175,19 @@ function useAutoCarousel(itemCount: number, intervalMs = 5000) {
 }
 
 export default function HubPageClient() {
-  const { activeIndex, setActiveIndex, isPaused, setIsPaused, scrollNext, scrollPrev } = useAutoCarousel(INVESTMENT_STRATEGY_SLIDES.length);
+  const { activeIndex, setActiveIndex, isPaused, setIsPaused, scrollNext, scrollPrev } = useAutoCarousel(VAULT_PRODUCT_SLIDES.length);
+
+  // Force dark mode on landing — toggle désactivé sur cette page uniquement
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.getAttribute('data-theme')
+    root.setAttribute('data-theme', 'dark')
+    root.classList.add('dark')
+    return () => {
+      if (previous) root.setAttribute('data-theme', previous)
+      else root.removeAttribute('data-theme')
+    }
+  }, [])
 
   useEffect(() => {
     const nav = document.getElementById('hub-site-nav');
@@ -162,6 +211,7 @@ export default function HubPageClient() {
         el.style.setProperty('--hub-ch-opacity', '1');
         el.style.setProperty('--hub-ch-ty', '0px');
       });
+      scope.querySelector<HTMLElement>('.tablet-mockup-layers')?.style.setProperty('--tablet-front-opacity', '1');
     } else {
       let rafId = 0;
       const schedule = (): void => {
@@ -169,9 +219,13 @@ export default function HubPageClient() {
         rafId = window.requestAnimationFrame(() => {
           rafId = 0;
           updateHubChapterStyles(scope);
+          const layers = scope.querySelector<HTMLElement>('.tablet-mockup-layers');
+          if (layers) updateTabletScrollBlend(layers);
         });
       };
       updateHubChapterStyles(scope);
+      const layers0 = scope.querySelector<HTMLElement>('.tablet-mockup-layers');
+      if (layers0) updateTabletScrollBlend(layers0);
       window.addEventListener('scroll', schedule, { passive: true });
       window.addEventListener('resize', schedule);
       return () => {
@@ -268,12 +322,9 @@ export default function HubPageClient() {
             </ul>
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <ThemeToggle variant="minimal" size="sm" />
           <Link href={CTA_LINKS.launchApp.href} className="login-btn" prefetch>
             <span>{CTA_LINKS.launchApp.label}</span>
           </Link>
-        </div>
         </header>
       </div>
 
@@ -281,14 +332,9 @@ export default function HubPageClient() {
       <section id="welcome" className="center" lang="en">
         <Image src="/logos/hearst-connect.svg" alt="Hearst Connect" className="welcome-logo" width={416} height={110} style={{ height: 'auto' }} priority />
         <h1 className="welcome-title hub-chapter">
-          Turn Bitcoin Mining
+          Turning bitcoin mining
           <br />
-          Into Structured Yield
-          <br />
-          <span className="text-accent">
-            Access institutional-grade yield from real mining infrastructure,
-            packaged into transparent onchain vaults.
-          </span>
+          into structured yield.
         </h1>
       </section>
 
@@ -305,17 +351,22 @@ export default function HubPageClient() {
         </div>
 
         <div className="icons">
-          <div className="icons-track" aria-hidden="false">
-            {ICONS.map((icon, i) => (
-              <div key={`${icon.name}-${i}`} className="icon">
-                <Image
-                  src={icon.src}
-                  alt={i < ICONS.length ? icon.name : ''}
-                  className="icon-img"
-                  width={40}
-                  height={40}
-                  loading="lazy"
-                />
+          {/* icons-marquee-strip : conteneur animé, 3 copies pour boucle seamless */}
+          <div className="icons-marquee-strip">
+            {[0, 1, 2].map((copy) => (
+              <div key={copy} className="icons-track" aria-hidden={copy > 0}>
+                {ICONS.map((icon, i) => (
+                  <div key={`${icon.name}-${copy}-${i}`} className="icon">
+                    <Image
+                      src={icon.src}
+                      alt={copy === 0 ? icon.name : ''}
+                      className="icon-img"
+                      width={56}
+                      height={56}
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -339,7 +390,19 @@ export default function HubPageClient() {
           </div>
           <div className="features-tablet">
             <div className="tablet-mockup">
-              <Image src="/platform-screenshot.svg" alt="Hearst vault strategies preview" width={500} height={320} sizes="(max-width: 930px) 90vw, 45vw" loading="lazy" />
+              <div className="tablet-mockup-layers">
+                <div className="tablet-mockup-stack-inner">
+                  <video
+                    src="/marketing/area.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="tablet-layer tablet-layer--video"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -365,52 +428,55 @@ export default function HubPageClient() {
             className="hub-carousel-auto-track"
             style={{ transform: `translateX(calc(-${activeIndex} * (var(--slide-width) + var(--slide-gap))))` }}
           >
-            {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
+            {VAULT_PRODUCT_SLIDES.map((slide, i) => (
               <article
-                key={slide.title}
+                key={slide.id}
                 className={`hub-carousel-auto-slide ${i === activeIndex ? 'is-active' : ''}`}
                 aria-hidden={i !== activeIndex}
               >
                 <div className="hub-slide-card">
-                  <div className="hub-slide-stack">
-                    <figure className="hub-slide-media">
-                      {slide.type === 'video' ? (
-                        i === activeIndex ? (
-                          <video
-                            key={slide.src}
-                            src={slide.src}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            draggable={false}
-                            preload="auto"
-                          />
-                        ) : (
-                          <video
-                            key={`${slide.src}-idle`}
-                            src={slide.src}
-                            muted
-                            playsInline
-                            draggable={false}
-                            preload="none"
-                          />
-                        )
-                      ) : (
-                        <Image src={slide.src} alt="" width={1000} height={562} draggable={false} loading="lazy" />
-                      )}
-                    </figure>
-                    <div className="hub-slide-scrim" aria-hidden={true} />
-                    <div className="hub-slide-content">
-                      <span className="hub-slide-badge">{slide.caption}</span>
-                      <h3 className="hub-slide-title">{slide.title}</h3>
-                      <p className="hub-slide-desc">{slide.desc}</p>
-                      <a href={CTA_LINKS.viewOffering.href} className="hub-slide-cta">
+                  <div className={`hub-vault-product-card hub-vault-product-card--${slide.variant}`}>
+                    <div className="hub-vault-product-inner">
+                      <div className="hub-vault-product-emblem" aria-hidden>
+                        <span className="hub-vault-product-monogram">
+                          <HearstMonogram />
+                        </span>
+                        <span className="hub-vault-product-line">{slide.brandLine}</span>
+                      </div>
+                      <h3 className="hub-vault-product-name">{slide.productName}</h3>
+                      <p className="hub-vault-product-apy">{slide.apy}</p>
+                      <p className="hub-vault-product-tagline">{slide.tagline}</p>
+                      <p className="hub-vault-product-desc">{slide.description}</p>
+                      <dl className="hub-vault-product-specs">
+                        <div>
+                          <dt>Lock</dt>
+                          <dd>{slide.lock}</dd>
+                        </div>
+                        <div>
+                          <dt>Min deposit</dt>
+                          <dd>{slide.minDeposit}</dd>
+                        </div>
+                        <div>
+                          <dt>Risk</dt>
+                          <dd>{slide.risk}</dd>
+                        </div>
+                      </dl>
+                      <a href={CTA_LINKS.viewOffering.href} className="hub-slide-cta hub-vault-product-cta">
                         <span>{CTA_LINKS.viewOffering.label}</span>
                         <svg className="hub-slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                       </a>
+                    </div>
+                    <div className="hub-vault-product-video-wrapper">
+                      <video
+                        src={slide.bgVideo}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="hub-vault-product-bg-video"
+                      />
                     </div>
                   </div>
                 </div>
@@ -440,13 +506,13 @@ export default function HubPageClient() {
           </button>
 
           <div className="hub-carousel-auto-indicators">
-            {INVESTMENT_STRATEGY_SLIDES.map((slide, i) => (
+            {VAULT_PRODUCT_SLIDES.map((slide, i) => (
               <button
-                key={slide.title}
+                key={slide.id}
                 type="button"
                 className={`hub-carousel-auto-indicator ${i === activeIndex ? 'is-active' : ''}`}
                 onClick={() => setActiveIndex(i)}
-                aria-label={`Go to slide ${i + 1}`}
+                aria-label={`${slide.productName}, slide ${i + 1}`}
               />
             ))}
           </div>

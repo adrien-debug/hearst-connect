@@ -13,6 +13,8 @@ import type {
   DbUserPositionWithVault,
   DbActivityEvent,
   DbActivityEventInput,
+  DbRebalanceSignal,
+  DbMarketSnapshot,
 } from './db/schema'
 
 const API_BASE = '/api'
@@ -205,6 +207,78 @@ export const ActivityApi = {
 
   async logWithdraw(vaultId: string, vaultName: string, amount: number, txHash?: string): Promise<void> {
     await this.create({ vaultId, vaultName, type: 'withdraw', amount, txHash })
+  },
+}
+
+// Signals API - Admin only
+export const SignalsApi = {
+  async list(status?: string, limit = 50): Promise<{ signals: DbRebalanceSignal[] }> {
+    const qs = new URLSearchParams()
+    if (status) qs.set('status', status)
+    qs.set('limit', String(limit))
+    return fetchApi<{ signals: DbRebalanceSignal[] }>(`/signals?${qs}`, {
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+
+  async getById(id: string): Promise<{ signal: DbRebalanceSignal } | null> {
+    try {
+      return await fetchApi<{ signal: DbRebalanceSignal }>(`/signals/${id}`, {
+        headers: { 'x-admin-key': ADMIN_KEY },
+      })
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null
+      throw e
+    }
+  },
+
+  async approve(id: string): Promise<{ signal: DbRebalanceSignal }> {
+    return fetchApi<{ signal: DbRebalanceSignal }>(`/signals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'approved' }),
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+
+  async reject(id: string): Promise<{ signal: DbRebalanceSignal }> {
+    return fetchApi<{ signal: DbRebalanceSignal }>(`/signals/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'rejected' }),
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+
+  async execute(id: string): Promise<{ signal: DbRebalanceSignal }> {
+    return fetchApi<{ signal: DbRebalanceSignal }>(`/signals/${id}/execute`, {
+      method: 'POST',
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+}
+
+// Market API - Admin only
+export const MarketApi = {
+  async latest(): Promise<{ snapshot: DbMarketSnapshot | null }> {
+    return fetchApi<{ snapshot: DbMarketSnapshot | null }>('/market', {
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+
+  async history(limit = 100, from?: number): Promise<{ snapshots: DbMarketSnapshot[] }> {
+    const qs = new URLSearchParams({ limit: String(limit) })
+    if (from) qs.set('from', String(from))
+    return fetchApi<{ snapshots: DbMarketSnapshot[] }>(`/market/history?${qs}`, {
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+}
+
+// Agents Status API - Admin only
+export const AgentsApi = {
+  async status(): Promise<{ agents: Array<{ name: string; status: string; lastSeen: number | null; lastMessage: string | null }> }> {
+    return fetchApi(`/agents/status`, {
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
   },
 }
 

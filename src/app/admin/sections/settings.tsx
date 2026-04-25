@@ -145,7 +145,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statusCard: {
     background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
     borderRadius: TOKENS.radius.lg,
     padding: TOKENS.spacing[5],
   },
@@ -167,7 +167,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: TOKENS.spacing[2],
     padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
     background: TOKENS.colors.accentSubtle,
-    border: `1px solid ${TOKENS.colors.accent}`,
+    border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
     borderRadius: TOKENS.radius.md,
     fontFamily: MONO,
     fontSize: TOKENS.fontSizes.micro,
@@ -203,7 +203,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   card: {
     background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
     borderRadius: TOKENS.radius.lg,
     padding: TOKENS.spacing[5],
   },
@@ -222,8 +222,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${TOKENS.spacing[3]} 0`,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[0]}`,
+    borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
   },
   settingInfo: {
     display: 'flex',

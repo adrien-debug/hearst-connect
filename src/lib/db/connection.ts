@@ -132,6 +132,59 @@ export function initDb(): void {
     CREATE INDEX IF NOT EXISTS idx_activity_timestamp ON activity_events(timestamp);
   `)
 
+  // Market snapshots table - agent-collected market data
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS market_snapshots (
+      id TEXT PRIMARY KEY,
+      timestamp INTEGER NOT NULL,
+      btc_price REAL NOT NULL,
+      btc_24h_change REAL NOT NULL DEFAULT 0,
+      btc_7d_change REAL NOT NULL DEFAULT 0,
+      usdc_apy REAL NOT NULL DEFAULT 0,
+      usdt_apy REAL NOT NULL DEFAULT 0,
+      btc_apy REAL NOT NULL DEFAULT 0,
+      mining_hashprice REAL,
+      fear_greed INTEGER NOT NULL DEFAULT 50,
+      fear_label TEXT NOT NULL DEFAULT 'Neutral',
+      notes TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_snapshots_timestamp ON market_snapshots(timestamp DESC);
+  `)
+
+  // Rebalance signals table - agent-generated trading signals
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS rebalance_signals (
+      id TEXT PRIMARY KEY,
+      timestamp INTEGER NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('TAKE_PROFIT', 'REBALANCE', 'YIELD_ROTATE', 'INCREASE_BTC', 'REDUCE_RISK')),
+      vault_id TEXT,
+      description TEXT NOT NULL,
+      params_json TEXT,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected', 'executed', 'blocked')),
+      risk_score REAL,
+      risk_notes TEXT,
+      created_by TEXT NOT NULL CHECK(created_by IN ('watcher', 'strategy', 'audit')),
+      approved_at INTEGER,
+      executed_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_signals_status ON rebalance_signals(status);
+    CREATE INDEX IF NOT EXISTS idx_signals_timestamp ON rebalance_signals(timestamp DESC);
+  `)
+
+  // Agent logs table - operational logs from all agents
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS agent_logs (
+      id TEXT PRIMARY KEY,
+      agent TEXT NOT NULL CHECK(agent IN ('watcher', 'strategy', 'audit')),
+      timestamp INTEGER NOT NULL,
+      level TEXT NOT NULL CHECK(level IN ('info', 'warn', 'error')),
+      message TEXT NOT NULL,
+      data_json TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_agent ON agent_logs(agent, timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_level ON agent_logs(level);
+  `)
+
   // Apply performance indexes
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_vaults_address ON vaults(vault_address);

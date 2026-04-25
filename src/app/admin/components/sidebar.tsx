@@ -5,6 +5,9 @@ import { ADMIN_TOKENS as TOKENS, MONO } from '../constants'
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutGridIcon },
   { id: 'vaults', label: 'Vaults', icon: VaultIcon },
+  { id: 'signals', label: 'Signals', icon: SignalsIcon },
+  { id: 'market', label: 'Market', icon: MarketIcon },
+  { id: 'simulator', label: 'Simulator', icon: SimulatorIcon },
   { id: 'activity', label: 'Activity', icon: ActivityIcon },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
@@ -111,6 +114,30 @@ function SettingsIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
       <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
+function SignalsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M2 20h.01" /><path d="M7 20v-4" /><path d="M12 20v-8" /><path d="M17 20V8" /><path d="M22 4v16" />
+    </svg>
+  )
+}
+
+function SimulatorIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /><path d="M2 20h20" />
+    </svg>
+  )
+}
+
+function MarketIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
     </svg>
   )
 }

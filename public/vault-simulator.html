@@ -8,9 +8,10 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0a0f;--card:#12121a;--border:#1e1e2e;--accent:#6c5ce7;
-  --green:#00b894;--red:#d63031;--orange:#fdcb6e;--blue:#74b9ff;
-  --text:#e0e0e0;--muted:#888;--white:#fff;
+  --bg:#050505;--card:#1a1a1a;--border:rgba(255,255,255,0.08);--accent:#a7fb90;
+  --green:#a7fb90;--red:#ef4444;--orange:#F7931A;--blue:#3B82F6;
+  --text:rgba(255,255,255,0.92);--muted:#7A808A;--white:#fff;
+  --purple:#A78BFA;
 }
 body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;padding:20px}
 h1{font-size:1.5rem;font-weight:700;color:var(--white);margin-bottom:2px}
@@ -28,8 +29,8 @@ h2{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:10px}
 .live-item .lv.pos{color:var(--green)}.live-item .lv.neg{color:var(--red)}
 .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.fear-bar{width:80px;height:6px;border-radius:3px;background:#1a1a28;overflow:hidden;margin-top:2px}
-.fear-fill{height:100%;border-radius:3px;transition:width .5s}
+.fear-bar{width:80px;height:6px;border-radius:9999px;background:var(--card);overflow:hidden;margin-top:2px}
+.fear-fill{height:100%;border-radius:9999px;transition:width .5s}
 
 /* Layout */
 .layout{display:grid;grid-template-columns:340px 1fr;gap:20px}
@@ -38,10 +39,10 @@ h2{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:10px}
 /* Inputs */
 .field{margin-bottom:10px}
 .field label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:3px}
-.field input,.field select{width:100%;background:#1a1a28;border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-size:.85rem}
+.field input,.field select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-size:.85rem}
 .field input:focus{outline:none;border-color:var(--accent)}
 .range-row{display:flex;align-items:center;gap:8px}
-.range-row input[type=range]{flex:1;-webkit-appearance:none;height:6px;background:#1a1a28;border-radius:3px;border:none;padding:0}
+.range-row input[type=range]{flex:1;-webkit-appearance:none;height:6px;background:var(--card);border-radius:9999px;border:none;padding:0}
 .range-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer}
 .range-val{font-size:.8rem;color:var(--accent);min-width:40px;text-align:right;font-weight:600}
 .alloc-bar{height:8px;border-radius:4px;display:flex;overflow:hidden;margin:6px 0 4px}
@@ -54,25 +55,25 @@ h2{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:10px}
 .preset-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .preset-btn{padding:6px 12px;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s}
 .preset-btn:hover{border-color:var(--accent);color:var(--white)}
-.preset-btn.active{border-color:var(--accent);background:rgba(108,92,231,.15);color:var(--white)}
+.preset-btn.active{border-color:var(--accent);background:rgba(167,251,144,.12);color:var(--white)}
 
 /* Profit table */
 .profit-table{width:100%;font-size:.75rem;border-collapse:collapse}
 .profit-table th{text-align:left;padding:5px;color:var(--muted);border-bottom:1px solid var(--border)}
 .profit-table td{padding:5px;border-bottom:1px solid var(--border)}
-.profit-table input{width:55px;background:#1a1a28;border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem;text-align:center}
-.profit-table select{background:#1a1a28;border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem}
+.profit-table input{width:55px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem;text-align:center}
+.profit-table select{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3px 5px;color:var(--white);font-size:.75rem}
 
 /* Tabs */
 .tabs{display:flex;gap:6px;margin-bottom:14px}
 .tab{padding:7px 14px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s}
-.tab.active{border-color:var(--accent);color:var(--white);background:rgba(108,92,231,.12)}
-.tab.bear.active{border-color:var(--red);color:var(--red);background:rgba(214,48,49,.1)}
-.tab.bull.active{border-color:var(--green);color:var(--green);background:rgba(0,184,148,.1)}
+.tab.active{border-color:var(--accent);color:var(--accent);background:rgba(167,251,144,.10)}
+.tab.bear.active{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.10)}
+.tab.bull.active{border-color:var(--green);color:var(--green);background:rgba(167,251,144,.10)}
 
 /* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:#1a1a28;border-radius:10px;padding:12px}
+.kpi{background:var(--card);border-radius:10px;padding:12px}
 .kpi .label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .kpi .value{font-size:1.15rem;font-weight:700;color:var(--white);margin-top:1px}
 .pos{color:var(--green)}.neg{color:var(--red)}
@@ -91,7 +92,7 @@ h2{font-size:1rem;font-weight:600;color:var(--white);margin-bottom:10px}
 
 /* Yields live */
 .yield-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.yield-card{background:#1a1a28;border-radius:8px;padding:10px}
+.yield-card{background:var(--card);border-radius:8px;padding:10px}
 .yield-card .yl{font-size:.65rem;color:var(--muted);text-transform:uppercase}
 .yield-card .yv{font-size:1rem;font-weight:700;color:var(--green);margin-top:1px}
 .yield-card .ys{font-size:.65rem;color:var(--muted)}
@@ -102,7 +103,7 @@ table.comp th{text-align:left;padding:6px;color:var(--muted);border-bottom:1px s
 table.comp td{padding:6px;border-bottom:1px solid var(--border)}
 
 .btn{padding:8px 16px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;transition:.2s}
-.btn-primary{background:var(--accent);color:var(--white)}.btn-primary:hover{background:#5b4bd5}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{opacity:.85}
 .btn-sm{padding:5px 10px;font-size:.7rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer}
 .btn-sm:hover{border-color:var(--accent);color:var(--white)}
 
@@ -166,9 +167,9 @@ table.comp td{padding:6px;border-bottom:1px solid var(--border)}
     <div class="alloc-bar" id="allocBar"></div>
     <div class="alloc-legend">
       <span><span class="dot" style="background:var(--orange)"></span>BTC</span>
-      <span><span class="dot" style="background:var(--accent)"></span>Mining</span>
+      <span><span class="dot" style="background:#4ADE80"></span>Mining</span>
       <span><span class="dot" style="background:var(--blue)"></span>Stable</span>
-      <span><span class="dot" style="background:var(--muted)"></span>Réserve</span>
+      <span><span class="dot" style="background:var(--purple)"></span>Réserve</span>
     </div>
     <div id="allocWarn" style="color:var(--red);font-size:.7rem;margin-top:3px"></div>
   </div>
@@ -322,7 +323,7 @@ function applyPreset(id){
 
 // ========== ALLOCATION (dynamic gauges, always 100%) ==========
 const allocIds=['allocBtc','allocMining','allocStable','allocReserve'];
-const allocColors=['var(--orange)','var(--accent)','var(--blue)','var(--muted)'];
+const allocColors=['#F7931A','#4ADE80','#3B82F6','#A78BFA'];
 
 function rebalanceAlloc(changedId){
   const newVal=+$(changedId).value;
@@ -526,10 +527,10 @@ function renderOutputs(){
     <div class="kpi"><div class="label">Expo BTC</div><div class="value">${r.btcExpo.toFixed(1)}%</div></div>`;
 
   const pockets=[
-    {name:'BTC Spot',color:'#fdcb6e',cap:r.btcCap,val:r.btcTotal,pnl:r.btcPnl},
-    {name:'Mining',color:'#6c5ce7',cap:r.mCap,val:r.mTotal,pnl:r.mPnl},
-    {name:'Stablecoins',color:'#74b9ff',cap:r.sCap,val:r.sTotal,pnl:r.sPnl},
-    {name:'Réserve',color:'#636e72',cap:r.rCap,val:r.rTotal,pnl:r.rPnl},
+    {name:'BTC Spot',color:'#F7931A',cap:r.btcCap,val:r.btcTotal,pnl:r.btcPnl},
+    {name:'Mining',color:'#4ADE80',cap:r.mCap,val:r.mTotal,pnl:r.mPnl},
+    {name:'Stablecoins',color:'#3B82F6',cap:r.sCap,val:r.sTotal,pnl:r.sPnl},
+    {name:'Réserve',color:'#A78BFA',cap:r.rCap,val:r.rTotal,pnl:r.rPnl},
   ];
   $('pocketDetail').innerHTML=pockets.map(p=>`
     <div class="pocket-row">
@@ -548,10 +549,10 @@ function renderOutputs(){
   }
 
   destroyCharts();
-  const dOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#888',font:{size:10}}}}};
-  cAlloc=new Chart($('cAlloc'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:[r.btcTotal,r.mTotal,r.sTotal,r.rTotal],backgroundColor:['#fdcb6e','#6c5ce7','#74b9ff','#636e72'],borderWidth:0}]},options:dOpts});
+  const dOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#7A808A',font:{size:10}}}}};
+  cAlloc=new Chart($('cAlloc'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:[r.btcTotal,r.mTotal,r.sTotal,r.rTotal],backgroundColor:['#F7931A','#4ADE80','#3B82F6','#A78BFA'],borderWidth:0}]},options:dOpts});
   const cd=[r.btcContrib,r.mContrib,r.sContrib,r.rContrib].map(v=>Math.max(v,0));
-  cContrib=new Chart($('cContrib'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:cd,backgroundColor:['#fdcb6e','#6c5ce7','#74b9ff','#636e72'],borderWidth:0}]},options:dOpts});
+  cContrib=new Chart($('cContrib'),{type:'doughnut',data:{labels:['BTC','Mining','Stable','Réserve'],datasets:[{data:cd,backgroundColor:['#F7931A','#4ADE80','#3B82F6','#A78BFA'],borderWidth:0}]},options:dOpts});
 }
 
 function renderComp(){
@@ -585,9 +586,9 @@ function renderSensitivity(){
   if(cSens)cSens.destroy();
   cSens=new Chart($('cSensitivity'),{type:'bar',data:{
     labels:prices.map(p=>'$'+fmt(p)),
-    datasets:[{data:perf,backgroundColor:perf.map(v=>v>=0?'rgba(0,184,148,.6)':'rgba(214,48,49,.6)'),borderRadius:4}]
+    datasets:[{data:perf,backgroundColor:perf.map(v=>v>=0?'rgba(167,251,144,.55)':'rgba(239,68,68,.55)'),borderRadius:4}]
   },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-    scales:{x:{ticks:{color:'#888',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#888',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}});
+    scales:{x:{ticks:{color:'#7A808A',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#7A808A',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}}}}});
 }
 
 // ========== INIT ==========

@@ -56,8 +56,15 @@ export const ADMIN_TOKENS = {
   letterSpacing: {
     tight: '-0.02em',
     normal: '0',
+    loose: '0.05em',
     wide: '0.12em',
     display: '0.2em',
+  },
+  lineHeight: {
+    tight: '1.2',
+    normal: '1.5',
+    relaxed: '1.6',
+    loose: '1.8',
   },
   spacing: {
     0: '0px',
@@ -71,6 +78,8 @@ export const ADMIN_TOKENS = {
     10: '40px',
     12: '48px',
     16: '64px',
+    20: '80px',
+    50: '200px',
   },
   radius: {
     sm: '8px',
@@ -84,6 +93,21 @@ export const ADMIN_TOKENS = {
     thin: '1px',
     thick: '2px',
     heavy: '6px',
+  },
+  transitions: {
+    fast: '0.15s ease',
+    base: '0.2s ease',
+    slow: '0.3s ease',
+  },
+  lineHeights: {
+    tight: '1.2',
+    base: '1.5',
+    relaxed: '1.7',
+  },
+  opacities: {
+    subtle: '0.2',
+    medium: '0.5',
+    strong: '0.8',
   },
 }
 

@@ -15,6 +15,14 @@ import type {
   DbUserPositionWithVault,
   DbActivityEvent,
   DbActivityEventInput,
+  DbMarketSnapshot,
+  DbMarketSnapshotInput,
+  DbRebalanceSignal,
+  DbRebalanceSignalInput,
+  DbAgentLog,
+  DbAgentLogInput,
+  SignalStatus,
+  AgentName,
 } from './schema'
 import type { Address } from 'viem'
 
@@ -460,5 +468,190 @@ function mapActivityRow(row: Record<string, unknown>): DbActivityEvent {
     type: String(row.type) as 'deposit' | 'claim' | 'withdraw',
     amount: Number(row.amount),
     timestamp: Number(row.timestamp),
+  }
+}
+
+// Market Snapshots Repository
+export const MarketRepository = {
+  latest(): DbMarketSnapshot | null {
+    const db = getDb()
+    const row = db.prepare('SELECT * FROM market_snapshots ORDER BY timestamp DESC LIMIT 1').get() as Record<string, unknown> | undefined
+    return row ? mapSnapshotRow(row) : null
+  },
+
+  history(limit = 100, from?: number): DbMarketSnapshot[] {
+    const db = getDb()
+    if (from) {
+      const rows = db.prepare('SELECT * FROM market_snapshots WHERE timestamp >= ? ORDER BY timestamp DESC LIMIT ?').all(from, limit) as Record<string, unknown>[]
+      return rows.map(mapSnapshotRow)
+    }
+    const rows = db.prepare('SELECT * FROM market_snapshots ORDER BY timestamp DESC LIMIT ?').all(limit) as Record<string, unknown>[]
+    return rows.map(mapSnapshotRow)
+  },
+
+  create(input: DbMarketSnapshotInput): DbMarketSnapshot {
+    const db = getDb()
+    const snapshot: DbMarketSnapshot = {
+      id: generateId('snap'),
+      timestamp: Date.now(),
+      btcPrice: input.btcPrice,
+      btc24hChange: input.btc24hChange,
+      btc7dChange: input.btc7dChange,
+      usdcApy: input.usdcApy,
+      usdtApy: input.usdtApy,
+      btcApy: input.btcApy,
+      miningHashprice: input.miningHashprice ?? null,
+      fearGreed: input.fearGreed,
+      fearLabel: input.fearLabel,
+      notes: input.notes ?? null,
+    }
+    db.prepare(`
+      INSERT INTO market_snapshots (id, timestamp, btc_price, btc_24h_change, btc_7d_change, usdc_apy, usdt_apy, btc_apy, mining_hashprice, fear_greed, fear_label, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(snapshot.id, snapshot.timestamp, snapshot.btcPrice, snapshot.btc24hChange, snapshot.btc7dChange, snapshot.usdcApy, snapshot.usdtApy, snapshot.btcApy, snapshot.miningHashprice, snapshot.fearGreed, snapshot.fearLabel, snapshot.notes)
+    return snapshot
+  },
+}
+
+// Rebalance Signals Repository
+export const SignalRepository = {
+  findAll(status?: SignalStatus, limit = 50): DbRebalanceSignal[] {
+    const db = getDb()
+    if (status) {
+      return (db.prepare('SELECT * FROM rebalance_signals WHERE status = ? ORDER BY timestamp DESC LIMIT ?').all(status, limit) as Record<string, unknown>[]).map(mapSignalRow)
+    }
+    return (db.prepare('SELECT * FROM rebalance_signals ORDER BY timestamp DESC LIMIT ?').all(limit) as Record<string, unknown>[]).map(mapSignalRow)
+  },
+
+  findById(id: string): DbRebalanceSignal | null {
+    const db = getDb()
+    const row = db.prepare('SELECT * FROM rebalance_signals WHERE id = ?').get(id) as Record<string, unknown> | undefined
+    return row ? mapSignalRow(row) : null
+  },
+
+  create(input: DbRebalanceSignalInput): DbRebalanceSignal {
+    const db = getDb()
+    const signal: DbRebalanceSignal = {
+      id: generateId('sig'),
+      timestamp: Date.now(),
+      type: input.type,
+      vaultId: input.vaultId ?? null,
+      description: input.description,
+      paramsJson: input.paramsJson ?? null,
+      status: 'pending',
+      riskScore: input.riskScore ?? null,
+      riskNotes: input.riskNotes ?? null,
+      createdBy: input.createdBy,
+      approvedAt: null,
+      executedAt: null,
+    }
+    db.prepare(`
+      INSERT INTO rebalance_signals (id, timestamp, type, vault_id, description, params_json, status, risk_score, risk_notes, created_by, approved_at, executed_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(signal.id, signal.timestamp, signal.type, signal.vaultId, signal.description, signal.paramsJson, signal.status, signal.riskScore, signal.riskNotes, signal.createdBy, signal.approvedAt, signal.executedAt)
+    return signal
+  },
+
+  updateStatus(id: string, status: SignalStatus, riskScore?: number, riskNotes?: string): DbRebalanceSignal | null {
+    const db = getDb()
+    const existing = this.findById(id)
+    if (!existing) return null
+
+    const sets: string[] = ['status = ?']
+    const vals: (string | number | null)[] = [status]
+
+    if (status === 'approved') { sets.push('approved_at = ?'); vals.push(Date.now()) }
+    if (status === 'executed') { sets.push('executed_at = ?'); vals.push(Date.now()) }
+    if (riskScore !== undefined) { sets.push('risk_score = ?'); vals.push(riskScore) }
+    if (riskNotes !== undefined) { sets.push('risk_notes = ?'); vals.push(riskNotes) }
+
+    vals.push(id)
+    db.prepare(`UPDATE rebalance_signals SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+    return this.findById(id)
+  },
+}
+
+// Agent Logs Repository
+export const AgentLogRepository = {
+  findByAgent(agent: AgentName, limit = 50): DbAgentLog[] {
+    const db = getDb()
+    return (db.prepare('SELECT * FROM agent_logs WHERE agent = ? ORDER BY timestamp DESC LIMIT ?').all(agent, limit) as Record<string, unknown>[]).map(mapAgentLogRow)
+  },
+
+  findAll(limit = 100): DbAgentLog[] {
+    const db = getDb()
+    return (db.prepare('SELECT * FROM agent_logs ORDER BY timestamp DESC LIMIT ?').all(limit) as Record<string, unknown>[]).map(mapAgentLogRow)
+  },
+
+  latestByAgent(): Record<AgentName, DbAgentLog | null> {
+    const agents: AgentName[] = ['watcher', 'strategy', 'audit']
+    const result = {} as Record<AgentName, DbAgentLog | null>
+    for (const agent of agents) {
+      const logs = this.findByAgent(agent, 1)
+      result[agent] = logs[0] ?? null
+    }
+    return result
+  },
+
+  create(input: DbAgentLogInput): DbAgentLog {
+    const db = getDb()
+    const log: DbAgentLog = {
+      id: generateId('log'),
+      agent: input.agent,
+      timestamp: Date.now(),
+      level: input.level,
+      message: input.message,
+      dataJson: input.dataJson ?? null,
+    }
+    db.prepare(`
+      INSERT INTO agent_logs (id, agent, timestamp, level, message, data_json)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(log.id, log.agent, log.timestamp, log.level, log.message, log.dataJson)
+    return log
+  },
+}
+
+function mapSnapshotRow(row: Record<string, unknown>): DbMarketSnapshot {
+  return {
+    id: String(row.id),
+    timestamp: Number(row.timestamp),
+    btcPrice: Number(row.btc_price),
+    btc24hChange: Number(row.btc_24h_change),
+    btc7dChange: Number(row.btc_7d_change),
+    usdcApy: Number(row.usdc_apy),
+    usdtApy: Number(row.usdt_apy),
+    btcApy: Number(row.btc_apy),
+    miningHashprice: row.mining_hashprice != null ? Number(row.mining_hashprice) : null,
+    fearGreed: Number(row.fear_greed),
+    fearLabel: String(row.fear_label),
+    notes: row.notes ? String(row.notes) : null,
+  }
+}
+
+function mapSignalRow(row: Record<string, unknown>): DbRebalanceSignal {
+  return {
+    id: String(row.id),
+    timestamp: Number(row.timestamp),
+    type: String(row.type) as DbRebalanceSignal['type'],
+    vaultId: row.vault_id ? String(row.vault_id) : null,
+    description: String(row.description),
+    paramsJson: row.params_json ? String(row.params_json) : null,
+    status: String(row.status) as DbRebalanceSignal['status'],
+    riskScore: row.risk_score != null ? Number(row.risk_score) : null,
+    riskNotes: row.risk_notes ? String(row.risk_notes) : null,
+    createdBy: String(row.created_by) as DbRebalanceSignal['createdBy'],
+    approvedAt: row.approved_at != null ? Number(row.approved_at) : null,
+    executedAt: row.executed_at != null ? Number(row.executed_at) : null,
+  }
+}
+
+function mapAgentLogRow(row: Record<string, unknown>): DbAgentLog {
+  return {
+    id: String(row.id),
+    agent: String(row.agent) as DbAgentLog['agent'],
+    timestamp: Number(row.timestamp),
+    level: String(row.level) as DbAgentLog['level'],
+    message: String(row.message),
+    dataJson: row.data_json ? String(row.data_json) : null,
   }
 }

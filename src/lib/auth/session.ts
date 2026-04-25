@@ -131,10 +131,11 @@ export function requireAdmin(session: Session | null): asserts session is Sessio
 }
 
 const ADMIN_PANEL_KEY = process.env.ADMIN_PANEL_KEY || 'hearst-admin-dev-key'
+const AGENT_WEBHOOK_KEY = process.env.AGENT_WEBHOOK_KEY || process.env.ADMIN_PANEL_KEY || 'hearst-admin-dev-key'
 
 /**
- * Check admin access: JWT admin session OR x-admin-key header.
- * Throws AuthError if neither is valid.
+ * Check admin access: JWT admin session, x-admin-key, or x-agent-key header.
+ * Throws AuthError if none is valid.
  */
 export async function requireAdminAccess(request: Request): Promise<void> {
   const session = await getSessionFromRequest(request)
@@ -142,6 +143,9 @@ export async function requireAdminAccess(request: Request): Promise<void> {
 
   const key = request.headers.get('x-admin-key')
   if (key === ADMIN_PANEL_KEY) return
+
+  const agentKey = request.headers.get('x-agent-key')
+  if (agentKey && agentKey === AGENT_WEBHOOK_KEY) return
 
   throw new AuthError('Admin access required', 403)
 }

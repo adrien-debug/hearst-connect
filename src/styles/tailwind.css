@@ -104,3 +104,70 @@
   outline-offset: 2px;
   border-radius: var(--dashboard-radius-sm);
 }
+
+/* ─── ADMIN SCOPE — range input styling ─────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--color-bg-tertiary, #141414);
+  border-radius: 9999px;
+  height: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent, #a7fb90);
+  margin-top: -5px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px rgba(167, 251, 144, 0.20);
+}
+
+input[type="range"]::-moz-range-track {
+  background: var(--color-bg-tertiary, #141414);
+  border-radius: 9999px;
+  height: 4px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent, #a7fb90);
+  border: none;
+  cursor: pointer;
+}
+
+input[type="range"]:focus-visible {
+  outline: none;
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(167, 251, 144, 0.30);
+}
+
+/* ─── Admin inputs / selects — browser default reset ──────────────────────── */
+input[type="number"],
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background: #141414;
+  color: rgba(255, 255, 255, 0.92);
+}

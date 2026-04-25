@@ -116,3 +116,78 @@ export interface DbUserPositionWithVault extends DbUserPosition {
   vaultRisk: string
   vaultFees: string
 }
+
+// Market Snapshot - periodic market data captured by agents
+export type SignalType = 'TAKE_PROFIT' | 'REBALANCE' | 'YIELD_ROTATE' | 'INCREASE_BTC' | 'REDUCE_RISK'
+export type SignalStatus = 'pending' | 'approved' | 'rejected' | 'executed' | 'blocked'
+export type AgentName = 'watcher' | 'strategy' | 'audit'
+export type LogLevel = 'info' | 'warn' | 'error'
+
+export interface DbMarketSnapshot {
+  id: string
+  timestamp: number
+  btcPrice: number
+  btc24hChange: number
+  btc7dChange: number
+  usdcApy: number
+  usdtApy: number
+  btcApy: number
+  miningHashprice: number | null
+  fearGreed: number
+  fearLabel: string
+  notes: string | null
+}
+
+export interface DbMarketSnapshotInput {
+  btcPrice: number
+  btc24hChange: number
+  btc7dChange: number
+  usdcApy: number
+  usdtApy: number
+  btcApy: number
+  miningHashprice?: number
+  fearGreed: number
+  fearLabel: string
+  notes?: string
+}
+
+export interface DbRebalanceSignal {
+  id: string
+  timestamp: number
+  type: SignalType
+  vaultId: string | null
+  description: string
+  paramsJson: string | null
+  status: SignalStatus
+  riskScore: number | null
+  riskNotes: string | null
+  createdBy: AgentName
+  approvedAt: number | null
+  executedAt: number | null
+}
+
+export interface DbRebalanceSignalInput {
+  type: SignalType
+  vaultId?: string
+  description: string
+  paramsJson?: string
+  riskScore?: number
+  riskNotes?: string
+  createdBy: AgentName
+}
+
+export interface DbAgentLog {
+  id: string
+  agent: AgentName
+  timestamp: number
+  level: LogLevel
+  message: string
+  dataJson: string | null
+}
+
+export interface DbAgentLogInput {
+  agent: AgentName
+  level: LogLevel
+  message: string
+  dataJson?: string
+}

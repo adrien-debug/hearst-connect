@@ -7,6 +7,9 @@ import { DashboardSection } from './sections/dashboard'
 import { VaultsSection } from './sections/vaults'
 import { ActivitySection } from './sections/activity'
 import { SettingsSection } from './sections/settings'
+import { SignalsSection } from './sections/signals'
+import { MarketSection } from './sections/market'
+import { SimulatorSection } from './sections/simulator'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { ADMIN_TOKENS as TOKENS } from './constants'
 
@@ -14,6 +17,9 @@ import { ADMIN_TOKENS as TOKENS } from './constants'
 const SECTIONS: Record<string, React.ComponentType> = {
   dashboard: DashboardSection,
   vaults: VaultsSection,
+  signals: SignalsSection,
+  market: MarketSection,
+  simulator: SimulatorSection,
   activity: ActivitySection,
   settings: SettingsSection,
 }
@@ -21,6 +27,9 @@ const SECTIONS: Record<string, React.ComponentType> = {
 const SECTION_TITLES: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'Overview and key metrics' },
   vaults: { title: 'Vault Management', subtitle: 'Configure and manage vaults' },
+  signals: { title: 'Rebalancing Signals', subtitle: 'Agent signals — approve, reject or execute' },
+  market: { title: 'Market Intelligence', subtitle: 'Live data, yields, sentiment & agent insights' },
+  simulator: { title: 'Vault Simulator', subtitle: 'Projections multi-scénarios · Produit structuré crypto' },
   activity: { title: 'Activity Log', subtitle: 'Recent actions and events' },
   settings: { title: 'Settings', subtitle: 'System configuration' },
 }
