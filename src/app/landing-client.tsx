@@ -57,21 +57,21 @@ const FEATURE_PILLARS = [
 const INVESTMENT_STRATEGY_SLIDES = [
   {
     type: 'video',
-    src: '/videos/view-1.mp4',
+    src: '/view-1.mp4',
     caption: 'Flagship — stable income',
-    title: 'Hearst Connect Prime Yield',
+    title: 'Hearst Prime Yield',
     desc: 'Target ~12% annual yield. $250K min, monthly USDC distributions, 3-year lock. Diversified mining income with volatility hedging for predictable returns.',
   },
   {
     type: 'video',
-    src: '/videos/view-2.mp4',
+    src: '/view-2.mp4',
     caption: 'Growth — BTC upside',
-    title: 'Hearst Connect Growth',
+    title: 'Hearst Growth',
     desc: 'Target 16–22% annual yield. $250K min, monthly distributions, 3-year lock. Forward BTC mining exposure plus spot price upside with USDC buffer.',
   },
   {
     type: 'video',
-    src: '/videos/view-3.mp4',
+    src: '/view-3.mp4',
     caption: 'Yield mechanics',
     title: 'How yield is generated',
     desc: 'USDC is deployed into industrial mining operations. BTC rewards are converted via OTC desks. Net yield is distributed monthly, auditable end to end.',

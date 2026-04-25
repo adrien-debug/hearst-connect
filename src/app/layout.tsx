@@ -9,6 +9,8 @@ import '@/styles/theme/tokens.css';
 import '@/styles/marketing/hub-font.css';
 import '@/styles/marketing/hub.css';
 import '@/styles/marketing/intro.css';
+import '@/styles/components/main-nav.css';
+import '@/styles/components/subscription.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 

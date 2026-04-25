@@ -136,72 +136,90 @@
 }
 
 /* ============================================
-   LIGHT THEME
+   LIGHT THEME - "Light Stylé" Design System
+   Bone White / High Contrast / Citrus Accent
    ============================================ */
 
 [data-theme="light"] {
-  /* Backgrounds (Ultra-modern, crisp light mode like Vercel/Linear) */
-  --color-bg-primary: #f8fafc;
-  --color-bg-secondary: #f1f5f9;
-  --color-bg-tertiary: #e2e8f0;
-  --color-bg-elevated: #ffffff;
-  --color-bg-overlay: rgba(15, 23, 42, 0.4);
-  --color-bg-input: #ffffff;
+  /* Backgrounds (Bone White / High-End Light) */
+  --color-bg-primary: #F9F9F7;    /* Bone White - Mastic très clair */
+  --color-bg-secondary: #FFFFFF;  /* Pure White */
+  --color-bg-tertiary: #F4F4F5;   /* Subtle gray for tertiary surfaces */
+  --color-bg-elevated: #FFFFFF;   /* Elevated surfaces */
+  --color-bg-overlay: rgba(0, 0, 0, 0.4);
+  --color-bg-input: #F4F4F5;     /* Input backgrounds */
 
-  /* Text (Deep slate for premium contrast) */
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-ghost: #94a3b8;
-  --color-text-disabled: #cbd5e1;
-  --color-text-inverse: #ffffff;
+  /* Text (Pure Black & Zinc tones for contrast) */
+  --color-text-primary: #000000;   /* Pure Black */
+  --color-text-secondary: #52525B; /* Zinc-600 */
+  --color-text-ghost: #71717A;   /* Zinc-500 */
+  --color-text-disabled: #A1A1AA; /* Zinc-400 */
+  --color-text-inverse: #FFFFFF;  /* White on dark elements */
 
-  /* Borders (Very subtle) */
-  --color-border-subtle: rgba(15, 23, 42, 0.06);
-  --color-border-default: rgba(15, 23, 42, 0.12);
-  --color-border-strong: rgba(15, 23, 42, 0.20);
-  --color-border-focus: rgba(15, 23, 42, 0.40);
+  /* Borders (Black opacities for definition) */
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+  --color-border-default: rgba(0, 0, 0, 0.10);
+  --color-border-strong: rgba(0, 0, 0, 0.20);
+  --color-border-focus: rgba(0, 0, 0, 0.40);
 
-  /* Accent (Emerald 600 - Vibrant but perfectly readable on white) */
-  --color-accent: #059669;
-  --color-accent-fg: #ffffff;
-  --color-accent-dim: rgba(5, 150, 105, 0.1);
-  --color-accent-subtle: rgba(5, 150, 105, 0.15);
-  --color-accent-glow: rgba(5, 150, 105, 0.25);
-  --color-accent-text: #ffffff;
+  /* Accent (Citrus Neon - Identique au Dark) */
+  --color-accent: #a7fb90;              /* Citrus Neon exact */
+  --color-accent-fg: #000000;           /* Black text on accent */
+  --color-accent-dim: rgba(167, 251, 144, 0.10);
+  --color-accent-subtle: rgba(167, 251, 144, 0.15);
+  --color-accent-glow: rgba(167, 251, 144, 0.25);
+  --color-accent-text: #000000;
 
-  /* Status colors */
-  --color-success: #059669;
-  --color-success-bg: rgba(5, 150, 105, 0.1);
-  --color-success-border: rgba(5, 150, 105, 0.2);
-  
-  --color-error: #e11d48;
-  --color-error-bg: rgba(225, 29, 72, 0.1);
-  --color-error-border: rgba(225, 29, 72, 0.2);
-  
-  --color-warning: #d97706;
-  --color-warning-bg: rgba(217, 119, 6, 0.1);
-  --color-warning-border: rgba(217, 119, 6, 0.2);
-  
-  --color-info: #2563eb;
-  --color-info-bg: rgba(37, 99, 235, 0.1);
-  --color-info-border: rgba(37, 99, 235, 0.2);
+  /* Status colors (adapted for light theme) */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.10);
+  --color-success-border: rgba(34, 197, 94, 0.20);
 
-  /* Shadows (Crisp and elegant) */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.05);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02);
-  --shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 0 20px rgba(5, 150, 105, 0.15);
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.10);
+  --color-error-border: rgba(239, 68, 68, 0.20);
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.10);
+  --color-warning-border: rgba(245, 158, 11, 0.20);
+
+  --color-info: #3b82f6;
+  --color-info-bg: rgba(59, 130, 246, 0.10);
+  --color-info-border: rgba(59, 130, 246, 0.20);
+
+  /* Shadows (Multi-layer for depth without "dirtying") */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.06);
+  --shadow-glow: 0 0 20px rgba(167, 251, 144, 0.20);
+
+  /* Card-specific multi-layer shadows (Light Stylé signature) */
+  --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.02),
+                 0 12px 24px rgba(0, 0, 0, 0.03),
+                 0 20px 40px -10px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 8px rgba(0, 0, 0, 0.04),
+                       0 20px 40px rgba(167, 251, 144, 0.15),
+                       0 30px 60px -12px rgba(0, 0, 0, 0.06);
+
+  /* Button shadows */
+  --shadow-button-primary-hover: 0 4px 16px rgba(167, 251, 144, 0.25);
 
   /* Interactive states */
-  --color-hover: rgba(15, 23, 42, 0.04);
-  --color-active: rgba(15, 23, 42, 0.08);
-  --color-selected: rgba(5, 150, 105, 0.08);
+  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-active: rgba(0, 0, 0, 0.08);
+  --color-selected: rgba(167, 251, 144, 0.15);
 
   /* Scrollbar */
-  --scrollbar-thumb: rgba(15, 23, 42, 0.20);
-  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.30);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
   --scrollbar-track: transparent;
+
+  /* Cinematic Gradients (adaptés au blanc) */
+  --gradient-stage-shoulder: radial-gradient(ellipse 160% 100% at 50% -30%, rgba(167, 251, 144, 0.08) 0%, transparent 55%);
+  --gradient-stage-carbon: radial-gradient(ellipse at 25% 15%, rgba(0, 0, 0, 0.01) 0%, transparent 45%),
+                           radial-gradient(ellipse at 75% 85%, rgba(0, 0, 0, 0.01) 0%, transparent 40%),
+                           radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.02) 0%, transparent 70%);
 }
 
 /* ============================================
@@ -241,33 +259,36 @@
 }
 
 [data-theme="light"] .connect-scope {
-  --hc-bg-app: #f8fafc;
-  --hc-bg-page: #f1f5f9;
-  --hc-bg-sidebar: #ffffff;
-  --hc-bg-surface: #ffffff;
-  --hc-bg-secondary: #f8fafc;
-  --hc-bg-tertiary: #f1f5f9;
+  /* "Light Stylé" - Bone White / High Contrast */
+  --hc-bg-app: #F9F9F7;
+  --hc-bg-page: #F9F9F7;
+  --hc-bg-sidebar: #FFFFFF;
+  --hc-bg-surface: #FFFFFF;
+  --hc-bg-secondary: #F4F4F5;
+  --hc-bg-tertiary: #F4F4F5;
 
-  --hc-text-primary: #0f172a;
-  --hc-text-secondary: #475569;
-  --hc-text-ghost: #94a3b8;
+  --hc-text-primary: #000000;
+  --hc-text-secondary: #52525B;
+  --hc-text-ghost: #71717A;
 
-  --hc-border-subtle: rgba(15, 23, 42, 0.06);
-  --hc-border-default: rgba(15, 23, 42, 0.12);
-  --hc-border-strong: rgba(15, 23, 42, 0.20);
+  --hc-border-subtle: rgba(0, 0, 0, 0.05);
+  --hc-border-default: rgba(0, 0, 0, 0.10);
+  --hc-border-strong: rgba(0, 0, 0, 0.20);
 
-  --hc-accent: #059669;
-  --hc-accent-dim: rgba(5, 150, 105, 0.08);
-  --hc-accent-glow: rgba(5, 150, 105, 0.15);
+  /* Citrus accent - identical to Dark theme */
+  --hc-accent: #a7fb90;
+  --hc-accent-dim: rgba(167, 251, 144, 0.10);
+  --hc-accent-glow: rgba(167, 251, 144, 0.15);
 
-  --hc-overlay: rgba(15, 23, 42, 0.4);
+  --hc-overlay: rgba(0, 0, 0, 0.4);
 
-  --hc-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
-  --hc-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.05);
-  --hc-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(15, 23, 42, 0.02);
+  /* Multi-layer shadows for Light theme */
+  --hc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --hc-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.03);
+  --hc-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.04);
 
-  --hc-scrollbar-thumb: rgba(15, 23, 42, 0.15);
-  --hc-scrollbar-thumb-hover: rgba(15, 23, 42, 0.25);
+  --hc-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --hc-scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
 
   color-scheme: light;
 }
@@ -346,4 +367,109 @@
 .connect-scope {
   scrollbar-width: thin;
   scrollbar-color: var(--hc-scrollbar-thumb) transparent;
+}
+
+/* ============================================
+   LIGHT THEME GLOBAL STYLES - "Light Stylé"
+   ============================================ */
+
+/* Technical grid background - "Operating System" feel */
+[data-theme="light"] body {
+  background-color: var(--color-bg-primary);
+  /* Ultra-fine dot grid (2% opacity) + Cinematic gradients */
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.02) 1px, transparent 0),
+    var(--gradient-stage-shoulder),
+    var(--gradient-stage-carbon);
+  background-size: 32px 32px, 100% 100%, 100% 100%;
+}
+
+/* Cards - Multi-layer shadows for "High-End" depth */
+[data-theme="light"] .card,
+[data-theme="light"] [class*="card"] {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.2, 1, 0.2, 1);
+}
+
+[data-theme="light"] .card:hover,
+[data-theme="light"] [class*="card"]:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Buttons - Primary: Black bg, Citrus text */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] button[data-variant="primary"],
+[data-theme="light"] [class*="btn-primary"] {
+  background: #000000;
+  color: var(--color-accent);
+  border: 2px solid #000000;
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .btn-primary:hover,
+[data-theme="light"] button[data-variant="primary"]:hover,
+[data-theme="light"] [class*="btn-primary"]:hover {
+  background: var(--color-accent);
+  color: #000000;
+  border-color: #000000;
+  transform: scale(1.02);
+  box-shadow: var(--shadow-button-primary-hover);
+}
+
+/* Ghost/Secondary buttons */
+[data-theme="light"] .btn-ghost,
+[data-theme="light"] button[data-variant="ghost"] {
+  background: transparent;
+  color: #000000;
+  border: 1px solid var(--color-border-default);
+}
+
+[data-theme="light"] .btn-ghost:hover,
+[data-theme="light"] button[data-variant="ghost"]:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-strong);
+}
+
+/* Inputs */
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+  outline: none;
+  background: var(--color-bg-secondary);
+  border-color: #000000;
+  box-shadow: 4px 4px 0px var(--color-accent);
+}
+
+/* Badges with accent */
+[data-theme="light"] .badge,
+[data-theme="light"] [class*="badge"] {
+  background: var(--color-accent);
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+/* ============================================
+   LOGOS - Light theme: H en vert citrus
+   ============================================ */
+
+/* Pour les logos images: on ne peut pas séparer le H du texte avec filter CSS */
+/* Solution: passer tout en noir (texte) et accepter que le H soit aussi noir, */
+/* ou garder le logo original blanc/vert */
+
+/* Option 1: Logos en noir complet (filter simple) */
+[data-theme="light"] .welcome-logo,
+[data-theme="light"] img[src*="hearst"] {
+  filter: brightness(0);
 }

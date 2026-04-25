@@ -2,7 +2,7 @@
  * Smart fitting utilities for responsive text and values
  */
 
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 
 export type SmartFitMode = 'normal' | 'tight' | 'limit'
 
@@ -18,14 +18,19 @@ interface UseSmartFitOptions {
 export function useSmartFit(options?: UseSmartFitOptions) {
   const { tightHeight = 740, limitHeight = 660, tightWidth = 940, limitWidth = 820 } = options || {}
 
-  // Determine mode based on viewport dimensions (client-side only)
-  const mode: SmartFitMode = useMemo(() => {
-    if (typeof window === 'undefined') return 'normal'
-    const h = window.innerHeight
-    const w = window.innerWidth
-    if (h < limitHeight || w < limitWidth) return 'limit'
-    if (h < tightHeight || w < tightWidth) return 'tight'
-    return 'normal'
+  const [mode, setMode] = useState<SmartFitMode>('normal')
+
+  useEffect(() => {
+    function calculate() {
+      const h = window.innerHeight
+      const w = window.innerWidth
+      if (h < limitHeight || w < limitWidth) return setMode('limit')
+      if (h < tightHeight || w < tightWidth) return setMode('tight')
+      setMode('normal')
+    }
+    calculate()
+    window.addEventListener('resize', calculate)
+    return () => window.removeEventListener('resize', calculate)
   }, [tightHeight, limitHeight, tightWidth, limitWidth])
 
   const isLimit = mode === 'limit'
@@ -57,22 +62,15 @@ type FitValueMapping<T = string> = {
   limit: T
 }
 
-/**
- * fitValue - Returns a value from the mapping based on the current mode
- */
 export function fitValue<T extends string | number>(
   mode: SmartFitMode,
   mapping: FitValueMapping<T>
 ): T
-/**
- * fitValue - Truncates a string/number based on mode (legacy API)
- */
 export function fitValue(value: number | string, mode?: SmartFitMode): string
 export function fitValue<T extends string | number>(
   modeOrValue: SmartFitMode | number | string,
   mappingOrMode?: FitValueMapping<T> | SmartFitMode
 ): T | string {
-  // If first arg is a mode string and second is an object with normal/tight/limit, return mapping value
   if (
     typeof modeOrValue === 'string' &&
     ['normal', 'tight', 'limit'].includes(modeOrValue) &&
@@ -85,7 +83,6 @@ export function fitValue<T extends string | number>(
     return mapping[mode]
   }
 
-  // Otherwise, first arg is value, second is mode (or undefined) - truncate string
   const str = String(modeOrValue)
   const mode = (typeof mappingOrMode === 'string' ? mappingOrMode : 'normal') as SmartFitMode
   

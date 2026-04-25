@@ -3,8 +3,8 @@ import { AppClient } from './app-client'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Connect | Hearst',
-  description: 'Cinematic portfolio OS — positions, subscription flow, and projections.',
+  title: 'App | Hearst Connect',
+  description: 'Access institutional-grade yield vaults backed by Bitcoin mining.',
 }
 
 export default function AppPage() {
