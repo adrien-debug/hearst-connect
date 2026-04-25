@@ -45,12 +45,22 @@ const nextConfig = {
       },
       {
         source: '/launch-app',
-        destination: '/intro',
+        destination: '/app',
+        permanent: true,
+      },
+      {
+        source: '/products',
+        destination: '/app',
+        permanent: true,
+      },
+      {
+        source: '/vaults',
+        destination: '/app',
         permanent: true,
       },
       {
         source: '/vault',
-        destination: '/vaults',
+        destination: '/app',
         permanent: true,
       },
     ];
