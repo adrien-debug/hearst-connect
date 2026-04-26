@@ -185,10 +185,10 @@ export const TOKENS = {
     microFont: 'var(--dashboard-activity-row-font-micro)',
   },
   dock: {
-    buttonSize: 'var(--dashboard-dock-button-size)',
-    logoSize: 'var(--dashboard-dock-logo-size)',
-    dotSize: 'var(--dashboard-dock-dot-size)',
-    dotOffset: 'var(--dashboard-dock-dot-offset)',
+    buttonSize: 'var(--dashboard-dock-button-size, 52px)',
+    logoSize: 'var(--dashboard-dock-logo-size, 26px)',
+    dotSize: 'var(--dashboard-dock-dot-size, 4px)',
+    dotOffset: 'var(--dashboard-dock-dot-offset, 5px)',
   },
 }
 

@@ -37,17 +37,19 @@ export function PortfolioSummary({
   const [isClaimingAll, setIsClaimingAll] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const { actions: userActions, activity: userActivity } = useUserData()
+  const { actions: userActions, activity: userActivity, stats: userStats } = useUserData()
 
   const activeVaults = vaults.filter((v): v is ActiveVault => v.type === 'active')
   const availableVaults = vaults.filter((v): v is AvailableVault => v.type === 'available')
-  const maturedByDate = activeVaults
-    .map(v => ({ ...v, lockedUntilMs: v.lockedUntil }))
-    .sort((a, b) => a.lockedUntilMs - b.lockedUntilMs)
-  const nextMaturity = maturedByDate[0]?.maturity ?? null
   // Use client-only values to prevent hydration mismatch
   const safeAgg = mounted ? agg : { totalDeposited: 0, totalClaimable: 0, avgApr: 0, activeVaults: 0 }
+  const safeYieldClaimed = mounted ? userStats.totalYieldClaimed : 0
   const portfolioValue = safeAgg.totalDeposited + safeAgg.totalClaimable
+  const totalYieldEarned = safeAgg.totalClaimable + safeYieldClaimed
+  const yieldPct = safeAgg.totalDeposited > 0
+    ? (totalYieldEarned / safeAgg.totalDeposited) * 100
+    : 0
+  const nextDistribution = mounted ? computeNextDailyDistribution() : null
 
   const handleClaimAll = async () => {
     if (safeAgg.totalClaimable === 0 || isClaimingAll) return
@@ -126,34 +128,42 @@ export function PortfolioSummary({
             limit: TOKENS.spacing[3],
           }),
         }}>
-          {/* Position Value — Primary */}
+          {/* Portfolio Value — Primary, with lifetime yield delta */}
           <CockpitGauge
-            label="Position Value"
+            label="Portfolio Value"
             value={fmtUsd(portfolioValue)}
             valueCompact={fmtUsdCompact(portfolioValue)}
-            subtext={`${mounted ? activeVaults.length : 0} position${(mounted ? activeVaults.length : 0) !== 1 ? 's' : ''}`}
+            subtext={
+              totalYieldEarned > 0 ? (
+                <span style={{ color: TOKENS.colors.accent }}>
+                  +{fmtUsd(totalYieldEarned)} ({yieldPct >= 0 ? '+' : ''}{yieldPct.toFixed(2)}%)
+                </span>
+              ) : (
+                `${mounted ? activeVaults.length : 0} position${(mounted ? activeVaults.length : 0) !== 1 ? 's' : ''}`
+              )
+            }
             mode={mode}
             primary
             align="center"
           />
 
-          {/* Accrued Yield — Accent */}
+          {/* Yield Earned to Date — Accent */}
           <CockpitGauge
-            label="Accrued Yield"
-            value={`+${fmtUsd(safeAgg.totalClaimable)}`}
-            valueCompact={`+${fmtUsdCompact(safeAgg.totalClaimable)}`}
-            subtext={`${safeAgg.avgApr.toFixed(1)}% avg APY`}
+            label="Yield Earned to Date"
+            value={fmtUsd(totalYieldEarned)}
+            valueCompact={fmtUsdCompact(totalYieldEarned)}
+            subtext="USDC · distributed daily"
             mode={mode}
             accent
             align="center"
           />
-          
-          {/* Performance / Maturity */}
+
+          {/* Next Distribution — daily 00:00 UTC */}
           <CockpitGauge
-            label="Performance"
-            value={`${((safeAgg.totalClaimable / (safeAgg.totalDeposited || 1)) * 100).toFixed(1)}%`}
-            valueCompact={`${((safeAgg.totalClaimable / (safeAgg.totalDeposited || 1)) * 100).toFixed(1)}%`}
-            subtext={nextMaturity ? `Next maturity: ${nextMaturity}` : 'All positions active'}
+            label="Next Distribution"
+            value={nextDistribution?.relative ?? '—'}
+            valueCompact={nextDistribution?.relative ?? '—'}
+            subtext={nextDistribution?.absolute ?? ''}
             mode={mode}
             align="center"
           />
@@ -1169,6 +1179,30 @@ function formatActivityType(type: string) {
       return 'Withdrawal'
     default:
       return 'Deposit'
+  }
+}
+
+function computeNextDailyDistribution(): { relative: string; absolute: string } {
+  const now = new Date()
+  const next = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+    0, 0, 0, 0,
+  ))
+
+  const todayUtcDay = now.getUTCDate()
+  const nextUtcDay = next.getUTCDate()
+  const sameUtcMonth = now.getUTCMonth() === next.getUTCMonth() && now.getUTCFullYear() === next.getUTCFullYear()
+  const isTomorrow = sameUtcMonth ? nextUtcDay === todayUtcDay + 1 : true
+
+  const day = next.getUTCDate()
+  const month = next.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })
+  const absolute = `${day} ${month} · 00:00 UTC`
+
+  return {
+    relative: isTomorrow ? 'Tomorrow' : absolute,
+    absolute,
   }
 }
 

@@ -81,12 +81,16 @@ export function DockRadial({ onSelect }: DockRadialProps) {
         {/* Official Hearst wordmark monogram (green HB from /logos/hearst-connect.svg); larger hit area reads clearer than 22px */}
         <svg
           viewBox="572.6 466.87 129.26 142.86"
+          width={26}
+          height={26}
+          preserveAspectRatio="xMidYMid meet"
           aria-hidden
           style={{
             width: TOKENS.dock.logoSize,
             height: TOKENS.dock.logoSize,
             color: TOKENS.colors.accent,
             display: 'block',
+            flexShrink: 0,
           }}
         >
           <polygon fill="currentColor" points="601.74 466.87 572.6 466.87 572.6 609.73 601.74 609.73 601.74 549.07 633.11 579.43 665.76 579.43 601.74 517.46 601.74 466.87" />

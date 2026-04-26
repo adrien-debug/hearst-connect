@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { TOKENS, LINE_HEIGHT, VALUE_LETTER_SPACING } from './constants'
 import { fitValue, type SmartFitMode } from './smart-fit'
 
@@ -7,7 +8,7 @@ interface CockpitGaugeProps {
   label: string
   value: string
   valueCompact: string
-  subtext: string
+  subtext: ReactNode
   mode: SmartFitMode
   primary?: boolean
   accent?: boolean
