@@ -21,6 +21,7 @@ import type {
   DbRebalanceSignalInput,
   DbAgentLog,
   DbAgentLogInput,
+  DbAgentConfig,
   SignalStatus,
   AgentName,
 } from './schema'
@@ -653,5 +654,80 @@ function mapAgentLogRow(row: Record<string, unknown>): DbAgentLog {
     level: String(row.level) as DbAgentLog['level'],
     message: String(row.message),
     dataJson: row.data_json ? String(row.data_json) : null,
+  }
+}
+
+// ── Agent Config ────────────────────────────────────────────────────────
+
+const DEFAULT_CONFIG: Record<string, string> = {
+  btc_entry_price: '95000',
+  profit_levels: JSON.stringify([
+    { mult: 1.15, pct: 15 },
+    { mult: 1.35, pct: 20 },
+    { mult: 1.55, pct: 20 },
+    { mult: 1.80, pct: 20 },
+  ]),
+  fear_greed_low: '20',
+  fear_greed_high: '80',
+  yield_drift_threshold: '2',
+  allocation_drift_threshold: '5',
+  max_btc_sell_pct: '20',
+  watcher_interval_ms: '60000',
+  strategy_interval_ms: '300000',
+  audit_interval_ms: '600000',
+  signal_cooldown_hours: JSON.stringify({
+    TAKE_PROFIT: 24,
+    YIELD_ROTATE: 12,
+    REBALANCE: 48,
+    INCREASE_BTC: 24,
+    REDUCE_RISK: 6,
+  }),
+  strategy_prompt_extra: '',
+  audit_prompt_extra: '',
+  watcher_prompt_extra: '',
+}
+
+export class AgentConfigRepository {
+  static getAll(): Record<string, string> {
+    const db = getDb()
+    const rows = db.prepare('SELECT key, value FROM agent_config').all() as Array<{ key: string; value: string }>
+    const result: Record<string, string> = { ...DEFAULT_CONFIG }
+    for (const row of rows) {
+      result[row.key] = row.value
+    }
+    return result
+  }
+
+  static get(key: string): string {
+    const db = getDb()
+    const row = db.prepare('SELECT value FROM agent_config WHERE key = ?').get(key) as { value: string } | undefined
+    return row?.value ?? DEFAULT_CONFIG[key] ?? ''
+  }
+
+  static set(key: string, value: string): DbAgentConfig {
+    const db = getDb()
+    const now = Date.now()
+    db.prepare(
+      'INSERT INTO agent_config (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+    ).run(key, value, now)
+    return { key, value, updatedAt: now }
+  }
+
+  static setMany(entries: Record<string, string>): void {
+    const db = getDb()
+    const now = Date.now()
+    const stmt = db.prepare(
+      'INSERT INTO agent_config (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at'
+    )
+    const tx = db.transaction(() => {
+      for (const [key, value] of Object.entries(entries)) {
+        stmt.run(key, value, now)
+      }
+    })
+    tx()
+  }
+
+  static getDefaults(): Record<string, string> {
+    return { ...DEFAULT_CONFIG }
   }
 }

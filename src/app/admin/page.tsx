@@ -10,6 +10,8 @@ import { SettingsSection } from './sections/settings'
 import { SignalsSection } from './sections/signals'
 import { MarketSection } from './sections/market'
 import { SimulatorSection } from './sections/simulator'
+import { AgentConfigSection } from './sections/agent-config'
+import AgentsSection from './sections/agents'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { ADMIN_TOKENS as TOKENS } from './constants'
 
@@ -20,6 +22,8 @@ const SECTIONS: Record<string, React.ComponentType> = {
   signals: SignalsSection,
   market: MarketSection,
   simulator: SimulatorSection,
+  'agent-config': AgentConfigSection,
+  agents: AgentsSection,
   activity: ActivitySection,
   settings: SettingsSection,
 }
@@ -30,6 +34,8 @@ const SECTION_TITLES: Record<string, { title: string; subtitle: string }> = {
   signals: { title: 'Rebalancing Signals', subtitle: 'Agent signals — approve, reject or execute' },
   market: { title: 'Market Intelligence', subtitle: 'Live data, yields, sentiment & agent insights' },
   simulator: { title: 'Vault Simulator', subtitle: 'Projections multi-scénarios · Produit structuré crypto' },
+  'agent-config': { title: 'Agent Config', subtitle: 'Seuils, timings, prompts — tout se règle ici' },
+  agents: { title: 'Managed Agents', subtitle: 'Déclencher et monitorer les agents en temps réel' },
   activity: { title: 'Activity Log', subtitle: 'Recent actions and events' },
   settings: { title: 'Settings', subtitle: 'System configuration' },
 }

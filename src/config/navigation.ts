@@ -11,7 +11,6 @@ export const NAV_LINKS = [
   { href: '#intro', label: 'Integrations' },
   { href: '#feature-unified', label: 'Platform' },
   { href: '#developers', label: 'Solutions' },
-  { href: '#who', label: 'Contact' },
 ] as const
 
 export const CTA_LINKS = {

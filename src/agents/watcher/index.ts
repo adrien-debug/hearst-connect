@@ -4,12 +4,12 @@
  */
 
 import { fetchBtcPrice, fetchDeFiYields, fetchFearGreed, estimateMiningHashprice } from '../shared/api-sources'
-import { pushWebhook } from '../shared/hearst-api'
+import { pushWebhook, getAgentConfig } from '../shared/hearst-api'
 import { analyzeWithClaude } from '../shared/anthropic'
 import { checkAlerts } from './alerts'
 import type { MarketSnapshot } from '../shared/types'
 
-const PRICE_INTERVAL = 60_000
+let PRICE_INTERVAL = 60_000
 const YIELD_INTERVAL = 5 * 60_000
 const SENTIMENT_INTERVAL = 15 * 60_000
 
@@ -25,8 +25,18 @@ async function log(level: 'info' | 'warn' | 'error', message: string, data?: unk
   } catch {}
 }
 
+let promptExtra = ''
+
 async function collectAndPush() {
   try {
+    // Refresh config
+    try {
+      const cfg = await getAgentConfig()
+      const cfgInterval = parseInt(cfg.watcher_interval_ms || '60000', 10)
+      if (cfgInterval >= 10000) PRICE_INTERVAL = cfgInterval
+      promptExtra = cfg.watcher_prompt_extra || ''
+    } catch {}
+
     const now = Date.now()
     const btc = await fetchBtcPrice()
 
@@ -54,8 +64,9 @@ async function collectAndPush() {
     let notes: string | null = null
     try {
       notes = await analyzeWithClaude('watcher',
-        `Market snapshot:\n- BTC: $${btc.price.toFixed(0)} (24h: ${btc.change24h.toFixed(2)}%, 7d: ${btc.change7d.toFixed(2)}%)\n- USDC APY: ${cachedYields.usdcApy.toFixed(2)}%\n- USDT APY: ${cachedYields.usdtApy.toFixed(2)}%\n- BTC APY: ${cachedYields.btcApy.toFixed(2)}%\n- Fear & Greed: ${cachedSentiment.fearGreed} (${cachedSentiment.fearLabel})\n- Hashprice: ~$${hashprice}/PH/day\n\nProvide a 2-sentence market observation.`,
-        200
+        `Market snapshot:\n- BTC: $${btc.price.toFixed(0)} (24h: ${btc.change24h.toFixed(2)}%, 7d: ${btc.change7d.toFixed(2)}%)\n- USDC APY: ${cachedYields.usdcApy.toFixed(2)}%\n- USDT APY: ${cachedYields.usdtApy.toFixed(2)}%\n- BTC APY: ${cachedYields.btcApy.toFixed(2)}%\n- Fear & Greed: ${cachedSentiment.fearGreed} (${cachedSentiment.fearLabel})\n- Hashprice: ~$${hashprice}/PH/day\n\nRédige une observation de marché en 2-3 phrases.`,
+        200,
+        promptExtra || undefined
       )
     } catch {}
 
@@ -84,7 +95,12 @@ async function collectAndPush() {
 async function main() {
   await log('info', 'Market Watcher agent started')
   await collectAndPush()
-  setInterval(collectAndPush, PRICE_INTERVAL)
+
+  const loop = () => setTimeout(async () => {
+    await collectAndPush()
+    loop()
+  }, PRICE_INTERVAL)
+  loop()
 }
 
 main().catch(console.error)

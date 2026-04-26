@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ADMIN_TOKENS as TOKENS, MONO } from '../constants'
 import type { DbActivityEvent } from '@/lib/db/schema'
 
 const SYSTEM_EVENTS: { id: string; type: string; message: string; time: string; level: string }[] = []
@@ -70,74 +69,62 @@ export function ActivitySection() {
   const last24h = allActivity.filter((a) => isRecent(a.time, 24)).length
 
   return (
-    <div style={styles.container}>
+    <div className="activity-container">
       {/* Stats */}
-      <div style={styles.stats}>
+      <div className="activity-stats">
         <ActivityStat label="Total Events" value={totalEvents} />
         <ActivityStat label="System Events" value={systemCount} />
         <ActivityStat label="User Actions" value={liveCount} accent />
       </div>
 
       {/* Filters */}
-      <div style={styles.filters}>
+      <div className="activity-filters">
         <button
           onClick={() => setActiveFilter('all')}
-          style={{
-            ...styles.filterBtn,
-            background: activeFilter === 'all' ? TOKENS.colors.accent : TOKENS.colors.bgSidebar,
-            color: activeFilter === 'all' ? TOKENS.colors.black : TOKENS.colors.textSecondary,
-          }}
+          className={`activity-filter-btn ${activeFilter === 'all' ? 'activity-filter-btn-active' : ''}`}
         >
           All ({totalEvents})
         </button>
         <button
           onClick={() => setActiveFilter('system')}
-          style={{
-            ...styles.filterBtn,
-            background: activeFilter === 'system' ? TOKENS.colors.accent : TOKENS.colors.bgSidebar,
-            color: activeFilter === 'system' ? TOKENS.colors.black : TOKENS.colors.textSecondary,
-          }}
+          className={`activity-filter-btn ${activeFilter === 'system' ? 'activity-filter-btn-active' : ''}`}
         >
           System ({systemCount})
         </button>
         <button
           onClick={() => setActiveFilter('live')}
-          style={{
-            ...styles.filterBtn,
-            background: activeFilter === 'live' ? TOKENS.colors.accent : TOKENS.colors.bgSidebar,
-            color: activeFilter === 'live' ? TOKENS.colors.black : TOKENS.colors.textSecondary,
-          }}
+          className={`activity-filter-btn ${activeFilter === 'live' ? 'activity-filter-btn-active' : ''}`}
         >
           Users ({liveCount})
         </button>
       </div>
 
       {/* Activity List */}
-      <div style={styles.card}>
-        <div style={styles.listHeader}>
-          <span style={styles.headerCell}>Event</span>
-          <span style={styles.headerCell}>Type</span>
-          <span style={styles.headerCell}>Timestamp</span>
-          <span style={styles.headerCell}>Source</span>
+      <div className="activity-card">
+        <div className="activity-list-header">
+          <span className="activity-header-cell">Event</span>
+          <span className="activity-header-cell">Type</span>
+          <span className="activity-header-cell">Timestamp</span>
+          <span className="activity-header-cell">Source</span>
         </div>
-        <div style={styles.list}>
+        <div className="activity-list">
           {isLoading && (
-            <div style={styles.loadingRow}>
-              <div style={styles.spinner} />
+            <div className="activity-loading-row">
+              <div className="activity-spinner" />
               <span>Loading activities...</span>
             </div>
           )}
           {!isLoading && filteredActivity.length === 0 && (
-            <div style={styles.emptyRow}>No activities found for this filter</div>
+            <div className="activity-empty-row">No activities found for this filter</div>
           )}
           {!isLoading && filteredActivity.map((event) => (
-            <div key={event.id} style={styles.row}>
-              <div style={styles.cellEvent}>
-                <div style={styles.eventIcon}>{getIcon(event.type)}</div>
-                <span style={styles.eventMessage}>{event.message}</span>
+            <div key={event.id} className="activity-row">
+              <div className="activity-cell-event">
+                <div className="activity-event-icon">{getIcon(event.type)}</div>
+                <span className="activity-event-message">{event.message}</span>
               </div>
-              <span style={styles.cellType}>{event.type}</span>
-              <span style={styles.cellTime}>{event.time}</span>
+              <span className="activity-cell-type">{event.type}</span>
+              <span className="activity-cell-time">{event.time}</span>
               <SourceBadge source={event.source || 'system'} />
             </div>
           ))}
@@ -145,13 +132,13 @@ export function ActivitySection() {
       </div>
 
       {/* Pagination */}
-      <div style={styles.pagination}>
-        <span style={styles.pageInfo}>
+      <div className="activity-pagination">
+        <span className="activity-page-info">
           Showing {filteredActivity.length} of {totalEvents} events
         </span>
-        <div style={styles.pageButtons}>
-          <button style={styles.pageBtn} disabled>Previous</button>
-          <button style={styles.pageBtn} disabled>Next</button>
+        <div className="activity-page-buttons">
+          <button className="activity-page-btn" disabled>Previous</button>
+          <button className="activity-page-btn" disabled>Next</button>
         </div>
       </div>
     </div>
@@ -160,27 +147,16 @@ export function ActivitySection() {
 
 function ActivityStat({ label, value, accent = false }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div style={styles.statCard}>
-      <span style={{ ...styles.statValue, color: accent ? TOKENS.colors.accent : styles.statValue.color }}>{value}</span>
-      <span style={styles.statLabel}>{label}</span>
+    <div className="activity-stat-card">
+      <span className={`activity-stat-value ${accent ? '' : ''}`}>{value}</span>
+      <span className="activity-stat-label">{label}</span>
     </div>
   )
 }
 
 function SourceBadge({ source }: { source: 'system' | 'live' }) {
-  const colors: Record<string, string> = {
-    system: TOKENS.colors.textSecondary,
-    live: 'var(--color-info)',
-  }
-
   return (
-    <span
-      style={{
-        ...styles.sourceBadge,
-        color: colors[source] || TOKENS.colors.textSecondary,
-        borderColor: colors[source] || TOKENS.colors.textSecondary,
-      }}
-    >
+    <span className={`activity-source-badge activity-source-badge-${source}`}>
       {source}
     </span>
   )
@@ -223,170 +199,4 @@ function isRecent(time: string, hours: number): boolean {
   const eventTime = new Date(time).getTime()
   const cutoff = Date.now() - hours * 3600000
   return eventTime > cutoff
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[4],
-  },
-  stats: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: TOKENS.spacing[4],
-  },
-  statCard: {
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.lg,
-    padding: TOKENS.spacing[4],
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[1],
-  },
-  statValue: {
-    fontSize: TOKENS.fontSizes.xl,
-    fontWeight: TOKENS.fontWeights.black,
-    color: TOKENS.colors.accent,
-  },
-  statLabel: {
-    fontSize: TOKENS.fontSizes.xs,
-    color: TOKENS.colors.textSecondary,
-    textTransform: 'uppercase',
-    fontWeight: TOKENS.fontWeights.bold,
-  },
-  filters: {
-    display: 'flex',
-    gap: TOKENS.spacing[2],
-  },
-  filterBtn: {
-    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-    fontSize: TOKENS.fontSizes.xs,
-    fontWeight: TOKENS.fontWeights.bold,
-    cursor: 'pointer',
-  },
-  card: {
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.lg,
-    overflow: 'hidden',
-  },
-  listHeader: {
-    display: 'grid',
-    gridTemplateColumns: '3fr 1fr 2fr 1fr',
-    gap: TOKENS.spacing[4],
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgApp,
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.micro,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-    letterSpacing: TOKENS.letterSpacing.display,
-    color: TOKENS.colors.textSecondary,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-  },
-  headerCell: {
-    textAlign: 'left',
-  },
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  row: {
-    display: 'grid',
-    gridTemplateColumns: '3fr 1fr 2fr 1fr',
-    gap: TOKENS.spacing[4],
-    alignItems: 'center',
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-  },
-  cellEvent: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: TOKENS.spacing[3],
-  },
-  eventIcon: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: TOKENS.spacing[6],
-    height: TOKENS.spacing[6],
-    background: TOKENS.colors.bgTertiary,
-    borderRadius: TOKENS.radius.sm,
-    color: TOKENS.colors.accent,
-  },
-  eventMessage: {
-    fontSize: TOKENS.fontSizes.sm,
-    color: TOKENS.colors.textPrimary,
-  },
-  cellType: {
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.micro,
-    textTransform: 'uppercase',
-    color: TOKENS.colors.textSecondary,
-  },
-  cellTime: {
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.xs,
-    color: TOKENS.colors.textGhost,
-  },
-  sourceBadge: {
-    display: 'inline-block',
-    padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[2]}`,
-    border: `1px solid`,
-    borderRadius: TOKENS.radius.sm,
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.micro,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-  },
-  loadingRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: TOKENS.spacing[3],
-    padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[4]}`,
-    color: TOKENS.colors.textSecondary,
-  },
-  emptyRow: {
-    padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[4]}`,
-    textAlign: 'center',
-    color: TOKENS.colors.textGhost,
-  },
-  spinner: {
-    width: TOKENS.spacing[5],
-    height: TOKENS.spacing[5],
-    border: `2px solid ${TOKENS.colors.bgTertiary}`,
-    borderTopColor: TOKENS.colors.accent,
-    borderRadius: TOKENS.radius.full,
-    animation: 'spin 1s linear infinite',
-  },
-  pagination: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-  },
-  pageInfo: {
-    fontSize: TOKENS.fontSizes.sm,
-    color: TOKENS.colors.textSecondary,
-  },
-  pageButtons: {
-    display: 'flex',
-    gap: TOKENS.spacing[2],
-  },
-  pageBtn: {
-    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-    fontSize: TOKENS.fontSizes.sm,
-    cursor: 'pointer',
-  },
 }

@@ -38,11 +38,22 @@ const PRESETS: Record<string, { alloc: number[]; profits: ProfitLevel[] }> = {
   barbell: { alloc: [20, 0, 60, 20], profits: [{ price: 1.25, pct: 20, dest: 'usdc' }, { price: 1.55, pct: 20, dest: 'usdc' }, { price: 1.90, pct: 20, dest: 'reserve' }, { price: 2.10, pct: 20, dest: 'usdc' }] },
 }
 
-// Colors pulled from dashboard-vars.css asset tokens
-const POCKET_COLORS = ['#F7931A', '#4ADE80', '#3B82F6', '#A78BFA']
+// Pocket colors - read from CSS variables via getComputedStyle
+// Using dashboard-color-* tokens for consistency with dashboard section
+const getPocketColors = () => {
+  if (typeof window === 'undefined') return ['#F7931A', '#4ADE80', '#3B82F6', '#A78BFA']
+  const root = getComputedStyle(document.documentElement)
+  return [
+    root.getPropertyValue('--color-pocket-btc').trim() || '#F7931A',
+    root.getPropertyValue('--color-pocket-mining').trim() || '#4ADE80',
+    root.getPropertyValue('--color-pocket-stable').trim() || '#3B82F6',
+    root.getPropertyValue('--color-pocket-reserve').trim() || '#A78BFA',
+  ]
+}
 const POCKET_NAMES = ['BTC Spot', 'Mining', 'Stablecoins', 'Réserve']
 
-// Chart.js static colors (CSS variables don't work in Chart.js context)
+// Chart.js static colors (Chart.js doesn't support CSS variables in its context)
+// These are hardcoded because Chart.js canvas rendering doesn't have access to CSS custom properties
 const CHART_TEXT_SECONDARY = '#7A808A'
 const CHART_GRID_COLOR = 'rgba(255,255,255,.05)'
 const CHART_SUCCESS_BG = 'rgba(167,251,144,.55)'
@@ -149,6 +160,7 @@ export function SimulatorSection() {
   const [profitLevels, setProfitLevels] = useState<ProfitLevel[]>(PRESETS.balanced.profits.map(p => ({ ...p })))
   const [activeTab, setActiveTab] = useState<Scenario>('base')
   const [miningOverride, setMiningOverride] = useState<string>('')
+  const [pocketColors, setPocketColors] = useState(getPocketColors())
   const intervalRef = useRef<ReturnType<typeof setInterval>>(null)
 
   // Fetch live data
@@ -188,6 +200,7 @@ export function SimulatorSection() {
 
   useEffect(() => {
     fetchLive()
+    setPocketColors(getPocketColors())
     intervalRef.current = setInterval(fetchLive, 60000)
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [fetchLive])
@@ -248,25 +261,24 @@ export function SimulatorSection() {
 
   return (
     <div>
-      <style>{`@keyframes simPulse{0%,100%{opacity:1}50%{opacity:.3}}.sim-live-dot{animation:simPulse 2s infinite}`}</style>
       {/* Live bar */}
-      <div style={s.liveBar}>
+      <div className="simulator-live-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[1] }}>
-          <div className="sim-live-dot" style={s.liveDot} /><span style={{ fontSize: T.fontSizes.xs, color: T.colors.success, fontWeight: T.fontWeights.bold }}>LIVE</span>
+          <div className="simulator-live-dot" /><span className="simulator-live-badge">LIVE</span>
         </div>
         <LiveItem label="BTC/USD" value={fmtU(live.btcPrice)} />
         <LiveItem label="24h" value={fmtPct(live.btc24h)} color={cc(live.btc24h)} />
         <LiveItem label="USDC (Aave)" value={`${live.usdcApy.toFixed(2)}%`} color={T.colors.success} />
         <LiveItem label="USDT (Aave)" value={`${live.usdtApy.toFixed(2)}%`} color={T.colors.success} />
         <div>
-          <span style={s.ll}>Fear & Greed</span>
-          <span style={{ ...s.lv, color: live.fearGreed < 30 ? T.colors.danger : live.fearGreed > 70 ? T.colors.success : T.colors.warning }}>{live.fearGreed} — {live.fearLabel}</span>
-          <div style={s.fgBar}><div style={{ height: '100%', width: `${live.fearGreed}%`, borderRadius: T.radius.full, background: `hsl(${fgHue},70%,50%)`, transition: `width ${T.transitions.slow}` }} /></div>
+          <span className="simulator-live-label">Fear & Greed</span>
+          <span className="simulator-live-value" style={{ color: live.fearGreed < 30 ? T.colors.danger : live.fearGreed > 70 ? T.colors.success : T.colors.warning }}>{live.fearGreed} — {live.fearLabel}</span>
+          <div className="simulator-fear-bar"><div style={{ height: '100%', width: `${live.fearGreed}%`, borderRadius: T.radius.full, background: `hsl(${fgHue},70%,50%)`, transition: `width ${T.transitions.slow}` }} /></div>
         </div>
         <LiveItem label="Mining" value={`${effectiveMining.toFixed(1)}%/yr`} color={T.colors.success} />
       </div>
 
-      <div style={s.layout}>
+      <div className="simulator-layout">
         {/* LEFT INPUTS */}
         <div>
           <Card title="Investissement">
@@ -276,26 +288,26 @@ export function SimulatorSection() {
           </Card>
 
           <Card title="Profil">
-            <div style={s.presetRow}>
+            <div className="simulator-preset-row">
               {Object.keys(PRESETS).map(id => (
-                <button key={id} onClick={() => applyPreset(id)} style={{ ...s.presetBtn, ...(preset === id ? s.presetActive : {}) }}>{id === 'conservative' ? 'Conservateur' : id === 'balanced' ? 'Équilibré' : id === 'growth' ? 'Growth' : id === 'aggressive' ? 'Agressif' : 'Barbell'}</button>
+                <button key={id} onClick={() => applyPreset(id)} className={`simulator-preset-btn ${preset === id ? 'simulator-preset-active' : ''}`}>{id === 'conservative' ? 'Conservateur' : id === 'balanced' ? 'Équilibré' : id === 'growth' ? 'Growth' : id === 'aggressive' ? 'Agressif' : 'Barbell'}</button>
               ))}
             </div>
             {['BTC Spot', 'Mining', 'Stablecoins', 'Réserve'].map((name, i) => (
-              <div key={i} style={s.field}>
-                <label style={s.label}>{name}</label>
-                <div style={s.rangeRow}>
-                  <input type="range" min={0} max={100} value={alloc[i]} onChange={e => setAllocSlider(i, +e.target.value)} style={s.range} />
-                  <span style={s.rangeVal}>{alloc[i]}%</span>
+              <div key={i} className="simulator-field">
+                <label className="simulator-label">{name}</label>
+                <div className="simulator-range-row">
+                  <input type="range" min={0} max={100} value={alloc[i]} onChange={e => setAllocSlider(i, +e.target.value)} className="simulator-range" />
+                  <span className="simulator-range-val">{alloc[i]}%</span>
                 </div>
               </div>
             ))}
-            <div style={s.allocBar}>{alloc.map((v, i) => <div key={i} style={{ width: `${v}%`, height: '100%', background: POCKET_COLORS[i], transition: `width ${T.transitions.slow}` }} />)}</div>
-            <div style={s.allocLegend}>{POCKET_NAMES.map((n, i) => <span key={i} style={s.legendItem}><span style={{ ...s.dot, background: POCKET_COLORS[i] }} />{n}</span>)}</div>
+            <div className="simulator-alloc-bar">{alloc.map((v, i) => <div key={i} style={{ width: `${v}%`, height: '100%', background: pocketColors[i], transition: `width ${T.transitions.slow}` }} />)}</div>
+            <div className="simulator-alloc-legend">{POCKET_NAMES.map((n, i) => <span key={i} className="simulator-legend-item"><span className="simulator-dot" style={{ background: pocketColors[i] }} />{n}</span>)}</div>
           </Card>
 
           <Card title="Yields live">
-            <div style={s.yieldGrid}>
+            <div className="simulator-yield-grid">
               <YieldCard label="Mining net/an" value={`${effectiveMining.toFixed(1)}%`} sub="Hashprice-based" />
               <YieldCard label="USDC DeFi" value={`${live.usdcApy.toFixed(2)}%`} sub="Aave v3" />
               <YieldCard label="USDT DeFi" value={`${live.usdtApy.toFixed(2)}%`} sub="Aave v3" />
@@ -305,41 +317,34 @@ export function SimulatorSection() {
           </Card>
 
           <Card title="Prise de profit BTC">
-            <table style={s.profitTable}>
-              <thead><tr><th style={s.profitTh}>Prix $</th><th style={s.profitTh}>% vendu</th><th style={s.profitTh}>Dest.</th><th style={s.profitTh}></th></tr></thead>
+            <table className="simulator-profit-table">
+              <thead><tr><th className="simulator-profit-th">Prix $</th><th className="simulator-profit-th">% vendu</th><th className="simulator-profit-th">Dest.</th><th className="simulator-profit-th"></th></tr></thead>
               <tbody>
                 {profitLevels.map((lv, i) => (
                   <tr key={i}>
-                    <td style={s.profitTd}><input type="number" value={Math.round(live.btcPrice * lv.price)} step={5000} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, price: +e.target.value / live.btcPrice }; setProfitLevels(next) }} style={s.profitInput} /></td>
-                    <td style={s.profitTd}><input type="number" value={lv.pct} min={0} max={100} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, pct: +e.target.value }; setProfitLevels(next) }} style={s.profitInput} />%</td>
-                    <td style={s.profitTd}><select value={lv.dest} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, dest: e.target.value }; setProfitLevels(next) }} style={s.profitSelect}><option value="usdc">USDC</option><option value="reserve">Réserve</option><option value="mining">Mining</option></select></td>
-                    <td style={s.profitTd}><button onClick={() => setProfitLevels(prev => prev.filter((_, j) => j !== i))} style={s.btnSm}>✕</button></td>
+                    <td className="simulator-profit-td"><input type="number" value={Math.round(live.btcPrice * lv.price)} step={5000} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, price: +e.target.value / live.btcPrice }; setProfitLevels(next) }} className="simulator-profit-input" /></td>
+                    <td className="simulator-profit-td"><input type="number" value={lv.pct} min={0} max={100} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, pct: +e.target.value }; setProfitLevels(next) }} className="simulator-profit-input" />%</td>
+                    <td className="simulator-profit-td"><select value={lv.dest} onChange={e => { const next = [...profitLevels]; next[i] = { ...lv, dest: e.target.value }; setProfitLevels(next) }} className="simulator-profit-select"><option value="usdc">USDC</option><option value="reserve">Réserve</option><option value="mining">Mining</option></select></td>
+                    <td className="simulator-profit-td"><button onClick={() => setProfitLevels(prev => prev.filter((_, j) => j !== i))} className="simulator-btn-sm">✕</button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button onClick={() => setProfitLevels(prev => [...prev, { price: (prev[prev.length - 1]?.price ?? 1.5) + 0.2, pct: 10, dest: 'usdc' }])} style={{ ...s.btnSm, marginTop: T.spacing[2] }}>+ Palier</button>
+            <button onClick={() => setProfitLevels(prev => [...prev, { price: (prev[prev.length - 1]?.price ?? 1.5) + 0.2, pct: 10, dest: 'usdc' }])} className="simulator-btn-sm simulator-btn-sm-with-margin">+ Palier</button>
           </Card>
         </div>
 
         {/* RIGHT OUTPUTS */}
         <div>
           {/* Tabs */}
-          <div style={s.tabs}>
+          <div className="simulator-tabs">
             {(['bear', 'base', 'bull'] as Scenario[]).map(sc => (
-              <button key={sc} onClick={() => setActiveTab(sc)} style={{
-                ...s.tab,
-                ...(activeTab === sc ? {
-                  borderColor: sc === 'bear' ? T.colors.danger : sc === 'bull' ? T.colors.success : T.colors.accent,
-                  color: sc === 'bear' ? T.colors.danger : sc === 'bull' ? T.colors.success : T.colors.accent,
-                  background: sc === 'bear' ? `${T.colors.danger}18` : sc === 'bull' ? `${T.colors.success}18` : `${T.colors.accent}18`,
-                } : {}),
-              }}>{sc === 'bear' ? 'Bear' : sc === 'base' ? 'Base' : 'Bull'}</button>
+              <button key={sc} onClick={() => setActiveTab(sc)} className={`simulator-tab ${activeTab === sc ? (sc === 'bear' ? 'simulator-tab-bear' : sc === 'bull' ? 'simulator-tab-bull' : 'simulator-tab-base') : ''}`}>{sc === 'bear' ? 'Bear' : sc === 'base' ? 'Base' : 'Bull'}</button>
             ))}
           </div>
 
           {/* KPIs */}
-          <div style={s.kpiGrid}>
+          <div className="simulator-kpi-grid">
             <Kpi label="Capital" value={fmtU(r.capital)} />
             <Kpi label="Valeur finale" value={fmtU(r.net)} />
             <Kpi label="P&L" value={fmtU(r.pnl)} color={cc(r.pnl)} />
@@ -351,22 +356,22 @@ export function SimulatorSection() {
           </div>
 
           {/* Charts */}
-          <div style={s.chartsRow}>
+          <div className="simulator-charts-row">
             <Card title="Valeur finale">
-              <div style={s.chartWrap}>
-                <Doughnut data={{ labels: POCKET_NAMES, datasets: [{ data: [r.btcTotal, r.mTotal, r.sTotal, r.rTotal], backgroundColor: POCKET_COLORS, borderWidth: 0 }] }} options={doughnutOpts} />
+              <div className="simulator-chart-wrap">
+                <Doughnut data={{ labels: POCKET_NAMES, datasets: [{ data: [r.btcTotal, r.mTotal, r.sTotal, r.rTotal], backgroundColor: pocketColors, borderWidth: 0 }] }} options={doughnutOpts} />
               </div>
             </Card>
             <Card title="Contribution P&L">
-              <div style={s.chartWrap}>
-                <Doughnut data={{ labels: POCKET_NAMES, datasets: [{ data: [r.btcContrib, r.mContrib, r.sContrib, r.rContrib].map(v => Math.max(v, 0)), backgroundColor: POCKET_COLORS, borderWidth: 0 }] }} options={doughnutOpts} />
+              <div className="simulator-chart-wrap">
+                <Doughnut data={{ labels: POCKET_NAMES, datasets: [{ data: [r.btcContrib, r.mContrib, r.sContrib, r.rContrib].map(v => Math.max(v, 0)), backgroundColor: pocketColors, borderWidth: 0 }] }} options={doughnutOpts} />
               </div>
             </Card>
           </div>
 
           {/* Sensitivity */}
           <Card title="Rendement par prix BTC">
-            <div style={s.chartWrap}>
+            <div className="simulator-chart-wrap">
               <Bar data={{
                 labels: sensPrices.map(p => '$' + fmt(p)),
                 datasets: [{ data: sensPerf, backgroundColor: sensPerf.map(v => v >= 0 ? CHART_SUCCESS_BG : CHART_DANGER_BG), borderRadius: CHART_BORDER_RADIUS }],
@@ -385,11 +390,11 @@ export function SimulatorSection() {
               const vals = [r.btcTotal, r.mTotal, r.sTotal, r.rTotal]
               const pnls = [r.btcPnl, r.mPnl, r.sPnl, r.rPnl]
               return (
-                <div key={i} style={s.pocketRow}>
-                  <div style={{ ...s.dot, background: POCKET_COLORS[i] }} />
-                  <span style={s.pocketName}>{name}</span>
-                  <span style={{ ...s.pocketVal, color: cc(pnls[i]) }}>{fmtU(vals[i])}</span>
-                  <span style={{ ...s.pocketPct, color: cc(pnls[i]) }}>{caps[i] > 0 ? fmtPct(pnls[i] / caps[i] * 100) : '—'}</span>
+                <div key={i} className="simulator-pocket-row">
+                  <div className="simulator-dot" style={{ background: pocketColors[i] }} />
+                  <span className="simulator-pocket-name">{name}</span>
+                  <span className="simulator-pocket-val" style={{ color: cc(pnls[i]) }}>{fmtU(vals[i])}</span>
+                  <span className="simulator-pocket-pct" style={{ color: cc(pnls[i]) }}>{caps[i] > 0 ? fmtPct(pnls[i] / caps[i] * 100) : '—'}</span>
                 </div>
               )
             })}
@@ -397,8 +402,8 @@ export function SimulatorSection() {
 
           {/* Comparison */}
           <Card title="Comparaison scénarios">
-            <table style={s.compTable}>
-              <thead><tr><th style={s.compTh}></th><th style={s.compTh}>Bear</th><th style={s.compTh}>Base</th><th style={s.compTh}>Bull</th></tr></thead>
+            <table className="simulator-comp-table">
+              <thead><tr><th className="simulator-comp-th"></th><th className="simulator-comp-th">Bear</th><th className="simulator-comp-th">Base</th><th className="simulator-comp-th">Bull</th></tr></thead>
               <tbody>
                 {[
                   ['BTC cible', (sc: Scenario) => fmtU(getYields(liveWithOverride, sc).btcExit)],
@@ -411,8 +416,8 @@ export function SimulatorSection() {
                   ['P&L Stable', (sc: Scenario) => fmtU(results[sc].sPnl)],
                 ].map(([label, fn, colored]) => (
                   <tr key={label as string}>
-                    <td style={{ ...s.compTd, fontWeight: T.fontWeights.bold }}>{label as string}</td>
-                    {(['bear', 'base', 'bull'] as Scenario[]).map(sc => <td key={sc} style={{ ...s.compTd, ...(colored ? { color: cc(results[sc].pnl) } : {}) }}>{(fn as (s: Scenario) => string)(sc)}</td>)}
+                    <td className="simulator-comp-td simulator-comp-td-bold">{label as string}</td>
+                    {(['bear', 'base', 'bull'] as Scenario[]).map(sc => <td key={sc} className="simulator-comp-td" style={colored ? { color: cc(results[sc].pnl) } : {}}>{(fn as (s: Scenario) => string)(sc)}</td>)}
                   </tr>
                 ))}
               </tbody>
@@ -422,21 +427,21 @@ export function SimulatorSection() {
           {/* Profit waterfall */}
           <Card title="Libération BTC">
             {r.profitLog.length > 0 ? (
-              <table style={s.compTable}>
-                <thead><tr><th style={s.compTh}>Prix</th><th style={s.compTh}>Vendu</th><th style={s.compTh}>Revenu</th><th style={s.compTh}>Dest.</th></tr></thead>
+              <table className="simulator-comp-table">
+                <thead><tr><th className="simulator-comp-th">Prix</th><th className="simulator-comp-th">Vendu</th><th className="simulator-comp-th">Revenu</th><th className="simulator-comp-th">Dest.</th></tr></thead>
                 <tbody>
                   {r.profitLog.map((p, i) => (
                     <tr key={i}>
-                      <td style={s.compTd}>{fmtU(p.price)}</td>
-                      <td style={s.compTd}>{p.sold.toFixed(4)} BTC</td>
-                      <td style={s.compTd}>{fmtU(p.revenue)}</td>
-                      <td style={s.compTd}>{p.dest.toUpperCase()}</td>
+                      <td className="simulator-comp-td">{fmtU(p.price)}</td>
+                      <td className="simulator-comp-td">{p.sold.toFixed(4)} BTC</td>
+                      <td className="simulator-comp-td">{fmtU(p.revenue)}</td>
+                      <td className="simulator-comp-td">{p.dest.toUpperCase()}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p style={{ color: T.colors.textSecondary, fontSize: T.fontSizes.sm }}>Aucun palier atteint dans ce scénario.</p>
+              <p className="simulator-empty-state">Aucun palier atteint dans ce scénario.</p>
             )}
           </Card>
         </div>
@@ -448,73 +453,21 @@ export function SimulatorSection() {
 // ── Sub-components ─────────────────────────────────────────────────────
 
 function LiveItem({ label, value, color }: { label: string; value: string; color?: string }) {
-  return <div><span style={s.ll}>{label}</span><span style={{ ...s.lv, ...(color ? { color } : {}) }}>{value}</span></div>
+  return <div><span className="simulator-live-label">{label}</span><span className="simulator-live-value" style={color ? { color } : {}}>{value}</span></div>
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div style={s.card}><h3 style={s.cardTitle}>{title}</h3>{children}</div>
+  return <div className="simulator-card"><h3 className="simulator-card-title">{title}</h3>{children}</div>
 }
 
 function Field({ label, value, onChange, type = 'text', ...rest }: { label: string; value: string | number; onChange: (v: string) => void; type?: string; [k: string]: unknown }) {
-  return <div style={s.field}><label style={s.label}>{label}</label><input type={type} value={value} onChange={e => onChange(e.target.value)} style={s.input} {...rest} /></div>
+  return <div className="simulator-field"><label className="simulator-label">{label}</label><input type={type} value={value} onChange={e => onChange(e.target.value)} className="simulator-input" {...rest} /></div>
 }
 
 function Kpi({ label, value, color }: { label: string; value: string; color?: string }) {
-  return <div style={s.kpi}><span style={s.kpiLabel}>{label}</span><span style={{ ...s.kpiValue, ...(color ? { color } : {}) }}>{value}</span></div>
+  return <div className="simulator-kpi"><span className="simulator-kpi-label">{label}</span><span className="simulator-kpi-value" style={color ? { color } : {}}>{value}</span></div>
 }
 
 function YieldCard({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return <div style={s.yieldCard}><span style={s.yl}>{label}</span><div style={s.yv}>{value}</div><div style={s.ys}>{sub}</div></div>
-}
-
-// ── Styles ─────────────────────────────────────────────────────────────
-
-const s: Record<string, React.CSSProperties> = {
-  liveBar: { display: 'flex', gap: T.spacing[4], alignItems: 'center', flexWrap: 'wrap', marginBottom: T.spacing[4], padding: `${T.spacing[3]} ${T.spacing[4]}`, background: T.colors.bgSurface, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.lg },
-  liveDot: { width: T.spacing[2], height: T.spacing[2], borderRadius: T.radius.full, background: T.colors.success },
-  ll: { display: 'block', fontSize: T.fontSizes.micro, color: T.colors.textSecondary, textTransform: 'uppercase', letterSpacing: T.letterSpacing.wide },
-  lv: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary, fontFamily: MONO },
-  fgBar: { width: T.spacing[16], height: T.spacing[1], borderRadius: T.radius.full, background: T.colors.bgTertiary, overflow: 'hidden', marginTop: T.spacing[1] },
-  layout: { display: 'grid', gridTemplateColumns: `${SIDEBAR_WIDTH} 1fr`, gap: T.spacing[4] },
-  card: { background: T.colors.bgSurface, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.lg, padding: T.spacing[4], marginBottom: T.spacing[3] },
-  cardTitle: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, margin: `0 0 ${T.spacing[3]}`, color: T.colors.textPrimary },
-  field: { marginBottom: T.spacing[2] },
-  label: { display: 'block', fontSize: T.fontSizes.micro, color: T.colors.textSecondary, marginBottom: T.spacing[1] },
-  input: { width: '100%', background: T.colors.bgTertiary, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.sm, padding: `${T.spacing[2]} ${T.spacing[3]}`, color: T.colors.textPrimary, fontSize: T.fontSizes.sm, fontFamily: 'inherit' },
-  presetRow: { display: 'flex', gap: T.spacing[2], marginBottom: T.spacing[3], flexWrap: 'wrap' },
-  presetBtn: { padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.sm, fontSize: T.fontSizes.micro, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.textSecondary, transition: `all ${T.transitions.fast}` },
-  presetActive: { borderColor: T.colors.accent, background: T.colors.accentSubtle, color: T.colors.accent },
-  rangeRow: { display: 'flex', alignItems: 'center', gap: T.spacing[2] },
-  range: { flex: 1, border: 'none', width: '100%' },
-  rangeVal: { fontSize: T.fontSizes.xs, color: T.colors.accent, minWidth: T.spacing[10], textAlign: 'right', fontWeight: T.fontWeights.bold, fontFamily: MONO },
-  allocBar: { height: T.spacing[2], borderRadius: T.radius.sm, display: 'flex', overflow: 'hidden', margin: `${T.spacing[1]} 0 ${T.spacing[1]}` },
-  allocLegend: { display: 'flex', gap: T.spacing[2], flexWrap: 'wrap', fontSize: T.fontSizes.micro },
-  legendItem: { display: 'flex', alignItems: 'center', gap: T.spacing[1], color: T.colors.textSecondary },
-  dot: { width: T.spacing[2], height: T.spacing[2], borderRadius: T.radius.full, display: 'inline-block', flexShrink: 0 },
-  yieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: T.spacing[2], marginBottom: T.spacing[2] },
-  yieldCard: { background: T.colors.bgTertiary, borderRadius: T.radius.sm, padding: T.spacing[2] },
-  yl: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary, textTransform: 'uppercase' },
-  yv: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, color: T.colors.success, fontFamily: MONO, marginTop: T.spacing[0] },
-  ys: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary },
-  profitTable: { width: '100%', fontSize: T.fontSizes.xs, borderCollapse: 'collapse' },
-  profitTh: { textAlign: 'left', padding: T.spacing[1], color: T.colors.textSecondary, borderBottom: `1px solid ${T.colors.borderSubtle}`, fontWeight: T.fontWeights.bold, fontSize: T.fontSizes.micro },
-  profitTd: { padding: T.spacing[1], borderBottom: `1px solid ${T.colors.borderSubtle}` },
-  profitInput: { width: T.spacing[12], background: T.colors.bgTertiary, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.sm, padding: `${T.spacing[1]} ${T.spacing[1]}`, color: T.colors.textPrimary, fontSize: T.fontSizes.micro, textAlign: 'center', fontFamily: MONO },
-  profitSelect: { background: T.colors.bgTertiary, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.sm, padding: `${T.spacing[1]} ${T.spacing[1]}`, color: T.colors.textPrimary, fontSize: T.fontSizes.micro },
-  btnSm: { padding: `${T.spacing[1]} ${T.spacing[2]}`, fontSize: T.fontSizes.micro, background: 'transparent', border: `1px solid ${T.colors.borderSubtle}`, color: T.colors.textSecondary, borderRadius: T.radius.sm, cursor: 'pointer' },
-  tabs: { display: 'flex', gap: T.spacing[2], marginBottom: T.spacing[3] },
-  tab: { padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.sm, fontSize: T.fontSizes.xs, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.textSecondary, transition: `all ${T.transitions.fast}` },
-  kpiGrid: { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${KPI_MIN_WIDTH}, 1fr))`, gap: T.spacing[2], marginBottom: T.spacing[3] },
-  kpi: { background: T.colors.bgTertiary, borderRadius: T.radius.md, padding: T.spacing[3] },
-  kpiLabel: { display: 'block', fontSize: T.fontSizes.micro, color: T.colors.textSecondary, textTransform: 'uppercase', letterSpacing: T.letterSpacing.wide },
-  kpiValue: { fontSize: T.fontSizes.lg, fontWeight: T.fontWeights.black, color: T.colors.textPrimary, fontFamily: MONO },
-  chartsRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: T.spacing[3] },
-  chartWrap: { position: 'relative', height: CHART_HEIGHT },
-  pocketRow: { display: 'flex', alignItems: 'center', gap: T.spacing[2], padding: `${T.spacing[2]} 0`, borderBottom: `1px solid ${T.colors.borderSubtle}` },
-  pocketName: { flex: 1, fontWeight: T.fontWeights.bold, fontSize: T.fontSizes.sm },
-  pocketVal: { fontWeight: T.fontWeights.bold, fontSize: T.fontSizes.sm, fontFamily: MONO },
-  pocketPct: { fontSize: T.fontSizes.xs, minWidth: T.spacing[12], textAlign: 'right', fontFamily: MONO },
-  compTable: { width: '100%', borderCollapse: 'collapse', fontSize: T.fontSizes.xs, fontFamily: MONO },
-  compTh: { textAlign: 'left', padding: T.spacing[2], color: T.colors.textSecondary, borderBottom: `1px solid ${T.colors.borderSubtle}`, fontWeight: T.fontWeights.bold },
-  compTd: { padding: T.spacing[2], borderBottom: `1px solid ${T.colors.borderSubtle}`, color: T.colors.textPrimary },
+  return <div className="simulator-yield-card"><span className="simulator-yield-label">{label}</span><div className="simulator-yield-value">{value}</div><div className="simulator-yield-sub">{sub}</div></div>
 }

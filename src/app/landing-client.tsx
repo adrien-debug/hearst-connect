@@ -177,6 +177,18 @@ function useAutoCarousel(itemCount: number, intervalMs = 5000) {
 export default function HubPageClient() {
   const { activeIndex, setActiveIndex, isPaused, setIsPaused, scrollNext, scrollPrev } = useAutoCarousel(VAULT_PRODUCT_SLIDES.length);
 
+  const [isHeaderVisible, setIsHeaderVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show header once scrolled past the hero section (~60% of viewport)
+      setIsHeaderVisible(window.scrollY > window.innerHeight * 0.6);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Force dark mode on landing — toggle désactivé sur cette page uniquement
   useEffect(() => {
     const root = document.documentElement
@@ -294,8 +306,11 @@ export default function HubPageClient() {
   return (
     <div className="hub-font-scope">
       {/* Header */}
-      <div className="header-wrapper">
+      <div className={`header-wrapper ${isHeaderVisible ? 'is-visible' : ''}`}>
         <header>
+          <a href="#" className="header-logo-link" aria-label="Hearst Connect">
+            <Image src="/logos/hearst-connect.svg" alt="Hearst Connect" className="header-logo" width={160} height={42} style={{ height: 'auto' }} priority />
+          </a>
           <input
             className="menu-checkbox"
             type="checkbox"
@@ -336,6 +351,12 @@ export default function HubPageClient() {
           <br />
           into structured yield.
         </h1>
+        <Link href={CTA_LINKS.launchApp.href} className="welcome-btn hub-chapter" prefetch>
+          <span>{CTA_LINKS.launchApp.label}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18" style={{ marginLeft: '4px' }}>
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </Link>
       </section>
 
       {/* Intro */}
@@ -516,30 +537,6 @@ export default function HubPageClient() {
               />
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Who */}
-      <section id="who" className="center" lang="en">
-        <div>
-          <h3>
-            Qualified investors
-            <br />
-            <span>Onchain access with institutional minimums</span>
-          </h3>
-          <a href={CTA_LINKS.viewOffering.href} className="hub-cta-primary">
-            {CTA_LINKS.viewOffering.label}
-          </a>
-        </div>
-        <div>
-          <h3>
-            Institutions
-            <br />
-            <span>Due diligence, reporting, and custody aligned to your mandate</span>
-          </h3>
-          <a href={CTA_LINKS.contactSales.href} className="hub-cta-secondary">
-            {CTA_LINKS.contactSales.label}
-          </a>
         </div>
       </section>
 

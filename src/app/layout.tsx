@@ -7,6 +7,7 @@ import { THEME_INLINE_SCRIPT } from '@/components/theme/theme-script';
 import '@/styles/tailwind.css';
 import '@/styles/theme/tokens.css';
 import '@/styles/components/subscription.css';
+import '@/styles/admin/admin.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 

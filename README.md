@@ -113,7 +113,8 @@ npx tsx src/agents/audit/index.ts
 - Admin addresses configured via `ADMIN_ADDRESSES` env variable
 - JWT session includes `isAdmin` flag for admin wallets
 - Admin API routes check `requireAdminAccess()` (JWT admin OR `x-admin-key` header)
-- `/admin` panel shows: Dashboard, Vaults, **Signals**, **Market**, Activity, Settings
+- `/admin` panel shows: Dashboard, Vaults, **Signals**, **Market**, Simulator, **Agent Config**, **Run Agents**, Activity, Settings
+- Agent tuning and one-off runs: `GET`/`PATCH` `/api/agents/config`, `POST` `/api/agents/run`, streaming `GET` `/api/agents/run/stream?agent=watcher|strategy|audit`
 
 **Security Features:**
 - HTTP-only cookies (XSS protection)

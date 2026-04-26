@@ -280,6 +280,71 @@ export const AgentsApi = {
       headers: { 'x-admin-key': ADMIN_KEY },
     })
   },
+  async getConfig(): Promise<{ config: Record<string, string>; defaults: Record<string, string> }> {
+    return fetchApi('/agents/config', {
+      headers: { 'x-admin-key': ADMIN_KEY },
+    })
+  },
+  async updateConfig(config: Record<string, string>): Promise<{ config: Record<string, string> }> {
+    return fetchApi('/agents/config', {
+      method: 'PUT',
+      headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    })
+  },
+
+  async run(agent: 'watcher' | 'strategy' | 'audit'): Promise<{
+    success: boolean
+    agent: string
+    report: string
+    signalsCreated: string[]
+    signalsUpdated: string[]
+    durationMs: number
+    eventCount: number
+  }> {
+    return fetchApi('/agents/run', {
+      method: 'POST',
+      headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent }),
+    })
+  },
+
+  // Returns a ReadableStream by fetching the SSE endpoint with admin headers.
+  // This avoids exposing the admin key in the URL (EventSource limitation workaround).
+  streamRun(
+    agent: 'watcher' | 'strategy' | 'audit',
+    onEvent: (raw: string) => void,
+    onDone: () => void,
+    onError: (err: Error) => void
+  ): AbortController {
+    const controller = new AbortController()
+    const base = typeof window !== 'undefined' ? window.location.origin : ''
+    fetch(`${base}/api/agents/run/stream?agent=${agent}`, {
+      headers: { 'x-admin-key': ADMIN_KEY },
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
+        const reader = res.body.getReader()
+        const dec = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += dec.decode(value, { stream: true })
+          const lines = buf.split('\n\n')
+          buf = lines.pop() ?? ''
+          for (const line of lines) {
+            if (line.startsWith('data: ')) onEvent(line.slice(6))
+          }
+        }
+        onDone()
+      })
+      .catch((e) => {
+        if (e.name !== 'AbortError') onError(e instanceof Error ? e : new Error(String(e)))
+      })
+    return controller
+  },
 }
 
 // Utility to convert DbVault to VaultConfig format for existing components

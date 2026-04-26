@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useVaultRegistry } from '@/hooks/useVaultRegistry'
-import { ADMIN_TOKENS as TOKENS, MONO, fmtUsd } from '../constants'
+import { fmtUsd } from '../constants'
 import { isAddress } from 'viem'
 import type { VaultConfig, VaultConfigInput } from '@/types/vault'
 
@@ -48,17 +48,16 @@ export function VaultsSection() {
   }
 
   return (
-    <div style={styles.container}>
-      {/* Toolbar */}
-      <div style={styles.toolbar}>
-        <div style={styles.searchBox}>
+    <div className="vaults-container">
+      <div className="vaults-toolbar">
+        <div className="vaults-search-box">
           <SearchIcon />
           <input
             type="text"
             placeholder="Search vaults..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={styles.searchInput}
+            className="vaults-search-input"
           />
         </div>
         <button
@@ -66,14 +65,13 @@ export function VaultsSection() {
             setEditingVault(null)
             setShowForm(true)
           }}
-          style={styles.addButton}
+          className="vaults-add-button"
         >
           <PlusIcon />
           Create Vault
         </button>
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <VaultFormModal
           initialData={editingVault}
@@ -86,24 +84,23 @@ export function VaultsSection() {
         />
       )}
 
-      {/* Vaults Table */}
-      <div style={styles.tableCard}>
+      <div className="vaults-table-card">
         {isLoading ? (
           <LoadingState />
         ) : filteredVaults.length === 0 ? (
           <EmptyState onCreate={() => setShowForm(true)} />
         ) : (
-          <div style={styles.table}>
-            <div style={styles.tableHeader}>
-              <span style={styles.th}>Vault</span>
-              <span style={styles.th}>Contract</span>
-              <span style={styles.th}>APR</span>
-              <span style={styles.th}>Target</span>
-              <span style={styles.th}>Min Deposit</span>
-              <span style={styles.th}>Lock</span>
-              <span style={styles.th}>Actions</span>
+          <div className="vaults-table">
+            <div className="vaults-table-header">
+              <span className="vaults-th">Vault</span>
+              <span className="vaults-th">Contract</span>
+              <span className="vaults-th">APR</span>
+              <span className="vaults-th">Target</span>
+              <span className="vaults-th">Min Deposit</span>
+              <span className="vaults-th">Lock</span>
+              <span className="vaults-th">Actions</span>
             </div>
-            <div style={styles.tableBody}>
+            <div className="vaults-table-body">
               {filteredVaults.map((vault) => (
                 <VaultRow
                   key={vault.id}
@@ -118,15 +115,14 @@ export function VaultsSection() {
         )}
       </div>
 
-      {/* Stats Footer */}
-      <div style={styles.footerStats}>
-        <span style={styles.footerStat}>
+      <div className="vaults-footer-stats">
+        <span className="vaults-footer-stat">
           Total: <strong>{vaults.length}</strong> vaults
         </span>
-        <span style={styles.footerStat}>
+        <span className="vaults-footer-stat">
           Active: <strong>{vaults.filter((v) => v.isActive !== false).length}</strong>
         </span>
-        <span style={styles.footerStat}>
+        <span className="vaults-footer-stat">
           Avg APR: <strong>{vaults.length > 0 ? (vaults.reduce((s, v) => s + v.apr, 0) / vaults.length).toFixed(1) : 0}%</strong>
         </span>
       </div>
@@ -146,27 +142,27 @@ function VaultRow({
   isDeleting: boolean
 }) {
   return (
-    <div style={styles.tableRow}>
-      <div style={styles.tdVault}>
-        {vault.image && <img src={vault.image} alt="" style={styles.vaultImage} />}
+    <div className="vaults-table-row">
+      <div className="vaults-td-vault">
+        {vault.image && <img src={vault.image} alt="" className="vaults-vault-image" />}
         <div>
-          <span style={styles.vaultName}>{vault.name}</span>
-          <span style={styles.vaultStrategy}>{vault.strategy}</span>
+          <span className="vaults-vault-name">{vault.name}</span>
+          <span className="vaults-vault-strategy">{vault.strategy}</span>
         </div>
       </div>
-      <span style={styles.tdMono}>
+      <span className="vaults-td-mono">
         {vault.vaultAddress.slice(0, 6)}...{vault.vaultAddress.slice(-4)}
       </span>
-      <span style={styles.tdApr}>{vault.apr}%</span>
-      <span style={styles.td}>{vault.target}</span>
-      <span style={styles.td}>{fmtUsd(vault.minDeposit)}</span>
-      <span style={styles.td}>{vault.lockPeriodDays} days</span>
-      <div style={styles.tdActions}>
-        <button onClick={onEdit} style={styles.actionBtn}>Edit</button>
+      <span className="vaults-td-apr">{vault.apr}%</span>
+      <span className="vaults-td">{vault.target}</span>
+      <span className="vaults-td">{fmtUsd(vault.minDeposit)}</span>
+      <span className="vaults-td">{vault.lockPeriodDays} days</span>
+      <div className="vaults-td-actions">
+        <button onClick={onEdit} className="vaults-action-btn">Edit</button>
         <button
           onClick={onDelete}
           disabled={isDeleting}
-          style={{ ...styles.actionBtn, ...styles.deleteBtn }}
+          className="vaults-action-btn vaults-delete-btn"
         >
           {isDeleting ? '...' : 'Delete'}
         </button>
@@ -205,6 +201,7 @@ function VaultFormModal({
     fees: initialData?.fees || '',
     risk: initialData?.risk || 'Moderate',
     image: initialData?.image || '',
+    isTest: initialData?.isTest ?? false,
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -231,17 +228,17 @@ function VaultFormModal({
   }
 
   return (
-    <div style={styles.modalOverlay}>
-      <div style={styles.modal}>
-        <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>
+    <div className="vaults-modal-overlay">
+      <div className="vaults-modal">
+        <div className="vaults-modal-header">
+          <h2 className="vaults-modal-title">
             {initialData ? 'Edit Vault' : 'Create New Vault'}
           </h2>
-          <button onClick={onCancel} style={styles.closeBtn}>×</button>
+          <button onClick={onCancel} className="vaults-close-btn">×</button>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formGrid}>
+        <form onSubmit={handleSubmit} className="vaults-form">
+          <div className="vaults-form-grid">
             <FormField
               label="Name *"
               value={formData.name}
@@ -320,11 +317,11 @@ function VaultFormModal({
             />
           </div>
 
-          <div style={styles.formActions}>
-            <button type="button" onClick={onCancel} style={styles.cancelBtn}>
+          <div className="vaults-form-actions">
+            <button type="button" onClick={onCancel} className="vaults-cancel-btn">
               Cancel
             </button>
-            <button type="submit" disabled={isSaving} style={styles.saveBtn}>
+            <button type="submit" disabled={isSaving} className="vaults-save-btn">
               {isSaving ? 'Saving...' : initialData ? 'Update Vault' : 'Create Vault'}
             </button>
           </div>
@@ -350,41 +347,37 @@ function FormField({
   placeholder?: string
 }) {
   return (
-    <div style={styles.field}>
-      <label style={styles.fieldLabel}>{label}</label>
+    <div className="vaults-field">
+      <label className="vaults-field-label">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        style={{
-          ...styles.fieldInput,
-          borderColor: error ? TOKENS.colors.danger : TOKENS.colors.borderSubtle,
-        }}
+        className={`vaults-field-input ${error ? 'error' : ''}`}
       />
-      {error && <span style={styles.fieldError}>{error}</span>}
+      {error && <span className="vaults-field-error">{error}</span>}
     </div>
   )
 }
 
 function LoadingState() {
   return (
-    <div style={styles.loadingState}>
-      <div style={styles.spinner} />
+    <div className="vaults-loading-state">
+      <div className="admin-spinner" />
     </div>
   )
 }
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div style={styles.emptyState}>
-      <p style={styles.emptyText}>No vaults configured yet</p>
-      <button onClick={onCreate} style={styles.emptyBtn}>Create First Vault</button>
+    <div className="vaults-empty-state">
+      <p className="vaults-empty-text">No vaults configured yet</p>
+      <button onClick={onCreate} className="vaults-empty-btn">Create First Vault</button>
     </div>
   )
 }
 
-// Icons
 function SearchIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -401,302 +394,4 @@ function PlusIcon() {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[4],
-  },
-  toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: TOKENS.spacing[4],
-  },
-  searchBox: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: TOKENS.spacing[3],
-    flex: 1,
-    maxWidth: TOKENS.spacing[20],
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-  },
-  searchInput: {
-    flex: 1,
-    background: 'transparent',
-    border: 'none',
-    color: TOKENS.colors.textPrimary,
-    fontSize: TOKENS.fontSizes.sm,
-    outline: 'none',
-  },
-  addButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: TOKENS.spacing[2],
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[5]}`,
-    background: TOKENS.colors.accent,
-    color: TOKENS.colors.black,
-    border: 'none',
-    borderRadius: TOKENS.radius.md,
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-  },
-  tableCard: {
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.lg,
-    overflow: 'hidden',
-  },
-  table: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  tableHeader: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 1.2fr',
-    gap: TOKENS.spacing[4],
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgApp,
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.micro,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-    letterSpacing: TOKENS.letterSpacing.display,
-    color: TOKENS.colors.textSecondary,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-  },
-  tableBody: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  tableRow: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr 0.8fr 0.8fr 1fr 0.8fr 1.2fr',
-    gap: TOKENS.spacing[4],
-    alignItems: 'center',
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-    transition: 'background 0.15s ease',
-  },
-  th: {
-    textAlign: 'left',
-  },
-  tdVault: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: TOKENS.spacing[3],
-  },
-  vaultImage: {
-    width: TOKENS.spacing[10],
-    height: TOKENS.spacing[10],
-    borderRadius: TOKENS.radius.md,
-    objectFit: 'cover',
-  },
-  vaultName: {
-    display: 'block',
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.bold,
-    color: TOKENS.colors.textPrimary,
-  },
-  vaultStrategy: {
-    display: 'block',
-    fontSize: TOKENS.fontSizes.micro,
-    color: TOKENS.colors.textGhost,
-    marginTop: TOKENS.spacing[1],
-  },
-  tdMono: {
-    fontFamily: MONO,
-    fontSize: TOKENS.fontSizes.xs,
-    color: TOKENS.colors.textSecondary,
-  },
-  tdApr: {
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.black,
-    color: TOKENS.colors.accent,
-  },
-  td: {
-    fontSize: TOKENS.fontSizes.sm,
-    color: TOKENS.colors.textSecondary,
-  },
-  tdActions: {
-    display: 'flex',
-    gap: TOKENS.spacing[2],
-  },
-  actionBtn: {
-    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-    background: 'transparent',
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-    fontSize: TOKENS.fontSizes.xs,
-    fontWeight: TOKENS.fontWeights.bold,
-    cursor: 'pointer',
-  },
-  deleteBtn: {
-    borderColor: TOKENS.colors.danger,
-    color: TOKENS.colors.danger,
-  },
-  footerStats: {
-    display: 'flex',
-    gap: TOKENS.spacing[6],
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    fontSize: TOKENS.fontSizes.sm,
-    color: TOKENS.colors.textSecondary,
-  },
-  footerStat: {
-    fontFamily: MONO,
-  },
-  modalOverlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'var(--color-bg-overlay)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 'var(--z-dropdown)',
-    padding: TOKENS.spacing[6],
-  },
-  modal: {
-    width: '100%',
-    maxWidth: TOKENS.spacing[50],
-    maxHeight: '90vh',
-    background: TOKENS.colors.bgSidebar,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.lg,
-    overflow: 'auto',
-  },
-  modalHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${TOKENS.spacing[5]} ${TOKENS.spacing[6]}`,
-    borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
-  },
-  modalTitle: {
-    fontSize: TOKENS.fontSizes.lg,
-    fontWeight: TOKENS.fontWeights.black,
-    textTransform: 'uppercase',
-    margin: 0,
-  },
-  closeBtn: {
-    width: TOKENS.spacing[8],
-    height: TOKENS.spacing[8],
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'transparent',
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-    fontSize: TOKENS.fontSizes.lg,
-    cursor: 'pointer',
-  },
-  form: {
-    padding: TOKENS.spacing[6],
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: TOKENS.spacing[4],
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[2],
-  },
-  fieldLabel: {
-    fontSize: TOKENS.fontSizes.xs,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-    color: TOKENS.colors.textSecondary,
-  },
-  fieldInput: {
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-    background: TOKENS.colors.bgTertiary,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textPrimary,
-    fontSize: TOKENS.fontSizes.sm,
-    outline: 'none',
-  },
-  fieldError: {
-    fontSize: TOKENS.fontSizes.xs,
-    color: TOKENS.colors.danger,
-  },
-  formActions: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: TOKENS.spacing[3],
-    marginTop: TOKENS.spacing[6],
-    paddingTop: TOKENS.spacing[6],
-    borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
-  },
-  cancelBtn: {
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[5]}`,
-    background: 'transparent',
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textSecondary,
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.bold,
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-  },
-  saveBtn: {
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[5]}`,
-    background: TOKENS.colors.accent,
-    border: 'none',
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.black,
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.bold,
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-  },
-  loadingState: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: TOKENS.spacing[12],
-  },
-  spinner: {
-    width: TOKENS.spacing[6],
-    height: TOKENS.spacing[6],
-    border: `2px solid ${TOKENS.colors.bgTertiary}`,
-    borderTopColor: TOKENS.colors.accent,
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-  },
-  emptyState: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: TOKENS.spacing[12],
-    gap: TOKENS.spacing[4],
-  },
-  emptyText: {
-    fontSize: TOKENS.fontSizes.md,
-    color: TOKENS.colors.textSecondary,
-    margin: 0,
-  },
-  emptyBtn: {
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[6]}`,
-    background: TOKENS.colors.accent,
-    color: TOKENS.colors.black,
-    border: 'none',
-    borderRadius: TOKENS.radius.md,
-    fontSize: TOKENS.fontSizes.sm,
-    fontWeight: TOKENS.fontWeights.bold,
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-  },
 }

@@ -185,6 +185,14 @@ export function initDb(): void {
     CREATE INDEX IF NOT EXISTS idx_agent_logs_level ON agent_logs(level);
   `)
 
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS agent_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+    );
+  `)
+
   // Apply performance indexes
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_vaults_address ON vaults(vault_address);

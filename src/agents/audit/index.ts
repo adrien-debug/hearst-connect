@@ -3,13 +3,14 @@
  * Validates signals, monitors risks, generates daily reports
  */
 
-import { pushWebhook, getSignals, getLatestMarket } from '../shared/hearst-api'
+import { pushWebhook, getSignals, getLatestMarket, getAgentConfig } from '../shared/hearst-api'
 import { analyzeWithClaude } from '../shared/anthropic'
 import { sendSlackNotification, formatDailyReport, formatCriticalAlert } from '../shared/slack'
 import { runRiskChecks } from './risk-checks'
 import { generateDailyReport } from './reports'
 
-const AUDIT_INTERVAL = 2 * 60_000
+let AUDIT_INTERVAL = 2 * 60_000
+let promptExtra = ''
 const DAILY_REPORT_HOUR = 8
 
 let lastReportDate = ''
@@ -70,6 +71,13 @@ async function checkDailyReport() {
 }
 
 async function tick() {
+  try {
+    const cfg = await getAgentConfig()
+    const cfgInterval = parseInt(cfg.audit_interval_ms || '120000', 10)
+    if (cfgInterval >= 30000) AUDIT_INTERVAL = cfgInterval
+    promptExtra = cfg.audit_prompt_extra || ''
+  } catch {}
+
   await auditPendingSignals()
   await checkDailyReport()
 }
@@ -77,7 +85,12 @@ async function tick() {
 async function main() {
   await log('info', 'Audit & Risk Monitor agent started')
   await tick()
-  setInterval(tick, AUDIT_INTERVAL)
+
+  const loop = () => setTimeout(async () => {
+    await tick()
+    loop()
+  }, AUDIT_INTERVAL)
+  loop()
 }
 
 main().catch(console.error)

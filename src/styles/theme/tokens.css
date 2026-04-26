@@ -105,6 +105,16 @@
   --z-overlay: 400;
   --z-modal: 500;
   --z-toast: 600;
+
+  /* Pocket colors for dashboard */
+  --color-pocket-btc: #F7931A;
+  --color-pocket-mining: #4ADE80;
+  --color-pocket-stable: #3B82F6;
+  --color-pocket-reserve: #A78BFA;
+
+  /* Text on colored backgrounds */
+  --color-on-accent: #000000;
+  --color-on-toggle: #ffffff;
 }
 
 /* ============================================

@@ -17,8 +17,7 @@
 		/* I am using Houdini PaintWorklets for this */
 		@layer speckled-backgrounds {
 			@supports (background: paint(something)) {
-				#beforeyougo .card,
-				#who > div {
+				#beforeyougo .card {
 			    --extra-confettiNumber: 250;
   			  --extra-confettiLengthVariance: 1;
 			    --extra-confettiWeightVariance: 1;
@@ -101,21 +100,6 @@
 					& nav {
 						overflow: auto;
 						overscroll-behavior: contain;
-					}
-				}
-			}
-
-			/* Hidey bar – http://brm.us/hidey-bar-2 */
-			@layer hidey-bar {
-				html {
-					container-type: scroll-state;
-				}
-				.header-wrapper:not(.header-wrapper:has(.menu-checkbox:checked)) {
-					transition: translate 0.25s;
-					translate: 0 0;
-
-					@container scroll-state(scrolled: bottom) {
-						translate: 0 -100%;
 					}
 				}
 			}
@@ -605,9 +589,15 @@
 			left: 0;
 			right: 0;
 
-	background: var(--dashboard-page);
-		border-bottom: 1px solid var(--dashboard-border);
-			z-index: 1;
+			background: var(--dashboard-page);
+			border-bottom: 1px solid var(--dashboard-border);
+			z-index: 100;
+			transform: translateY(-100%);
+			transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		}
+
+		.header-wrapper.is-visible {
+			transform: translateY(0);
 		}
 
 		header {
@@ -619,7 +609,13 @@
 			justify-content: flex-end;
 
 			padding-inline: 3rem; /* @TODO: Figure out if we can subgrid for this */
-			padding-block: 0.5rem;
+			padding-block: 0.85rem;
+		}
+
+		.header-logo-link {
+			margin-right: auto;
+			display: flex;
+			align-items: center;
 		}
 
 		/* Center nav on the header axis (desktop + mobile closed; mobile open uses fixed overlay) */
@@ -888,80 +884,6 @@
 				}
 			}
 		}
-	}
-
-	@layer who {
-		#who {
-			display: flex;
-			flex-direction: column;
-    	align-items: center;
-			text-align: center;
-			gap: var(--hub-space-lg);
-			justify-content: center;
-
-			@media (width >= 930px) {
-				flex-direction: row;
-				justify-content: center;
-				align-items: stretch;
-				gap: var(--hub-space-md);
-			}
-
-			> div {
-				min-height: 33vh;
-				min-height: 33svh;
-				min-height: 33dvh;
-				flex: 1 1 0;
-
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				gap: var(--hub-space-md);
-				max-width: min(36ch, 92vw);
-
-				@media (width >= 930px) {
-					min-height: 0;
-				}
-			}
-
-		h3 {
-			font-weight: 800;
-			font-size: var(--dashboard-text-2xl);
-	    line-height: 1.15;
-			letter-spacing: -0.03em;
-			margin: 0;
-
-			&::before {
-				content: '';
-				display: block;
-				width: min(2.5rem, 18vw);
-				height: var(--hub-accent-bar);
-				background: var(--dashboard-accent);
-				border-radius: var(--dashboard-radius-sm, 8px);
-				margin-inline: auto;
-				margin-bottom: var(--hub-space-sm);
-			}
-
-			span {
-				display: block;
-				margin-top: var(--hub-space-xs);
-				color: var(--dashboard-text-secondary);
-				font-weight: 500;
-				font-size: var(--dashboard-text-base);
-				letter-spacing: 0.03em;
-				line-height: 1.4;
-				text-wrap: balance;
-				max-width: 28ch;
-				margin-inline: auto;
-			}
-		}
-
-		.hub-cta-primary,
-		.hub-cta-secondary {
-			font-size: var(--dashboard-text-base);
-			font-weight: 600;
-		}
-	}
 	}
 
 	@layer beforeyougo {
@@ -1567,20 +1489,6 @@ width: clamp(2.5rem, 5.5vw, 3.5rem);
 }
 
 /* Menu button SVG icons inherit color from parent */
-.hub-font-scope .menu-button svg {
-  display: block;
-  width: var(--dashboard-text-xl);
-  height: var(--dashboard-text-xl);
-}
-
-#who h3 {
-  color: var(--dashboard-text-bright);
-}
-
-#who h3 span {
-  color: var(--dashboard-text-secondary);
-  font-weight: 400;
-}
 
 .feature-block p {
   font-weight: 400;

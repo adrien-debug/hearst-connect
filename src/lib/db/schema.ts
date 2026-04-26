@@ -191,3 +191,28 @@ export interface DbAgentLogInput {
   message: string
   dataJson?: string
 }
+
+// ── Agent Config ────────────────────────────────────────────────────────
+
+export interface DbAgentConfig {
+  key: string
+  value: string
+  updatedAt: number
+}
+
+export interface AgentConfigMap {
+  btc_entry_price: string
+  profit_levels: string // JSON array [{mult, pct}]
+  fear_greed_low: string
+  fear_greed_high: string
+  yield_drift_threshold: string
+  allocation_drift_threshold: string
+  max_btc_sell_pct: string
+  watcher_interval_ms: string
+  strategy_interval_ms: string
+  audit_interval_ms: string
+  signal_cooldown_hours: string // JSON {TAKE_PROFIT:24, ...}
+  strategy_prompt_extra: string
+  audit_prompt_extra: string
+  watcher_prompt_extra: string
+}

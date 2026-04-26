@@ -46,3 +46,8 @@ export async function getSignals(status?: string): Promise<unknown> {
 export async function getAgentsStatus(): Promise<unknown> {
   return apiCall('/agents/status')
 }
+
+export async function getAgentConfig(): Promise<Record<string, string>> {
+  const res = await apiCall<{ config: Record<string, string> }>('/agents/config')
+  return res.config
+}
