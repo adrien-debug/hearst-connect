@@ -137,6 +137,7 @@ export function SubscribePanel({ vault, onBack }: { vault: AvailableVault; onBac
       >
         <SubscriptionComposer
           vault={vault}
+          vaultConfig={vaultConfig}
           mode={mode}
           isLimit={isLimit}
           amount={amount}
