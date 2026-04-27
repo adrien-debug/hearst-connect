@@ -1,9 +1,11 @@
 /**
  * Centralized mock data for demo mode.
- * Populates every panel with realistic figures for screenshots.
+ * Hearst Connect ships 2 products: Hearst Prime (Moderate) and Hearst Growth (Growth).
+ * Each user can hold multiple cohort positions per product (Prime #1, Prime #2, Growth #1).
+ * Cohort positions inherit product mechanics; only inception/maturity/amount differ.
  */
 
-import type { VaultConfig } from '@/types/vault'
+import type { VaultConfig, MarketRegime, RebalanceWeights } from '@/types/vault'
 import type {
   UserPositionLine,
   UserActivityItem,
@@ -34,48 +36,86 @@ function syntheticReturns(targetApr: number, seed: number, months = 12): Array<{
   return out
 }
 
-// ───────────────────────────────────────────── Vaults registry
+// ───────────────────────────────────────────── Market regime (global)
+
+/** Active market regime — drives "currently active" scenario across all products. */
+export const DEMO_MARKET_REGIME: MarketRegime = 'sideways'
+
+// ───────────────────────────────────────────── Per-product rebalance weights
+
+const PRIME_REBALANCE: RebalanceWeights = {
+  bull: [
+    { label: 'RWA Mining',  pct: 55, pitch: 'Mining weight ↑, hedging lighter. Yield compounds faster.' },
+    { label: 'USDC Yield',  pct: 25, pitch: '' },
+    { label: 'BTC Hedged',  pct: 20, pitch: '' },
+  ],
+  sideways: [
+    { label: 'RWA Mining',  pct: 40, pitch: 'Stable mining production + diversified USDC yield keep generating returns at the default weights.' },
+    { label: 'USDC Yield',  pct: 30, pitch: '' },
+    { label: 'BTC Hedged',  pct: 30, pitch: '' },
+  ],
+  bear: [
+    { label: 'RWA Mining',  pct: 30, pitch: 'Distribution shifts toward USDC Yield and BTC Hedged. Volatility thresholds tighten, defensive allocation grows.' },
+    { label: 'USDC Yield',  pct: 45, pitch: '' },
+    { label: 'BTC Hedged',  pct: 25, pitch: '' },
+  ],
+}
+
+const GROWTH_REBALANCE: RebalanceWeights = {
+  bull: [
+    { label: 'BTC Spot',          pct: 80, pitch: 'Rising BTC price + mining cashflow accelerate portfolio value. Full BTC exposure maintained.' },
+    { label: 'Collateral Mining', pct: 20, pitch: '' },
+  ],
+  sideways: [
+    { label: 'BTC Spot',          pct: 70, pitch: 'Stable mining production keeps generating yield while BTC price trades flat. Default weights.' },
+    { label: 'Collateral Mining', pct: 30, pitch: '' },
+  ],
+  bear: [
+    { label: 'BTC Spot',          pct: 55, pitch: 'Mining weight increases to cushion BTC drawdowns. Reward distribution tilts to preservation.' },
+    { label: 'Collateral Mining', pct: 45, pitch: '' },
+  ],
+}
+
+// ───────────────────────────────────────────── Vaults registry (2 products)
 
 export const DEMO_VAULTS: VaultConfig[] = [
   {
-    id: 'demo-vault-flagship',
-    name: 'Flagship Mining Yield',
-    description: 'Our anchor allocation. Diversified exposure across tier-1 industrial Bitcoin mining operations in North America, hedged through hashprice swaps to smooth cashflow volatility. Monthly USDC distributions sourced directly from operating margin.',
+    id: 'demo-prime',
+    name: 'Hearst Prime',
+    description: 'A three-pocket income engine built for consistency. RWA Mining captures real-economy cashflow, USDC Yield anchors a stable income floor, and BTC Hedged adds delta-neutral upside. The tri-pillar mix smooths volatility across market cycles and distributes yield daily. The vault closes and principal unlocks once the 36% cumulative target is reached — or at 3-year maturity.',
     vaultAddress: ZERO_ADDR,
     usdcAddress: USDC_BASE,
     chain: base,
-    apr: 12.4,
-    target: '12.4%',
-    lockPeriodDays: 365,
-    minDeposit: 5000,
-    strategy: 'Hash-rate diversified · monthly distribution · hashprice-hedged',
-    fees: '1.5% performance · 0.25% management',
-    risk: 'Medium',
+    apr: 12,
+    target: '36%',
+    cumulativeTarget: 36,
+    lockPeriodDays: 36 * 30,
+    minDeposit: 500_000,
+    strategy: 'Multi-Strategy: RWA Mining · USDC Yield · BTC Hedged',
+    fees: '1.5% mgmt · 15% perf',
+    risk: 'Moderate',
     image: undefined,
     isTest: false,
     isActive: true,
-    createdAt: NOW() - 60 * DAY_MS,
+    createdAt: NOW() - 540 * DAY_MS,
     inception: NOW() - 540 * DAY_MS,
-    tvl: 18_420_000,
-    investorCount: 287,
-    historicalReturns: syntheticReturns(12.4, 1),
-    composition: [
-      { label: 'Tier-1 hashrate (Riot, Marathon)', pct: 48 },
-      { label: 'Mid-cap operators', pct: 27 },
-      { label: 'Hashprice swaps (hedge)', pct: 18 },
-      { label: 'Cash buffer', pct: 7 },
+    tvl: 28_400_000,
+    investorCount: 84,
+    historicalReturns: syntheticReturns(12, 1),
+    composition: PRIME_REBALANCE.sideways,
+    rebalanceWeights: PRIME_REBALANCE,
+    underlyingExposure: [
+      { label: 'BTC-correlated',         pct: 30 },
+      { label: 'Mining infrastructure',  pct: 40 },
+      { label: 'Stablecoin yield',       pct: 30 },
     ],
-    geo: [
-      { region: 'United States', pct: 64 },
-      { region: 'Canada', pct: 21 },
-      { region: 'Iceland', pct: 9 },
-      { region: 'Other', pct: 6 },
-    ],
+    productFamily: 'prime',
+    capitalRecoveryYears: 2,
+    productPitch: 'A three-pocket income engine built for consistency.',
     maxDrawdown: 4.2,
     volatility: 6.8,
     sharpe: 1.42,
-    cumulativeYield: 2_287_000,
-    earlyWithdrawalPenalty: '1.5% on remaining capital',
+    cumulativeYield: 3_120_000,
     custodian: 'Anchorage Digital · cold storage',
     auditReports: [
       { label: 'Quantstamp · Aug 2025', url: '#' },
@@ -83,268 +123,99 @@ export const DEMO_VAULTS: VaultConfig[] = [
     ],
   },
   {
-    id: 'demo-vault-conservative',
-    name: 'Conservative USDC Core',
-    description: 'Capital-preservation tier engineered for institutional treasuries. Short-duration USDC ladders backed by senior receivables from active mining operations. Monthly redemption windows, capital protected by overcollateralized claims.',
+    id: 'demo-growth',
+    name: 'Hearst Growth',
+    description: 'Bitcoin upside with a mining-backed cushion. BTC Spot drives direct cycle-level appreciation while Collateral Mining generates steady cashflow that supports returns during drawdowns. Allocation re-weights dynamically with the market regime, yield is distributed daily. The vault closes and principal unlocks once the 45% cumulative target is reached — or at 3-year maturity.',
     vaultAddress: ZERO_ADDR,
     usdcAddress: USDC_BASE,
     chain: base,
-    apr: 7.8,
-    target: '7.8%',
-    lockPeriodDays: 90,
-    minDeposit: 1000,
-    strategy: 'Receivable-backed USDC ladders · 90-day rolling · senior tranche',
-    fees: '0.5% management',
-    risk: 'Low',
+    apr: 15,
+    target: '45%',
+    cumulativeTarget: 45,
+    lockPeriodDays: 36 * 30,
+    minDeposit: 250_000,
+    strategy: 'Multi-Strategy: BTC Spot · Collateral Mining',
+    fees: '2% mgmt · 15% perf',
+    risk: 'Growth',
     image: undefined,
     isTest: false,
     isActive: true,
-    createdAt: NOW() - 90 * DAY_MS,
-    inception: NOW() - 720 * DAY_MS,
-    tvl: 32_140_000,
-    investorCount: 412,
-    historicalReturns: syntheticReturns(7.8, 7),
-    composition: [
-      { label: 'Senior receivables (90d)', pct: 62 },
-      { label: 'Senior receivables (60d)', pct: 24 },
-      { label: 'T-bill ladder', pct: 11 },
-      { label: 'Cash buffer', pct: 3 },
+    createdAt: NOW() - 540 * DAY_MS,
+    inception: NOW() - 540 * DAY_MS,
+    tvl: 12_650_000,
+    investorCount: 38,
+    historicalReturns: syntheticReturns(15, 7),
+    composition: GROWTH_REBALANCE.sideways,
+    rebalanceWeights: GROWTH_REBALANCE,
+    underlyingExposure: [
+      { label: 'BTC-correlated',         pct: 70 },
+      { label: 'Mining infrastructure',  pct: 30 },
+      { label: 'Stablecoin yield',       pct: 0 },
     ],
-    maxDrawdown: 0.4,
-    volatility: 1.1,
-    sharpe: 3.18,
-    cumulativeYield: 4_120_000,
-    earlyWithdrawalPenalty: 'None after lock window',
-    custodian: 'Fireblocks · MPC institutional',
-    auditReports: [
-      { label: 'Quantstamp · Feb 2025', url: '#' },
-    ],
-  },
-  {
-    id: 'demo-vault-growth',
-    name: 'Growth Hashrate +',
-    description: 'Higher-beta allocation tracking newly-commissioned hashrate expansions. Capital deployed into greenfield sites with 18-month build-out cycles, capturing the premium between forward hashprice curves and spot. Designed for accumulators with conviction on long-term BTC issuance economics.',
-    vaultAddress: ZERO_ADDR,
-    usdcAddress: USDC_BASE,
-    chain: base,
-    apr: 16.2,
-    target: '16.2%',
-    lockPeriodDays: 540,
-    minDeposit: 10000,
-    strategy: 'New-build hashrate · forward-curve arbitrage · 18mo build cycle',
-    fees: '2.0% performance · 0.25% management',
-    risk: 'High',
-    image: undefined,
-    isTest: false,
-    isActive: true,
-    createdAt: NOW() - 30 * DAY_MS,
-    inception: NOW() - 380 * DAY_MS,
-    tvl: 9_870_000,
-    investorCount: 94,
-    historicalReturns: syntheticReturns(16.2, 13),
-    composition: [
-      { label: 'Greenfield Texas (Stronghold)', pct: 38 },
-      { label: 'Greenfield Quebec (BitFarms)', pct: 26 },
-      { label: 'Forward hashprice curves', pct: 22 },
-      { label: 'Liquidity reserve', pct: 14 },
-    ],
-    geo: [
-      { region: 'United States (TX, OK)', pct: 52 },
-      { region: 'Canada (QC, AB)', pct: 31 },
-      { region: 'Norway', pct: 17 },
-    ],
+    productFamily: 'growth',
+    capitalRecoveryYears: 2,
+    productPitch: 'Bitcoin upside with a mining-backed cushion.',
     maxDrawdown: 11.4,
     volatility: 14.2,
     sharpe: 0.89,
-    cumulativeYield: 1_140_000,
-    earlyWithdrawalPenalty: '4% on remaining capital · waived after month 12',
+    cumulativeYield: 1_580_000,
     custodian: 'Anchorage Digital · cold storage',
     auditReports: [
       { label: 'Trail of Bits · Sep 2025', url: '#' },
     ],
   },
-  {
-    id: 'demo-vault-treasury',
-    name: 'Treasury Plus',
-    description: 'A parking lot for idle USDC with a yield premium. Curated short-duration notes (30-day average maturity) collateralized by mining-derived cashflows. Withdraw anytime after the lock window, no exit penalties.',
-    vaultAddress: ZERO_ADDR,
-    usdcAddress: USDC_BASE,
-    chain: base,
-    apr: 5.6,
-    target: '5.6%',
-    lockPeriodDays: 30,
-    minDeposit: 500,
-    strategy: 'Curated short-duration notes · 30-day average maturity · zero exit fee',
-    fees: '0.4% management',
-    risk: 'Very Low',
-    image: undefined,
-    isTest: false,
-    isActive: true,
-    createdAt: NOW() - 14 * DAY_MS,
-    inception: NOW() - 365 * DAY_MS,
-    tvl: 14_280_000,
-    investorCount: 526,
-    historicalReturns: syntheticReturns(5.6, 21),
-    composition: [
-      { label: 'Mining-cashflow notes (30d)', pct: 58 },
-      { label: 'Tokenized T-bills', pct: 32 },
-      { label: 'On-chain cash', pct: 10 },
-    ],
-    maxDrawdown: 0.1,
-    volatility: 0.6,
-    sharpe: 4.21,
-    cumulativeYield: 1_640_000,
-    earlyWithdrawalPenalty: 'None — withdraw anytime after lock window',
-    custodian: 'BitGo · qualified custody',
-    auditReports: [
-      { label: 'Quantstamp · Apr 2025', url: '#' },
-    ],
-  },
-  {
-    id: 'demo-vault-frontier',
-    name: 'Frontier Hashrate',
-    description: 'Opportunistic exposure to emerging-market mining sites — Africa, Latin America, Central Asia. Captures geographic energy arbitrage and frontier-market premium. 24-month commitment with quarterly distribution windows. Highest yield, highest variance.',
-    vaultAddress: ZERO_ADDR,
-    usdcAddress: USDC_BASE,
-    chain: base,
-    apr: 19.5,
-    target: '19.5%',
-    lockPeriodDays: 730,
-    minDeposit: 25000,
-    strategy: 'Frontier-market sites · energy-arbitrage · quarterly windows',
-    fees: '2.5% performance · 0.5% management',
-    risk: 'High',
-    image: undefined,
-    isTest: false,
-    isActive: true,
-    createdAt: NOW() - 7 * DAY_MS,
-    inception: NOW() - 280 * DAY_MS,
-    tvl: 5_640_000,
-    investorCount: 38,
-    historicalReturns: syntheticReturns(19.5, 27),
-    composition: [
-      { label: 'Africa (Ethiopia, Kenya)', pct: 34 },
-      { label: 'Latam (Paraguay, Argentina)', pct: 31 },
-      { label: 'Central Asia (Kazakhstan)', pct: 24 },
-      { label: 'Liquidity reserve', pct: 11 },
-    ],
-    geo: [
-      { region: 'Africa', pct: 34 },
-      { region: 'Latin America', pct: 31 },
-      { region: 'Central Asia', pct: 24 },
-      { region: 'Other', pct: 11 },
-    ],
-    maxDrawdown: 18.2,
-    volatility: 21.4,
-    sharpe: 0.71,
-    cumulativeYield: 720_000,
-    earlyWithdrawalPenalty: '6% on remaining capital · no early exits in year 1',
-    custodian: 'Anchorage Digital · multi-jurisdiction MPC',
-    auditReports: [
-      { label: 'Trail of Bits · Nov 2025', url: '#' },
-    ],
-  },
 ]
 
-// ───────────────────────────────────────────── User positions
+// ───────────────────────────────────────────── User positions (3 cohorts)
 
 const _positions: Array<Omit<UserPositionLine, 'daysRemaining' | 'progressPercent' | 'isMatured' | 'canWithdraw' | 'state'> & { state: UserPositionLine['state'] }> = [
   {
-    id: 'demo-pos-1',
-    vaultId: 'demo-vault-flagship',
-    vaultName: 'Flagship Mining Yield',
-    deposited: 145_000,
-    claimable: 1_854.32,
-    currentYield: 11_240.78,
-    createdAt: NOW() - 220 * DAY_MS,
-    maturityDate: NOW() + 145 * DAY_MS,
+    id: 'demo-pos-prime-1',
+    vaultId: 'demo-prime',
+    vaultName: 'Hearst Prime #1',
+    deposited: 500_000,
+    claimable: 0,
+    currentYield: 28_120,
+    createdAt: NOW() - 18 * 30 * DAY_MS,
+    maturityDate: NOW() + 18 * 30 * DAY_MS,
     state: 'active',
-    apr: 12.4,
-    target: '12.4%',
-    strategy: 'Hash-rate diversified · monthly distribution',
-    risk: 'Medium',
-    fees: '1.5% performance · 0.25% management',
+    apr: 12,
+    target: '36%',
+    strategy: 'Multi-Strategy: RWA Mining · USDC Yield · BTC Hedged',
+    risk: 'Moderate',
+    fees: '1.5% mgmt · 15% perf',
   },
   {
-    id: 'demo-pos-2',
-    vaultId: 'demo-vault-conservative',
-    vaultName: 'Conservative USDC Core',
-    deposited: 80_000,
-    claimable: 412.66,
-    currentYield: 2_184.44,
-    createdAt: NOW() - 60 * DAY_MS,
-    maturityDate: NOW() + 30 * DAY_MS,
+    id: 'demo-pos-prime-2',
+    vaultId: 'demo-prime',
+    vaultName: 'Hearst Prime #2',
+    deposited: 200_000,
+    claimable: 0,
+    currentYield: 5_400,
+    createdAt: NOW() - 8 * 30 * DAY_MS,
+    maturityDate: NOW() + 28 * 30 * DAY_MS,
     state: 'active',
-    apr: 7.8,
-    target: '7.8%',
-    strategy: 'Receivable-backed USDC ladders',
-    risk: 'Low',
-    fees: '0.5% management',
+    apr: 12,
+    target: '36%',
+    strategy: 'Multi-Strategy: RWA Mining · USDC Yield · BTC Hedged',
+    risk: 'Moderate',
+    fees: '1.5% mgmt · 15% perf',
   },
   {
-    id: 'demo-pos-3',
-    vaultId: 'demo-vault-growth',
-    vaultName: 'Growth Hashrate +',
-    deposited: 60_000,
-    claimable: 968.10,
-    currentYield: 4_218.50,
-    createdAt: NOW() - 110 * DAY_MS,
-    maturityDate: NOW() + 430 * DAY_MS,
+    id: 'demo-pos-growth-1',
+    vaultId: 'demo-growth',
+    vaultName: 'Hearst Growth #1',
+    deposited: 250_000,
+    claimable: 0,
+    currentYield: 14_060,
+    createdAt: NOW() - 12 * 30 * DAY_MS,
+    maturityDate: NOW() + 24 * 30 * DAY_MS,
     state: 'active',
-    apr: 16.2,
-    target: '16.2%',
-    strategy: 'New-build hashrate exposure',
-    risk: 'High',
-    fees: '2.0% performance · 0.25% management',
-  },
-  {
-    id: 'demo-pos-4',
-    vaultId: 'demo-vault-treasury',
-    vaultName: 'Treasury Plus',
-    deposited: 40_000,
-    claimable: 92.18,
-    currentYield: 386.92,
-    createdAt: NOW() - 14 * DAY_MS,
-    maturityDate: NOW() + 16 * DAY_MS,
-    state: 'active',
-    apr: 5.6,
-    target: '5.6%',
-    strategy: 'Curated short-duration notes',
-    risk: 'Very Low',
-    fees: '0.4% management',
-  },
-  // ── Matured positions — "Ready for exit" state for Portfolio screenshots ──
-  {
-    id: 'demo-pos-5',
-    vaultId: 'demo-vault-conservative',
-    vaultName: 'Conservative USDC Core',
-    deposited: 50_000,
-    claimable: 3_120.00,
-    currentYield: 3_120.00,
-    createdAt: NOW() - 95 * DAY_MS,
-    maturityDate: NOW() - 5 * DAY_MS,
-    state: 'active',
-    apr: 7.8,
-    target: '7.8%',
-    strategy: 'Receivable-backed USDC ladders',
-    risk: 'Low',
-    fees: '0.5% management',
-  },
-  {
-    id: 'demo-pos-6',
-    vaultId: 'demo-vault-treasury',
-    vaultName: 'Treasury Plus',
-    deposited: 25_000,
-    claimable: 116.40,
-    currentYield: 116.40,
-    createdAt: NOW() - 35 * DAY_MS,
-    maturityDate: NOW() - 2 * DAY_MS,
-    state: 'active',
-    apr: 5.6,
-    target: '5.6%',
-    strategy: 'Curated short-duration notes',
-    risk: 'Very Low',
-    fees: '0.4% management',
+    apr: 15,
+    target: '45%',
+    strategy: 'Multi-Strategy: BTC Spot · Collateral Mining',
+    risk: 'Growth',
+    fees: '2% mgmt · 15% perf',
   },
 ]
 
@@ -367,36 +238,61 @@ function hydrateDemoPosition(p: typeof _positions[number]): UserPositionLine {
 export const DEMO_POSITIONS: UserPositionLine[] = _positions.map(hydrateDemoPosition)
 
 // ───────────────────────────────────────────── User activity
+// Daily yield distribution events for the last 6 days, plus a monthly perf fee
+// and the original deposits. Mirrors the "Transactions" card of the mockups.
 
-export const DEMO_ACTIVITY: UserActivityItem[] = [
-  { id: 'a1',  type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 1_240.55, timestamp: NOW() - 2 * 60 * 60 * 1000 },
-  { id: 'a2',  type: 'deposit',  vaultId: 'demo-vault-treasury',     vaultName: 'Treasury Plus',            amount: 40_000,   timestamp: NOW() - 14 * DAY_MS },
-  { id: 'a3',  type: 'claim',    vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core',   amount: 318.22,   timestamp: NOW() - 1 * DAY_MS },
-  { id: 'a4',  type: 'deposit',  vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',        amount: 60_000,   timestamp: NOW() - 110 * DAY_MS },
-  { id: 'a5',  type: 'claim',    vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',        amount: 884.77,   timestamp: NOW() - 5 * DAY_MS },
-  { id: 'a6',  type: 'withdraw', vaultId: 'demo-vault-treasury',     vaultName: 'Treasury Plus',            amount: 25_000,   timestamp: NOW() - 22 * DAY_MS },
-  { id: 'a7',  type: 'deposit',  vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 145_000,  timestamp: NOW() - 220 * DAY_MS },
-  { id: 'a8',  type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 962.10,   timestamp: NOW() - 9 * DAY_MS },
-  { id: 'a9',  type: 'claim',    vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core',   amount: 295.18,   timestamp: NOW() - 32 * DAY_MS },
-  { id: 'a10', type: 'deposit',  vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core',   amount: 50_000,   timestamp: NOW() - 95 * DAY_MS },
-  { id: 'a11', type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 1_188.20, timestamp: NOW() - 38 * DAY_MS },
-  { id: 'a12', type: 'deposit',  vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core',   amount: 80_000,   timestamp: NOW() - 60 * DAY_MS },
-  { id: 'a13', type: 'claim',    vaultId: 'demo-vault-treasury',     vaultName: 'Treasury Plus',            amount: 84.10,    timestamp: NOW() - 45 * DAY_MS },
-  { id: 'a14', type: 'claim',    vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',        amount: 728.40,   timestamp: NOW() - 70 * DAY_MS },
-  { id: 'a15', type: 'deposit',  vaultId: 'demo-vault-treasury',     vaultName: 'Treasury Plus',            amount: 25_000,   timestamp: NOW() - 35 * DAY_MS },
-  { id: 'a16', type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 1_055.40, timestamp: NOW() - 68 * DAY_MS },
-  { id: 'a17', type: 'claim',    vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core',   amount: 312.90,   timestamp: NOW() - 90 * DAY_MS },
-  { id: 'a18', type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 1_104.85, timestamp: NOW() - 100 * DAY_MS },
-  { id: 'a19', type: 'claim',    vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',        amount: 632.10,   timestamp: NOW() - 130 * DAY_MS },
-  { id: 'a20', type: 'claim',    vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',    amount: 962.55,   timestamp: NOW() - 160 * DAY_MS },
-]
+const DAILY_PRIME = 164.38
+const DAILY_GROWTH = 102.74
+
+function shortHash(seed: string): string {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0
+  const hex = (h >>> 0).toString(16).padStart(8, '0')
+  return `0x${hex.slice(0, 4)}…${hex.slice(-2)}`
+}
+
+function dailyPrimeEvents(): UserActivityItem[] {
+  return Array.from({ length: 7 }, (_, i) => ({
+    id: `prime-daily-${i}`,
+    type: 'claim' as const,
+    vaultId: 'demo-prime',
+    vaultName: 'Hearst Prime #1',
+    amount: DAILY_PRIME,
+    txHash: shortHash(`prime-${i}`),
+    timestamp: NOW() - (i + 1) * DAY_MS,
+  }))
+}
+
+function dailyGrowthEvents(): UserActivityItem[] {
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: `growth-daily-${i}`,
+    type: 'claim' as const,
+    vaultId: 'demo-growth',
+    vaultName: 'Hearst Growth #1',
+    amount: DAILY_GROWTH,
+    txHash: shortHash(`growth-${i}`),
+    timestamp: NOW() - (i + 1) * DAY_MS,
+  }))
+}
+
+export const DEMO_ACTIVITY: UserActivityItem[] = ([
+  ...dailyPrimeEvents(),
+  ...dailyGrowthEvents(),
+  // Monthly performance fees (15% of monthly yield).
+  { id: 'fee-prime-1',  type: 'fee'     as const, vaultId: 'demo-prime',  vaultName: 'Hearst Prime #1',  amount: DAILY_PRIME * 30 * 0.15,  txHash: shortHash('fee-prime'),  timestamp: NOW() - 30 * DAY_MS },
+  { id: 'fee-growth-1', type: 'fee'     as const, vaultId: 'demo-growth', vaultName: 'Hearst Growth #1', amount: DAILY_GROWTH * 30 * 0.15, txHash: shortHash('fee-growth'), timestamp: NOW() - 30 * DAY_MS },
+  // Initial deposits.
+  { id: 'dep-prime-1',  type: 'deposit' as const, vaultId: 'demo-prime',  vaultName: 'Hearst Prime #1',  amount: 500_000, txHash: shortHash('dep-prime-1'),  timestamp: NOW() - 18 * 30 * DAY_MS },
+  { id: 'dep-prime-2',  type: 'deposit' as const, vaultId: 'demo-prime',  vaultName: 'Hearst Prime #2',  amount: 200_000, txHash: shortHash('dep-prime-2'),  timestamp: NOW() -  8 * 30 * DAY_MS },
+  { id: 'dep-growth-1', type: 'deposit' as const, vaultId: 'demo-growth', vaultName: 'Hearst Growth #1', amount: 250_000, txHash: shortHash('dep-growth-1'), timestamp: NOW() - 12 * 30 * DAY_MS },
+] as UserActivityItem[]).sort((a, b) => b.timestamp - a.timestamp)
 
 // ───────────────────────────────────────────── Stats (lifetime)
 
 export const DEMO_STATS: UserDataStats = {
   totalDeposited: DEMO_POSITIONS.reduce((s, p) => s + p.deposited, 0),
   totalClaimable: DEMO_POSITIONS.reduce((s, p) => s + p.claimable, 0),
-  totalYieldClaimed: 8_410.22,
+  totalYieldClaimed: DEMO_POSITIONS.reduce((s, p) => s + p.currentYield, 0),
   activePositionsCount: DEMO_POSITIONS.filter((p) => p.state !== 'withdrawn').length,
 }
 
@@ -424,8 +320,6 @@ export const DEMO_MARKET_LATEST = {
 }
 
 export const DEMO_MARKET_HISTORY = (() => {
-  // 168 hourly snapshots = 7 days × 24 hours. Dense enough for the admin
-  // market chart while remaining cheap to bundle.
   const HOURS = 168
   const snapshots = []
   const now = NOW()
@@ -454,9 +348,9 @@ export const DEMO_MARKET_HISTORY = (() => {
 
 export const DEMO_AGENTS_STATUS = {
   agents: [
-    { name: 'watcher',  status: 'online',  lastSeen: NOW() - 4 * 60 * 1000,  lastMessage: 'Snapshot collected — BTC $96,482 (+1.84% 24h)' },
-    { name: 'strategy', status: 'online',  lastSeen: NOW() - 12 * 60 * 1000, lastMessage: '2 signals emitted — 1 pending review' },
-    { name: 'audit',    status: 'online',  lastSeen: NOW() - 38 * 60 * 1000, lastMessage: 'Risk envelope nominal — no breaches' },
+    { name: 'watcher',  status: 'online', lastSeen: NOW() - 4 * 60 * 1000,  lastMessage: 'Snapshot collected — BTC $96,482 (+1.84% 24h)' },
+    { name: 'strategy', status: 'online', lastSeen: NOW() - 12 * 60 * 1000, lastMessage: 'Sideways regime confirmed — no rebalance signal' },
+    { name: 'audit',    status: 'online', lastSeen: NOW() - 38 * 60 * 1000, lastMessage: 'Risk envelope nominal — no breaches' },
   ],
 }
 
@@ -467,37 +361,37 @@ export const DEMO_SIGNALS = {
     {
       id: 'sig-1',
       timestamp: NOW() - 25 * 60 * 1000,
-      type: 'TAKE_PROFIT' as const,
-      vaultId: 'demo-vault-flagship',
-      description: 'BTC crossed +6% trigger over 7d window — recommend taking profit on Flagship.',
-      paramsJson: JSON.stringify({ pct: 8 }),
-      status: 'pending' as const,
-      riskScore: 38,
-      riskNotes: 'Liquidity adequate · slippage estimate < 0.4%',
+      type: 'REBALANCE' as const,
+      vaultId: 'demo-prime',
+      description: 'Sideways regime confirmed — Prime weights at baseline (40/30/30).',
+      paramsJson: JSON.stringify({ regime: 'sideways' }),
+      status: 'executed' as const,
+      riskScore: 12,
+      riskNotes: 'Baseline weights · no risk flags',
       createdBy: 'strategy' as const,
-      approvedAt: null,
-      executedAt: null,
+      approvedAt: NOW() - 30 * 60 * 1000,
+      executedAt: NOW() - 28 * 60 * 1000,
     },
     {
       id: 'sig-2',
       timestamp: NOW() - 2 * 60 * 60 * 1000,
       type: 'REBALANCE' as const,
-      vaultId: 'demo-vault-growth',
-      description: 'Allocation drift > 4% on Growth Hashrate — rebalance to target weights.',
-      paramsJson: JSON.stringify({ drift: 4.2 }),
-      status: 'approved' as const,
-      riskScore: 22,
-      riskNotes: 'Standard rebalance · within risk budget',
+      vaultId: 'demo-growth',
+      description: 'Sideways regime confirmed — Growth weights at baseline (70/30).',
+      paramsJson: JSON.stringify({ regime: 'sideways' }),
+      status: 'executed' as const,
+      riskScore: 14,
+      riskNotes: 'Baseline weights · no risk flags',
       createdBy: 'strategy' as const,
       approvedAt: NOW() - 90 * 60 * 1000,
-      executedAt: null,
+      executedAt: NOW() - 80 * 60 * 1000,
     },
     {
       id: 'sig-3',
       timestamp: NOW() - 6 * 60 * 60 * 1000,
       type: 'YIELD_ROTATE' as const,
-      vaultId: 'demo-vault-conservative',
-      description: 'USDC ladder maturing — rotate into 90d tranche at 7.9% APY.',
+      vaultId: 'demo-prime',
+      description: 'USDC ladder maturing inside Prime — rotate into 90d tranche at 7.9% APY.',
       paramsJson: null,
       status: 'executed' as const,
       riskScore: 10,
@@ -508,20 +402,6 @@ export const DEMO_SIGNALS = {
     },
     {
       id: 'sig-4',
-      timestamp: NOW() - 28 * 60 * 60 * 1000,
-      type: 'REDUCE_RISK' as const,
-      vaultId: 'demo-vault-frontier',
-      description: 'Frontier hashrate volatility spiked — recommend trimming exposure 15%.',
-      paramsJson: JSON.stringify({ trim: 15 }),
-      status: 'rejected' as const,
-      riskScore: 71,
-      riskNotes: 'Strategy overrides — long thesis intact',
-      createdBy: 'audit' as const,
-      approvedAt: null,
-      executedAt: null,
-    },
-    {
-      id: 'sig-5',
       timestamp: NOW() - 5 * 60 * 1000,
       type: 'INCREASE_BTC' as const,
       vaultId: null,
@@ -534,74 +414,17 @@ export const DEMO_SIGNALS = {
       approvedAt: null,
       executedAt: null,
     },
-    {
-      id: 'sig-6',
-      timestamp: NOW() - 14 * 60 * 60 * 1000,
-      type: 'TAKE_PROFIT' as const,
-      vaultId: 'demo-vault-growth',
-      description: 'Hashprice spike (+11% in 48h) — partial harvest on Growth recommended.',
-      paramsJson: JSON.stringify({ pct: 4 }),
-      status: 'approved' as const,
-      riskScore: 31,
-      riskNotes: 'Slippage estimate < 0.6% · within bounds',
-      createdBy: 'strategy' as const,
-      approvedAt: NOW() - 12 * 60 * 60 * 1000,
-      executedAt: null,
-    },
-    {
-      id: 'sig-7',
-      timestamp: NOW() - 9 * 60 * 60 * 1000,
-      type: 'YIELD_ROTATE' as const,
-      vaultId: 'demo-vault-treasury',
-      description: 'Stablecoin curve flattening — rotate Treasury Plus into 60d notes for +20bps.',
-      paramsJson: JSON.stringify({ targetTenorDays: 60 }),
-      status: 'pending' as const,
-      riskScore: 18,
-      riskNotes: 'No liquidity concerns · standard rotation',
-      createdBy: 'strategy' as const,
-      approvedAt: null,
-      executedAt: null,
-    },
-    {
-      id: 'sig-8',
-      timestamp: NOW() - 36 * 60 * 60 * 1000,
-      type: 'REBALANCE' as const,
-      vaultId: 'demo-vault-flagship',
-      description: 'Flagship overweight by 3.1% after recent inflows — trim back to target.',
-      paramsJson: JSON.stringify({ trim: 3.1 }),
-      status: 'executed' as const,
-      riskScore: 14,
-      riskNotes: 'Routine rebalance · no risk flags',
-      createdBy: 'strategy' as const,
-      approvedAt: NOW() - 32 * 60 * 60 * 1000,
-      executedAt: NOW() - 30 * 60 * 60 * 1000,
-    },
-    {
-      id: 'sig-9',
-      timestamp: NOW() - 50 * 60 * 1000,
-      type: 'REDUCE_RISK' as const,
-      vaultId: 'demo-vault-growth',
-      description: 'Forward hashprice curve flattened — trim Growth exposure 5% pending audit review.',
-      paramsJson: JSON.stringify({ trim: 5 }),
-      status: 'pending' as const,
-      riskScore: 44,
-      riskNotes: 'Audit team flagged for second-look',
-      createdBy: 'audit' as const,
-      approvedAt: null,
-      executedAt: null,
-    },
   ],
 }
 
 // ───────────────────────────────────────────── Admin activity log (system events)
 
 export const DEMO_ADMIN_ACTIVITY = [
-  { id: 'l1', userId: 'sys', vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',  type: 'claim'    as const, amount: 1240,  timestamp: NOW() - 2 * 60 * 60 * 1000 },
-  { id: 'l2', userId: 'sys', vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',      type: 'deposit'  as const, amount: 60000, timestamp: NOW() - 4 * 60 * 60 * 1000 },
-  { id: 'l3', userId: 'sys', vaultId: 'demo-vault-conservative', vaultName: 'Conservative USDC Core', type: 'claim'    as const, amount: 318,   timestamp: NOW() - 24 * 60 * 60 * 1000 },
-  { id: 'l4', userId: 'sys', vaultId: 'demo-vault-treasury',     vaultName: 'Treasury Plus',          type: 'withdraw' as const, amount: 25000, timestamp: NOW() - 22 * 24 * 60 * 60 * 1000 },
-  { id: 'l5', userId: 'sys', vaultId: 'demo-vault-flagship',     vaultName: 'Flagship Mining Yield',  type: 'deposit'  as const, amount: 145000,timestamp: NOW() - 220 * 24 * 60 * 60 * 1000 },
-  { id: 'l6', userId: 'sys', vaultId: 'demo-vault-growth',       vaultName: 'Growth Hashrate +',      type: 'claim'    as const, amount: 884,   timestamp: NOW() - 5 * 24 * 60 * 60 * 1000 },
+  { id: 'l1', userId: 'sys', vaultId: 'demo-prime',  vaultName: 'Hearst Prime #1',  type: 'claim'   as const, amount: DAILY_PRIME,  timestamp: NOW() -  2 * 60 * 60 * 1000 },
+  { id: 'l2', userId: 'sys', vaultId: 'demo-growth', vaultName: 'Hearst Growth #1', type: 'claim'   as const, amount: DAILY_GROWTH, timestamp: NOW() -  4 * 60 * 60 * 1000 },
+  { id: 'l3', userId: 'sys', vaultId: 'demo-prime',  vaultName: 'Hearst Prime #2',  type: 'deposit' as const, amount: 200_000,      timestamp: NOW() -  8 * 30 * DAY_MS },
+  { id: 'l4', userId: 'sys', vaultId: 'demo-prime',  vaultName: 'Hearst Prime #1',  type: 'deposit' as const, amount: 500_000,      timestamp: NOW() - 18 * 30 * DAY_MS },
+  { id: 'l5', userId: 'sys', vaultId: 'demo-growth', vaultName: 'Hearst Growth #1', type: 'deposit' as const, amount: 250_000,      timestamp: NOW() - 12 * 30 * DAY_MS },
 ]
 
 // ───────────────────────────────────────────── Per-vault activity (for vault detail page)
@@ -612,14 +435,18 @@ export function getDemoVaultActivity(vaultId: string): UserActivityItem[] {
 
 // ───────────────────────────────────────────── Position data (on-chain shape)
 
-export function getDemoPositionData(vaultId: string) {
-  const p = DEMO_POSITIONS.find((x) => x.vaultId === vaultId)
+export function getDemoPositionData(vaultId: string, positionId?: string) {
+  // When a cohort positionId is provided, target that exact cohort.
+  // Otherwise default to the first position of the vault — preserves prior behaviour.
+  const p = positionId
+    ? DEMO_POSITIONS.find((x) => x.id === positionId)
+    : DEMO_POSITIONS.find((x) => x.vaultId === vaultId)
   if (!p) return null
 
   return {
     capitalDeployed: p.deposited,
     accruedYield: p.claimable,
-    positionValue: p.deposited + p.claimable,
+    positionValue: p.deposited + p.currentYield,
     unlockTimeline: {
       daysRemaining: p.daysRemaining,
       maturityDate: new Date(p.maturityDate).toLocaleDateString('en-US', {

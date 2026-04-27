@@ -1,25 +1,19 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useAccount } from 'wagmi'
 import { TOKENS, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING, CHART_PALETTE } from './constants'
 import { formatVaultName } from './formatting'
-import { Modal, TransactionState } from './modal'
 import type { ActiveVault, MaturedVault } from './data'
-import type { VaultConfig } from '@/types/vault'
+import type { VaultConfig, MarketRegime } from '@/types/vault'
+import { DEMO_MARKET_REGIME } from '@/lib/demo/demo-data'
 import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
 import type { SmartFitMode } from './smart-fit'
-import { ActionButton } from './action-button'
 import { usePositionData } from '@/hooks/usePositionData'
-import { useVaultActions } from '@/hooks/useVault'
 import { useVaultById } from '@/hooks/useVaultRegistry'
-import { useTransaction } from '@/hooks/useTransaction'
 import { Skeleton } from './skeleton'
 import { WalletNotConnected, VaultNotConfigured, OnChainError } from './empty-states'
-import { useLiveActions } from '@/hooks/useLiveActions'
 import { useUserData } from '@/hooks/useUserData'
-
-type ModalType = 'claim' | 'manage' | 'exit' | null
 
 export function VaultDetailPanel({
   vault,
@@ -39,43 +33,32 @@ export function VaultDetailPanel({
   })
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
 
-  const vaultConfig = useVaultById(vault.id)
+  // ActiveVault.id is the unique cohort/position id (e.g. 'demo-pos-prime-1')
+  // while ActiveVault.productId points to the underlying vault config
+  // (e.g. 'demo-prime'). Fall back to id for non-cohort vaults (Available).
+  const productId = vault.productId ?? vault.id
+  const vaultConfig = useVaultById(productId)
 
   const {
     data: positionData,
     isLoading,
     error,
-    refresh,
     isVaultConfigured,
     isWalletConnected,
-    vaultAddress,
   } = usePositionData({
-    vaultId: vault.id,
+    vaultId: productId,
+    positionId: vault.productId ? vault.id : undefined,
     walletAddress: connectedAddress,
   })
 
-  const { isPending: isActionPending } = useVaultActions(
-    isVaultConfigured ? vaultAddress : undefined
-  )
-
-  const [activeModal, setActiveModal] = useState<ModalType>(null)
-  const transaction = useTransaction()
-
   // Hooks must run on every render — keep BEFORE the early returns below
   // (Rules of Hooks: order must be stable across renders).
-  const { claim: liveClaim, withdraw: liveWithdraw } = useLiveActions(vault.id)
   const { activity: allActivity } = useUserData()
-  const [activityFilter, setActivityFilter] = useState<'all' | 'claim' | 'deposit'>('all')
-  const vaultActivityRaw = useMemo(
-    () => allActivity.filter((a) => a.vaultId === vault.id),
-    [allActivity, vault.id],
+  // Filter to events for the active product (cohort-agnostic in demo for now).
+  const vaultActivity = useMemo(
+    () => allActivity.filter((a) => a.vaultId === productId).slice(0, 6),
+    [allActivity, productId],
   )
-  const vaultActivity = useMemo(() => {
-    const filtered = activityFilter === 'all'
-      ? vaultActivityRaw
-      : vaultActivityRaw.filter((a) => a.type === activityFilter)
-    return filtered.slice(0, 6)
-  }, [vaultActivityRaw, activityFilter])
 
   if (!isVaultConfigured) {
     return (
@@ -160,42 +143,6 @@ export function VaultDetailPanel({
   const isPositionReadyForExit = positionData?.canWithdraw ?? false
   const statusLabel = isPositionReadyForExit ? 'Ready for exit' : 'Active'
 
-  const handleClaim = async () => {
-    await transaction.execute(
-      async () => {
-        const result = await liveClaim()
-        if (!result.success) {
-          throw new Error(result.error || 'Claim failed')
-        }
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        refresh()
-      },
-      {
-        pending: 'Processing claim...',
-        success: `Claimed ${fmtUsdCompact(accruedYield)} successfully!`,
-        error: 'Claim failed. Please try again.',
-      }
-    )
-  }
-
-  const handleExit = async () => {
-    await transaction.execute(
-      async () => {
-        const result = await liveWithdraw()
-        if (!result.success) {
-          throw new Error(result.error || 'Withdraw failed')
-        }
-        await new Promise((resolve) => setTimeout(resolve, 3000))
-        refresh()
-      },
-      {
-        pending: 'Processing exit...',
-        success: 'Position exited successfully!',
-        error: 'Exit failed. Please contact support.',
-      }
-    )
-  }
-
   if (error && error.code !== 'WALLET_NOT_CONNECTED' && error.code !== 'VAULT_NOT_FOUND') {
     return (
       <div
@@ -250,13 +197,9 @@ export function VaultDetailPanel({
         vault={vault}
         subtitle={vault.strategy}
         chainName={vaultConfig?.chain?.name}
-        accruedYield={accruedYield}
         statusLabel={statusLabel}
         isReadyForExit={isPositionReadyForExit}
         onBack={onBack}
-        onClaim={() => setActiveModal('claim')}
-        onManage={() => setActiveModal('manage')}
-        onExit={() => setActiveModal('exit')}
         mode={mode}
         shellPadding={shellPadding}
       />
@@ -375,10 +318,10 @@ export function VaultDetailPanel({
             </DetailCard>
 
             <DetailCard title="Strategy details">
-              <VaultStrategyList vault={vault} vaultConfig={vaultConfig} />
-              {vaultConfig?.composition && vaultConfig.composition.length > 0 && (
-                <VaultCompositionBars composition={vaultConfig.composition} />
-              )}
+              <StrategyDetailsBody
+                vaultConfig={vaultConfig}
+                activeRegime={DEMO_MARKET_REGIME}
+              />
             </DetailCard>
           </div>
 
@@ -393,175 +336,13 @@ export function VaultDetailPanel({
             <DetailCard title="Capital recovery status">
               <CapitalRecoveryStatus />
             </DetailCard>
-            <DetailCard
-              title={`Transactions (${vaultActivityRaw.length})`}
-              headerRight={
-                <ActivityFilterTabs value={activityFilter} onChange={setActivityFilter} />
-              }
-            >
+            <DetailCard title="Transactions">
               <VaultActivityTimeline activity={vaultActivity} />
             </DetailCard>
           </div>
         </div>
       </div>
 
-      {/* Claim Modal */}
-      <Modal
-        isOpen={activeModal === 'claim'}
-        onClose={() => { setActiveModal(null); transaction.reset() }}
-        title="Claim Accrued Yield"
-        size="sm"
-        mode={mode}
-        footer={
-          transaction.isIdle && (
-            <div style={{ display: 'flex', gap: TOKENS.spacing[3] }}>
-              <ActionButton
-                label="Cancel"
-                variant="secondary"
-                onClick={() => setActiveModal(null)}
-              />
-              <ActionButton
-                label="Confirm Claim"
-                variant="accent"
-                disabled={isActionPending}
-                onClick={handleClaim}
-              />
-            </div>
-          )
-        }
-      >
-        {transaction.isIdle && (
-          <div style={{ textAlign: 'center', padding: TOKENS.spacing[4] }}>
-            <div style={{
-              fontSize: TOKENS.fontSizes.xxl,
-              fontWeight: TOKENS.fontWeights.black,
-              color: TOKENS.colors.accent,
-              marginBottom: TOKENS.spacing[3],
-            }}>
-              {fmtUsdCompact(accruedYield)}
-            </div>
-            <p style={{ color: TOKENS.colors.textSecondary, margin: 0 }}>
-              Available to claim now. This will transfer the accrued yield to your wallet.
-            </p>
-          </div>
-        )}
-        {transaction.status !== 'idle' && (
-          <TransactionState state={transaction.status} message={transaction.message} />
-        )}
-      </Modal>
-
-      {/* Manage Modal */}
-      <Modal
-        isOpen={activeModal === 'manage'}
-        onClose={() => setActiveModal(null)}
-        title="Manage Position"
-        size="md"
-        mode={mode}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
-          <ManageOption
-            title="Add Capital"
-            description="Increase your position size to compound returns"
-            onClick={() => {}}
-          />
-          <ManageOption
-            title="View History"
-            description="See all transactions and yield accruals"
-            onClick={() => {}}
-          />
-          <ManageOption
-            title="Download Statement"
-            description="Get a PDF summary of your position"
-            onClick={() => {}}
-          />
-          {isPositionReadyForExit && (
-            <ManageOption
-              title="Exit Position"
-              description="Withdraw your capital and accrued yield"
-              variant="danger"
-              onClick={() => { setActiveModal('exit') }}
-            />
-          )}
-        </div>
-      </Modal>
-
-      {/* Exit Modal */}
-      <Modal
-        isOpen={activeModal === 'exit'}
-        onClose={() => { setActiveModal(null); transaction.reset() }}
-        title="Exit Position"
-        size="sm"
-        mode={mode}
-        footer={
-          transaction.isIdle && (
-            <div style={{ display: 'flex', gap: TOKENS.spacing[3] }}>
-              <ActionButton
-                label="Cancel"
-                variant="secondary"
-                onClick={() => setActiveModal(null)}
-              />
-              <ActionButton
-                label="Confirm Exit"
-                variant="accent"
-                disabled={isActionPending}
-                onClick={handleExit}
-              />
-            </div>
-          )
-        }
-      >
-        {transaction.isIdle && (
-          <div style={{ padding: TOKENS.spacing[4] }}>
-            <div style={{
-              background: TOKENS.colors.bgSecondary,
-              borderRadius: TOKENS.radius.md,
-              padding: TOKENS.spacing[4],
-              marginBottom: TOKENS.spacing[4],
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: TOKENS.spacing[2],
-              }}>
-                <span style={{ color: TOKENS.colors.textSecondary }}>Capital to return</span>
-                <span style={{ color: TOKENS.colors.textPrimary, fontWeight: TOKENS.fontWeights.bold }}>
-                  {fmtUsdCompact(capitalDeployed)}
-                </span>
-              </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginBottom: TOKENS.spacing[2],
-              }}>
-                <span style={{ color: TOKENS.colors.textSecondary }}>Accrued yield</span>
-                <span style={{ color: TOKENS.colors.accent, fontWeight: TOKENS.fontWeights.bold }}>
-                  +{fmtUsdCompact(accruedYield)}
-                </span>
-              </div>
-              <div style={{
-                borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-                marginTop: TOKENS.spacing[2],
-                paddingTop: TOKENS.spacing[2],
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}>
-                <span style={{ color: TOKENS.colors.textPrimary, fontWeight: TOKENS.fontWeights.black }}>
-                  Total payout
-                </span>
-                <span style={{ color: TOKENS.colors.accent, fontWeight: TOKENS.fontWeights.black }}>
-                  {fmtUsdCompact(currentValue)}
-                </span>
-              </div>
-            </div>
-            <p style={{ color: TOKENS.colors.textSecondary, fontSize: TOKENS.fontSizes.xs, margin: 0 }}>
-              This will close your position and transfer all funds to your wallet.
-            </p>
-          </div>
-        )}
-        {transaction.status !== 'idle' && (
-          <TransactionState state={transaction.status} message={transaction.message} />
-        )}
-      </Modal>
     </div>
   )
 }
@@ -585,26 +366,18 @@ function PositionHeader({
   vault,
   subtitle,
   chainName,
-  accruedYield,
   statusLabel,
   isReadyForExit,
   onBack,
-  onClaim,
-  onManage,
-  onExit,
   mode,
   shellPadding,
 }: {
   vault: ActiveVault | MaturedVault
   subtitle?: string
   chainName?: string
-  accruedYield: number
   statusLabel: string
   isReadyForExit: boolean
   onBack?: () => void
-  onClaim: () => void
-  onManage: () => void
-  onExit: () => void
   mode: SmartFitMode
   shellPadding: number
 }) {
@@ -765,71 +538,8 @@ function PositionHeader({
             Daily distribution
           </span>
         </div>
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: TOKENS.spacing[2], flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {accruedYield > 0 && (
-            <HeaderActionButton label={`Claim ${fmtUsdCompact(accruedYield)}`} onClick={onClaim} variant="accent" />
-          )}
-          {isReadyForExit ? (
-            <HeaderActionButton label="Exit Position" onClick={onExit} variant="danger" />
-          ) : (
-            <HeaderActionButton label="Manage" onClick={onManage} variant="secondary" />
-          )}
-        </div>
       </div>
     </div>
-  )
-}
-
-/** HeaderActionButton — Solid button used in PositionHeader. Replaces the
- *  text-only HeaderActionPill which was hard to spot at a glance. */
-function HeaderActionButton({
-  label,
-  onClick,
-  variant,
-}: {
-  label: string
-  onClick: () => void
-  variant: 'accent' | 'secondary' | 'danger'
-}) {
-  const palette = {
-    accent: { bg: TOKENS.colors.accentSubtle, fg: TOKENS.colors.accent, border: TOKENS.colors.accent },
-    secondary: { bg: 'transparent', fg: TOKENS.colors.textPrimary, border: TOKENS.colors.borderStrong },
-    danger: { bg: 'transparent', fg: TOKENS.colors.danger, border: TOKENS.colors.danger },
-  }[variant]
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: TOKENS.spacing[2],
-        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-        background: palette.bg,
-        color: palette.fg,
-        border: `${TOKENS.borders.thin} solid ${palette.border}`,
-        borderRadius: TOKENS.radius.md,
-        fontFamily: TOKENS.fonts.sans,
-        fontSize: TOKENS.fontSizes.xs,
-        fontWeight: TOKENS.fontWeights.black,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-        cursor: 'pointer',
-        transition: TOKENS.transitions.fast,
-        whiteSpace: 'nowrap',
-      }}
-      onMouseEnter={(e) => {
-        if (variant === 'accent') e.currentTarget.style.filter = 'brightness(1.08)'
-        else e.currentTarget.style.background = TOKENS.colors.bgTertiary
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.filter = 'none'
-        e.currentTarget.style.background = palette.bg
-      }}
-    >
-      {label}
-    </button>
   )
 }
 
@@ -952,81 +662,6 @@ function CumulativeTargetProgress({
   )
 }
 
-
-function MetaRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'baseline',
-      justifyContent: 'space-between',
-      gap: TOKENS.spacing[3],
-      fontSize: TOKENS.fontSizes.xs,
-    }}>
-      <span style={{
-        fontFamily: TOKENS.fonts.mono,
-        color: TOKENS.colors.textGhost,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-      }}>
-        {label}
-      </span>
-      <span style={{
-        fontFamily: mono ? TOKENS.fonts.mono : TOKENS.fonts.sans,
-        color: TOKENS.colors.textPrimary,
-        textAlign: 'right',
-      }}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function ManageOption({
-  title,
-  description,
-  variant = 'default',
-  onClick,
-}: {
-  title: string
-  description: string
-  variant?: 'default' | 'danger'
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: TOKENS.spacing[2],
-        padding: TOKENS.spacing[4],
-        background: TOKENS.colors.bgTertiary,
-        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-        borderRadius: TOKENS.radius.md,
-        cursor: 'pointer',
-        width: '100%',
-        textAlign: 'left',
-      }}
-    >
-      <span style={{
-        fontSize: TOKENS.fontSizes.sm,
-        fontWeight: TOKENS.fontWeights.black,
-        color: variant === 'danger' ? TOKENS.colors.danger : TOKENS.colors.textPrimary,
-        textTransform: 'uppercase',
-        letterSpacing: TOKENS.letterSpacing.tight,
-      }}>
-        {title}
-      </span>
-      <span style={{
-        fontSize: TOKENS.fontSizes.xs,
-        color: TOKENS.colors.textSecondary,
-      }}>
-        {description}
-      </span>
-    </button>
-  )
-}
 
 /** DetailCard — Container for the 2-col grid sections of vault detail page. */
 function DetailCard({
@@ -1215,292 +850,372 @@ function CapitalRecoveryStatus() {
   )
 }
 
-/** VaultStrategyList — Structured Strategy section: type / cadence / hedging /
- * underlying / risk envelope. Reads from vault.strategy text plus optional
- * envelope fields on VaultMeta (drawdown, vol, sharpe). */
-function VaultStrategyList({
-  vault,
+/** StrategyDetailsBody — Renders the active market regime, the segmented
+ * allocation bar with legend, and the 3 scenario cards (Bull / Sideways / Bear).
+ * The currently-active scenario is highlighted with the accent border. */
+function StrategyDetailsBody({
   vaultConfig,
+  activeRegime,
 }: {
-  vault: ActiveVault | MaturedVault
   vaultConfig: VaultConfig | null
+  activeRegime: MarketRegime
 }) {
-  // Strategy text is delimited by " · " — split into tagged rows so the
-  // unstructured field still produces a structured display.
-  const parts = (vault.strategy || '').split('·').map((s) => s.trim()).filter(Boolean)
-  const cadence = parts[1] ?? '—'
-  const hedging = parts[2] ?? parts[0] ?? '—'
-  const underlying = parts[0] ?? '—'
+  const weights = vaultConfig?.rebalanceWeights
+  if (!weights) {
+    return (
+      <p style={{ margin: 0, fontSize: TOKENS.fontSizes.sm, color: TOKENS.colors.textGhost }}>
+        Strategy data not available.
+      </p>
+    )
+  }
 
-  const rows: Array<{ label: string; value: string; mono?: boolean }> = [
-    { label: 'Strategy', value: underlying },
-    { label: 'Distribution', value: cadence, mono: true },
-    { label: 'Hedging', value: hedging },
-  ]
+  const regimeLabel: Record<MarketRegime, string> = {
+    bull: 'Bull — accelerate growth',
+    sideways: 'Sideways — baseline mix',
+    bear: 'Bear — protect capital',
+  }
+  const scenarioTitle: Record<MarketRegime, string> = {
+    bull: 'Accelerate growth',
+    sideways: 'Baseline mix',
+    bear: 'Protect capital',
+  }
+  const activeWeights = weights[activeRegime]
+  const total = activeWeights.reduce((s, w) => s + w.pct, 0) || 1
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-      columnGap: TOKENS.spacing[6],
-      rowGap: TOKENS.spacing[3],
-    }}>
-      {rows.map((r) => <MetaRow key={r.label} label={r.label} value={r.value} mono={r.mono} />)}
-      {vaultConfig?.maxDrawdown != null && (
-        <MetaRow label="Max drawdown" value={`${vaultConfig.maxDrawdown.toFixed(1)}%`} mono />
-      )}
-      {vaultConfig?.volatility != null && (
-        <MetaRow label="Volatility" value={`${vaultConfig.volatility.toFixed(1)}%`} mono />
-      )}
-      {vaultConfig?.sharpe != null && (
-        <MetaRow label="Sharpe" value={vaultConfig.sharpe.toFixed(2)} mono />
-      )}
-    </div>
-  )
-}
-
-/** VaultCompositionBars — Horizontal bars for sub-allocation breakdown.
- * Color rotates through CHART_PALETTE so it visually rhymes with the donut. */
-function VaultCompositionBars({
-  composition,
-}: {
-  composition: Array<{ label: string; pct: number; color?: string }>
-}) {
-  const total = composition.reduce((s, c) => s + c.pct, 0) || 1
-  return (
-    <div style={{
-      marginTop: TOKENS.spacing[4],
-      paddingTop: TOKENS.spacing[3],
-      borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
+      {/* Active regime header */}
       <div style={{
-        fontFamily: TOKENS.fonts.mono,
-        fontSize: TOKENS.fontSizes.micro,
-        fontWeight: TOKENS.fontWeights.bold,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-        color: TOKENS.colors.textGhost,
-        marginBottom: TOKENS.spacing[3],
+        display: 'flex',
+        alignItems: 'center',
+        gap: TOKENS.spacing[2],
+        flexWrap: 'wrap',
+        fontSize: TOKENS.fontSizes.sm,
+        color: TOKENS.colors.textSecondary,
       }}>
-        Composition
+        <span>Current market regime:</span>
+        <span style={{ color: TOKENS.colors.textPrimary, fontWeight: TOKENS.fontWeights.black }}>
+          {regimeLabel[activeRegime]}
+        </span>
       </div>
-      {/* Stacked bar */}
+
+      {/* Segmented allocation bar */}
       <div style={{
         display: 'flex',
         height: TOKENS.bar.thin,
         borderRadius: TOKENS.radius.full,
         overflow: 'hidden',
-        marginBottom: TOKENS.spacing[3],
         background: TOKENS.colors.bgTertiary,
       }}>
-        {composition.map((slice, i) => (
+        {activeWeights.map((slice, i) => (
           <div
             key={slice.label}
             style={{
               flex: slice.pct / total,
-              background: slice.color ?? CHART_PALETTE[i % CHART_PALETTE.length],
+              background: CHART_PALETTE[i % CHART_PALETTE.length],
             }}
           />
         ))}
       </div>
-      {/* Legend rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2] }}>
-        {composition.map((slice, i) => (
-          <div
-            key={slice.label}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: TOKENS.spacing[3],
-              fontSize: TOKENS.fontSizes.xs,
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2], minWidth: 0 }}>
-              <span style={{
-                width: TOKENS.dot.sm,
-                height: TOKENS.dot.sm,
-                borderRadius: TOKENS.radius.full,
-                background: slice.color ?? CHART_PALETTE[i % CHART_PALETTE.length],
-                flexShrink: 0,
-              }} />
-              <span style={{
-                color: TOKENS.colors.textPrimary,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                {slice.label}
-              </span>
-            </span>
+
+      {/* Legend */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: TOKENS.spacing[4],
+        fontSize: TOKENS.fontSizes.xs,
+      }}>
+        {activeWeights.map((slice, i) => (
+          <span key={slice.label} style={{ display: 'inline-flex', alignItems: 'center', gap: TOKENS.spacing[2] }}>
+            <span style={{
+              width: TOKENS.dot.sm,
+              height: TOKENS.dot.sm,
+              borderRadius: TOKENS.radius.full,
+              background: CHART_PALETTE[i % CHART_PALETTE.length],
+              flexShrink: 0,
+            }} />
+            <span style={{ color: TOKENS.colors.textSecondary }}>{slice.label}</span>
             <span style={{
               fontFamily: TOKENS.fonts.mono,
               fontWeight: TOKENS.fontWeights.bold,
-              color: TOKENS.colors.textSecondary,
+              color: TOKENS.colors.textPrimary,
               fontVariantNumeric: 'tabular-nums',
-              flexShrink: 0,
             }}>
-              {slice.pct.toFixed(0)}%
+              {slice.pct}%
             </span>
-          </div>
+          </span>
         ))}
+      </div>
+
+      {/* Section header + dynamic allocation explanation */}
+      <div style={{
+        marginTop: TOKENS.spacing[2],
+        paddingTop: TOKENS.spacing[3],
+        borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+      }}>
+        <div style={{
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.micro,
+          fontWeight: TOKENS.fontWeights.bold,
+          letterSpacing: TOKENS.letterSpacing.display,
+          textTransform: 'uppercase',
+          color: TOKENS.colors.textGhost,
+          marginBottom: TOKENS.spacing[2],
+        }}>
+          Dynamic allocation · how the vault rebalances
+        </div>
+        <p style={{
+          margin: 0,
+          fontSize: TOKENS.fontSizes.xs,
+          color: TOKENS.colors.textSecondary,
+          lineHeight: LINE_HEIGHT.body,
+        }}>
+          Automated controls continuously rebalance exposures across the vault pockets,
+          tighten volatility thresholds, and shift reward distribution toward more defensive
+          strategies in downturns.
+        </p>
+      </div>
+
+      {/* 3 scenario cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: TOKENS.spacing[3],
+      }}>
+        {(['bull', 'sideways', 'bear'] as const).map((regime) => {
+          const isActive = regime === activeRegime
+          const sliceWeights = weights[regime]
+          const sliceTotal = sliceWeights.reduce((s, w) => s + w.pct, 0) || 1
+          const dotColor: Record<MarketRegime, string> = {
+            bull: TOKENS.colors.accent,
+            sideways: TOKENS.colors.textGhost,
+            bear: TOKENS.colors.danger,
+          }
+          const pitch = sliceWeights[0]?.pitch ?? ''
+
+          return (
+            <div
+              key={regime}
+              style={{
+                background: isActive ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
+                border: `${TOKENS.borders.thin} solid ${isActive ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.md,
+                padding: TOKENS.spacing[3],
+                display: 'flex',
+                flexDirection: 'column',
+                gap: TOKENS.spacing[2],
+              }}
+            >
+              {/* Scenario label */}
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: TOKENS.spacing[2],
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                color: TOKENS.colors.textSecondary,
+                width: 'fit-content',
+                padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
+                background: TOKENS.colors.black,
+                border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.full,
+              }}>
+                <span style={{
+                  width: TOKENS.dot.sm,
+                  height: TOKENS.dot.sm,
+                  borderRadius: TOKENS.radius.full,
+                  background: dotColor[regime],
+                  flexShrink: 0,
+                }} />
+                {regime}
+              </span>
+              <div style={{
+                fontSize: TOKENS.fontSizes.sm,
+                fontWeight: TOKENS.fontWeights.black,
+                color: TOKENS.colors.textPrimary,
+              }}>
+                {scenarioTitle[regime]}
+              </div>
+              <p style={{
+                margin: 0,
+                fontSize: TOKENS.fontSizes.xs,
+                color: TOKENS.colors.textSecondary,
+                lineHeight: LINE_HEIGHT.body,
+              }}>
+                {pitch}
+              </p>
+              {/* Mini allocation bar for this scenario */}
+              <div style={{
+                marginTop: TOKENS.spacing[2],
+                display: 'flex',
+                height: TOKENS.bar.thin,
+                borderRadius: TOKENS.radius.full,
+                overflow: 'hidden',
+                background: TOKENS.colors.bgTertiary,
+              }}>
+                {sliceWeights.map((slice, i) => (
+                  <div
+                    key={slice.label}
+                    style={{
+                      flex: slice.pct / sliceTotal,
+                      background: CHART_PALETTE[i % CHART_PALETTE.length],
+                    }}
+                  />
+                ))}
+              </div>
+              {isActive && (
+                <span style={{
+                  marginTop: TOKENS.spacing[1],
+                  fontFamily: TOKENS.fonts.mono,
+                  fontSize: TOKENS.fontSizes.micro,
+                  fontWeight: TOKENS.fontWeights.bold,
+                  letterSpacing: TOKENS.letterSpacing.display,
+                  textTransform: 'uppercase',
+                  color: TOKENS.colors.accent,
+                }}>
+                  ✓ Currently active
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 }
 
-/** ActivityFilterTabs — Tri-state pill (All / Claims / Deposits) above the
- * VaultActivityTimeline so users can isolate cashflow events. */
-function ActivityFilterTabs({
-  value,
-  onChange,
-}: {
-  value: 'all' | 'claim' | 'deposit'
-  onChange: (v: 'all' | 'claim' | 'deposit') => void
-}) {
-  const opts: Array<{ id: typeof value; label: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'claim', label: 'Claims' },
-    { id: 'deposit', label: 'Deposits' },
-  ]
-  return (
-    <div style={{
-      display: 'inline-flex',
-      gap: TOKENS.spacing.half,
-      padding: TOKENS.spacing.half,
-      background: TOKENS.colors.bgTertiary,
-      borderRadius: TOKENS.radius.full,
-      border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-    }}>
-      {opts.map((opt) => {
-        const active = value === opt.id
-        return (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => onChange(opt.id)}
-            style={{
-              padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
-              borderRadius: TOKENS.radius.full,
-              border: 'none',
-              background: active ? TOKENS.colors.accent : 'transparent',
-              color: active ? TOKENS.colors.bgApp : TOKENS.colors.textSecondary,
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.nano,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: TOKENS.transitions.fast,
-            }}
-          >
-            {opt.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/** VaultActivityTimeline — Compact list of recent events for this vault. */
+/** VaultActivityTimeline — Compact list of recent events for this vault.
+ * Mirrors the mockup: bold title, "DD MMM YYYY · tx 0x…" sub-line, amount and
+ * cadence label aligned right. Three event flavours: yield distribution (claim),
+ * performance fee (fee), initial deposit. */
 function VaultActivityTimeline({
   activity,
 }: {
   activity: Array<{
     id: string
-    type: 'deposit' | 'claim' | 'withdraw'
+    type: 'deposit' | 'claim' | 'withdraw' | 'fee'
     amount: number
     timestamp: number
+    txHash?: string
   }>
 }) {
   if (activity.length === 0) {
     return (
-      <div
-        style={{
-          padding: `${TOKENS.spacing[4]} 0`,
-          textAlign: 'center',
-          fontSize: TOKENS.fontSizes.xs,
-          color: TOKENS.colors.textGhost,
-        }}
-      >
+      <div style={{
+        padding: `${TOKENS.spacing[4]} 0`,
+        textAlign: 'center',
+        fontSize: TOKENS.fontSizes.xs,
+        color: TOKENS.colors.textGhost,
+      }}>
         No activity recorded yet
       </div>
     )
   }
+
+  const eventStyle = (type: typeof activity[number]['type']): {
+    label: string
+    cadence: string
+    amountColor: string
+    sign: '+' | '−'
+    glyph: string
+    glyphColor: string
+  } => {
+    switch (type) {
+      case 'claim':
+        return { label: 'Yield distribution', cadence: 'daily',   amountColor: TOKENS.colors.accent,         sign: '+', glyph: '↓', glyphColor: TOKENS.colors.accent }
+      case 'fee':
+        return { label: 'Performance fee',     cadence: 'monthly', amountColor: TOKENS.colors.danger,         sign: '−', glyph: '−', glyphColor: TOKENS.colors.danger }
+      case 'deposit':
+        return { label: 'Initial deposit',     cadence: 'deposit', amountColor: TOKENS.colors.textPrimary,    sign: '+', glyph: '+', glyphColor: TOKENS.colors.textSecondary }
+      case 'withdraw':
+        return { label: 'Position withdrawn',  cadence: 'exit',    amountColor: TOKENS.colors.danger,         sign: '−', glyph: '↑', glyphColor: TOKENS.colors.danger }
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {activity.map((event, i) => {
-        const isWithdraw = event.type === 'withdraw'
-        const accent = isWithdraw ? TOKENS.colors.danger : TOKENS.colors.accent
-        const accentBg = isWithdraw ? TOKENS.colors.dangerSubtle : TOKENS.colors.accentSubtle
-        const label = event.type === 'claim' ? 'Yield claimed'
-          : event.type === 'withdraw' ? 'Position withdrawn'
-          : 'Capital deposited'
+        const cfg = eventStyle(event.type)
+        const dateStr = new Date(event.timestamp).toLocaleDateString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric',
+        })
         return (
           <div
             key={event.id}
             style={{
               display: 'grid',
-              gridTemplateColumns: `${TOKENS.spacing[5]} 1fr auto`,
+              gridTemplateColumns: `${TOKENS.spacing[6]} 1fr auto`,
               alignItems: 'center',
               gap: TOKENS.spacing[3],
               padding: `${TOKENS.spacing[3]} 0`,
-              borderBottom: i < activity.length - 1 ? `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}` : 'none',
+              borderBottom: i < activity.length - 1
+                ? `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`
+                : 'none',
             }}
           >
-            <span
-              style={{
-                width: TOKENS.dot.sm,
-                height: TOKENS.dot.sm,
-                borderRadius: TOKENS.radius.full,
-                background: accentBg,
-                border: `${TOKENS.borders.thin} solid ${accent}`,
-                justifySelf: 'center',
-              }}
-            />
+            <span style={{
+              width: TOKENS.spacing[6],
+              height: TOKENS.spacing[6],
+              borderRadius: TOKENS.radius.full,
+              background: TOKENS.colors.bgTertiary,
+              border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: cfg.glyphColor,
+              fontSize: TOKENS.fontSizes.xs,
+              fontWeight: TOKENS.fontWeights.black,
+            }}>
+              {cfg.glyph}
+            </span>
             <div style={{ minWidth: 0 }}>
               <div style={{
                 fontSize: TOKENS.fontSizes.xs,
                 fontWeight: TOKENS.fontWeights.bold,
                 color: TOKENS.colors.textPrimary,
               }}>
-                {label}
+                {cfg.label}
               </div>
               <div style={{
                 fontSize: TOKENS.fontSizes.micro,
                 color: TOKENS.colors.textGhost,
                 fontFamily: TOKENS.fonts.mono,
               }}>
-                {formatAgo(event.timestamp)}
+                {dateStr}{event.txHash ? ` · tx ${event.txHash}` : ''}
               </div>
             </div>
-            <span
-              style={{
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: TOKENS.spacing[2],
+            }}>
+              <span style={{
                 fontFamily: TOKENS.fonts.mono,
                 fontSize: TOKENS.fontSizes.xs,
                 fontWeight: TOKENS.fontWeights.black,
-                color: accent,
+                color: cfg.amountColor,
                 fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {isWithdraw ? '-' : '+'}{fmtUsdCompact(event.amount)}
-            </span>
+              }}>
+                {cfg.sign}{fmtUsdCompact(event.amount)} USDC
+              </span>
+              <span style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.micro,
+                color: TOKENS.colors.textGhost,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+              }}>
+                {cfg.cadence}
+              </span>
+            </div>
           </div>
         )
       })}
     </div>
   )
-}
-
-function formatAgo(timestamp: number): string {
-  const delta = Math.max(0, Date.now() - timestamp)
-  const minutes = Math.floor(delta / 60_000)
-  if (minutes < 60) return `${Math.max(1, minutes)}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
 

@@ -1,5 +1,14 @@
 import type { Address, Chain } from 'viem'
 
+/** Product family — Hearst Connect ships 2 products (Prime / Growth).
+ * Prime = moderate risk, 12% APY, 36% cumulative target, 3-pocket strategy.
+ * Growth = higher risk, 15% APY, 45% cumulative target, 2-pocket strategy. */
+export type ProductFamily = 'prime' | 'growth'
+
+/** Market regime drives dynamic allocation rebalance.
+ * One regime is "currently active" at a given time across the platform. */
+export type MarketRegime = 'bull' | 'sideways' | 'bear'
+
 /** Sub-allocation slice for the vault Composition view. Sums should ≈ 100. */
 export interface VaultCompositionSlice {
   label: string
@@ -14,6 +23,17 @@ export interface VaultGeoSlice {
   region: string
   pct: number
 }
+
+/** Underlying exposure breakdown (dashboard recap). The 3 canonical buckets are
+ * BTC-correlated, Mining infrastructure, and Stablecoin yield. Sums ≈ 100. */
+export interface UnderlyingExposureSlice {
+  label: 'BTC-correlated' | 'Mining infrastructure' | 'Stablecoin yield'
+  pct: number
+}
+
+/** Per-regime allocation override. The vault re-weights its pockets based on
+ * the active market regime. Each regime maps pocket label → pct (sums ≈ 100). */
+export type RebalanceWeights = Record<MarketRegime, Array<{ label: string; pct: number; pitch: string }>>
 
 /** Monthly historical net yield (% APR equivalent for that month). */
 export interface VaultMonthlyReturn {
@@ -52,6 +72,21 @@ export interface VaultMeta {
   custodian?: string
   /** Audit reports (label + URL). */
   auditReports?: Array<{ label: string; url: string }>
+  /** Hearst Connect product family. Drives invest flow grouping. */
+  productFamily?: ProductFamily
+  /** Cumulative target as a number (e.g. 36 for 36%). The vault closes early
+   * once this cumulative yield is reached. */
+  cumulativeTarget?: number
+  /** Underlying exposure breakdown shown on the dashboard "Allocation · recap"
+   * section. Sums ≈ 100. */
+  underlyingExposure?: UnderlyingExposureSlice[]
+  /** Per-regime pocket weights. The vault re-weights dynamically. */
+  rebalanceWeights?: RebalanceWeights
+  /** Capital recovery safeguard config — if principal is below initial deposit
+   * at maturity, mining infrastructure operates `recoveryYears` more. */
+  capitalRecoveryYears?: number
+  /** Short pitch line (used on Invest > Select cards). */
+  productPitch?: string
 }
 
 export interface VaultConfig extends VaultMeta {

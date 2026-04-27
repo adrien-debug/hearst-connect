@@ -11,6 +11,11 @@ import { getDemoPositionData } from '@/lib/demo/demo-data'
 
 interface UsePositionDataOptions {
   vaultId: string
+  /** Optional cohort position id. In live mode each (vault × wallet) pair has a
+   * single on-chain position so this is ignored. In demo mode it disambiguates
+   * between multiple cohorts the user holds in the same product (e.g. Prime #1
+   * vs Prime #2 both share vaultId 'demo-prime'). */
+  positionId?: string
   walletAddress?: string
 }
 
@@ -28,6 +33,7 @@ interface UsePositionDataReturn {
 
 export function usePositionData({
   vaultId,
+  positionId,
   walletAddress: propWalletAddress,
 }: UsePositionDataOptions): UsePositionDataReturn {
   const { address: connectedAddress } = useAccount()
@@ -135,7 +141,7 @@ export function usePositionData({
   }
 
   if (isDemo) {
-    const demoData = getDemoPositionData(vaultId)
+    const demoData = getDemoPositionData(vaultId, positionId)
     return {
       data: demoData as PositionData | null,
       isLoading: false,

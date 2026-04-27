@@ -37,10 +37,15 @@ export interface UserPositionLine {
 
 export interface UserActivityItem {
   id: string
-  type: 'deposit' | 'claim' | 'withdraw'
+  /** 'claim' = yield distribution to wallet (positive amount).
+   *  'fee' = performance fee debited from position (display as negative).
+   *  'deposit' = initial capital subscription (positive). */
+  type: 'deposit' | 'claim' | 'withdraw' | 'fee'
   vaultId: string
   vaultName: string
   amount: number
+  /** Optional tx hash for display ("tx 0x4e…c2"). */
+  txHash?: string
   timestamp: number
 }
 

@@ -34,35 +34,47 @@ export function useVaultLines() {
 
   return useMemo(() => {
     if (isConnected || isDemo) {
-      // Combine registry vaults with user positions
-      const vaultLines: VaultLine[] = activeVaults.map((vaultConfig) => {
-        const userPosition = userPositions.find((p) => p.vaultId === vaultConfig.id && p.state !== 'withdrawn')
+      // Multi-cohort model: one ActiveVault per user position (e.g. Hearst Prime #1
+      // and Hearst Prime #2 are two distinct lines sharing productId 'demo-prime').
+      // Plus one AvailableVault per product (so Invest always lists Prime + Growth
+      // even when the user already has cohort positions in them).
+      const cohortCounters: Record<string, number> = {}
+      const activeLines: VaultLine[] = userPositions
+        .filter((p) => p.state !== 'withdrawn')
+        .map((position) => {
+          const vaultConfig = activeVaults.find((v) => v.id === position.vaultId)
+          if (!vaultConfig) return null
 
-        if (userPosition) {
-          // User has an active position in this vault
+          cohortCounters[position.vaultId] = (cohortCounters[position.vaultId] ?? 0) + 1
+          const cohortNumber = cohortCounters[position.vaultId]
+
           const activeVault: ActiveVault = {
             type: 'active',
-            id: vaultConfig.id,
-            name: vaultConfig.name,
+            id: position.id,
+            productId: vaultConfig.id,
+            cohortNumber,
+            name: position.vaultName,
             apr: vaultConfig.apr,
             target: vaultConfig.target,
             strategy: vaultConfig.strategy,
             image: vaultConfig.image,
-            deposited: userPosition.deposited,
-            claimable: userPosition.claimable,
-            createdAt: userPosition.createdAt,
-            lockedUntil: userPosition.maturityDate,
-            canWithdraw: userPosition.canWithdraw,
-            maturity: userPosition.isMatured ? 'Matured' : `${userPosition.daysRemaining} days`,
-            progress: userPosition.progressPercent,
-            risk: userPosition.risk,
+            deposited: position.deposited,
+            claimable: position.claimable,
+            yieldPaid: position.currentYield,
+            createdAt: position.createdAt,
+            lockedUntil: position.maturityDate,
+            canWithdraw: position.canWithdraw,
+            maturity: position.isMatured ? 'Matured' : `${position.daysRemaining} days`,
+            progress: position.progressPercent,
+            risk: position.risk,
           }
           return activeVault
-        }
+        })
+        .filter((v): v is ActiveVault => v !== null)
 
-        // No position - show as available
-        return toAvailableVault(vaultConfig)
-      })
+      const availableLines: VaultLine[] = activeVaults.map(toAvailableVault)
+
+      const vaultLines: VaultLine[] = [...activeLines, ...availableLines]
 
       return {
         vaults: vaultLines,

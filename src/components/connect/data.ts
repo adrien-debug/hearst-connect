@@ -23,6 +23,13 @@ export interface ActiveVault extends BaseVault {
   maturity: string
   progress: number
   risk: string
+  /** Underlying vault config id when this active line is a cohort of a product
+   * (e.g. Hearst Prime #1 has productId 'demo-prime'). Falls back to `id`. */
+  productId?: string
+  /** 1-indexed cohort number within the product. */
+  cohortNumber?: number
+  /** Total accumulated yield since inception (USD). Mirrors UserPositionLine.currentYield. */
+  yieldPaid?: number
 }
 
 export interface MaturedVault extends BaseVault {
@@ -31,6 +38,9 @@ export interface MaturedVault extends BaseVault {
   claimable: number
   maturity: string
   progress: number
+  productId?: string
+  cohortNumber?: number
+  yieldPaid?: number
 }
 
 export interface AvailableVault extends BaseVault {
