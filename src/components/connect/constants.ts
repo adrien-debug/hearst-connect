@@ -54,6 +54,8 @@ export const TOKENS = {
     mono: 'var(--font-mono)',
   },
   fontSizes: {
+    /** 10px — sub-micro figure, only for ultra-dense badges/glyphs */
+    nano: 'var(--dashboard-text-dense-xs)',
     /** Caption / register */
     micro: 'var(--dashboard-font-size-xs)',
     xs: 'var(--dashboard-font-size-sm)',
@@ -78,11 +80,19 @@ export const TOKENS = {
   letterSpacing: {
     tight: '-0.06em',
     normal: '0',
+    /** Subtle uppercase opener. */
+    loose: 'var(--tracking-loose)',
+    /** Caption tracker (0.08em). */
+    caption: 'var(--dashboard-letter-spacing-caption)',
+    /** UI micro labels (0.1em). */
+    micro: 'var(--dashboard-letter-spacing-micro)',
     wide: 'var(--dashboard-letter-spacing-title)',
     display: 'var(--dashboard-letter-spacing-label)',
   },
   spacing: {
     0: '0px',
+    /** 2px — micro spacing, ultra-dense layouts only. */
+    half: '2px',
     1: '4px',
     2: '8px',
     3: '12px',
@@ -158,6 +168,33 @@ export const TOKENS = {
     easeSpring: 'var(--dashboard-ease-spring)',
     easeSharp: 'var(--dashboard-ease-sharp)',
     easeDefault: 'var(--dashboard-ease)',
+  },
+  /** High-level transition shorthands — prefer these to raw 'all 120ms ease' strings. */
+  transitions: {
+    /** all + fast (≈150ms) — hover state changes on cards / buttons. */
+    fast: 'all var(--transition-fast)',
+    /** all + base (≈200ms) — sidebar items, tabs, larger surfaces. */
+    base: 'all var(--transition-base)',
+    /** all + slow (≈300ms) — modal / panel entrances. */
+    slow: 'all var(--transition-slow)',
+    /** Property-specific durations (compose: `opacity ${T.transitions.durFast}`). */
+    durFast: 'var(--transition-fast)',
+    durBase: 'var(--transition-base)',
+    durSlow: 'var(--transition-slow)',
+  },
+  zIndex: {
+    base: 'var(--z-base)',
+    raised: 'var(--z-raised)',
+    tooltip: 'var(--z-tooltip)',
+    dock: 'var(--z-dock)',
+    dockActive: 'var(--z-dock-active)',
+    dropdown: 'var(--z-dropdown)',
+    sticky: 'var(--z-sticky)',
+    fixed: 'var(--z-fixed)',
+    overlay: 'var(--z-overlay)',
+    modal: 'var(--z-modal)',
+    toast: 'var(--z-toast)',
+    banner: 'var(--z-banner)',
   },
   vault: {
     headerHeight: 'var(--dashboard-vault-header-height)',

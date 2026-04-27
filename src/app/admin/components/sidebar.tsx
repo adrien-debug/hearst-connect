@@ -172,7 +172,7 @@ function LogoutIcon() {
 
 const styles: Record<string, React.CSSProperties> = {
   sidebar: {
-    width: '240px',
+    width: 'var(--dashboard-sidebar-width, 240px)',
     background: TOKENS.colors.bgSidebar,
     borderRight: `1px solid ${TOKENS.colors.borderSubtle}`,
     display: 'flex',
@@ -219,7 +219,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: TOKENS.fontWeights.bold,
     cursor: 'pointer',
     textAlign: 'left',
-    transition: 'all 0.15s ease',
+    transition: TOKENS.transitions.all,
     position: 'relative',
   },
   navLabel: {
@@ -248,6 +248,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: TOKENS.fontSizes.sm,
     fontWeight: TOKENS.fontWeights.bold,
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: TOKENS.transitions.all,
   },
 }

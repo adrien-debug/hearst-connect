@@ -133,7 +133,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(167, 251, 144, 0.20);
+  box-shadow: 0 0 0 4px rgba(var(--brand-accent-rgb), 0.20);
 }
 
 input[type="range"]::-moz-range-track {
@@ -155,7 +155,7 @@ input[type="range"]:focus-visible {
   outline: none;
 }
 input[type="range"]:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(167, 251, 144, 0.30);
+  box-shadow: 0 0 0 3px rgba(var(--brand-accent-rgb), 0.30);
 }
 
 /* ─── Admin inputs / selects — browser default reset ──────────────────────── */

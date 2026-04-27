@@ -280,7 +280,7 @@ function CheckItem({
           onClick={action.onClick}
           disabled={action.disabled}
           style={{
-            padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+            padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
             background: TOKENS.colors.accent,
             color: TOKENS.colors.black,
             border: 'none',

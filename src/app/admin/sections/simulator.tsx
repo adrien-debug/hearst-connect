@@ -38,34 +38,39 @@ const PRESETS: Record<string, { alloc: number[]; profits: ProfitLevel[] }> = {
   barbell: { alloc: [20, 0, 60, 20], profits: [{ price: 1.25, pct: 20, dest: 'usdc' }, { price: 1.55, pct: 20, dest: 'usdc' }, { price: 1.90, pct: 20, dest: 'reserve' }, { price: 2.10, pct: 20, dest: 'usdc' }] },
 }
 
-// Pocket colors - read from CSS variables via getComputedStyle
-// Using dashboard-color-* tokens for consistency with dashboard section
-const getPocketColors = () => {
-  if (typeof window === 'undefined') return ['#F7931A', '#4ADE80', '#3B82F6', '#A78BFA']
-  const root = getComputedStyle(document.documentElement)
-  return [
-    root.getPropertyValue('--color-pocket-btc').trim() || '#F7931A',
-    root.getPropertyValue('--color-pocket-mining').trim() || '#4ADE80',
-    root.getPropertyValue('--color-pocket-stable').trim() || '#3B82F6',
-    root.getPropertyValue('--color-pocket-reserve').trim() || '#A78BFA',
-  ]
+// Chart.js renders on canvas and cannot read CSS custom properties at draw
+// time. We resolve all theme variables once via getComputedStyle and pass
+// concrete hex/rgba strings to Chart.js. SSR fallbacks mirror the token
+// defaults defined in tokens.css / dashboard-vars.css.
+const readVar = (name: string, fallback: string): string => {
+  if (typeof window === 'undefined') return fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
 }
+
 const POCKET_NAMES = ['BTC Spot', 'Mining', 'Stablecoins', 'Réserve']
 
-// Chart.js static colors (Chart.js doesn't support CSS variables in its context)
-// These are hardcoded because Chart.js canvas rendering doesn't have access to CSS custom properties
-const CHART_TEXT_SECONDARY = '#7A808A'
-const CHART_GRID_COLOR = 'rgba(255,255,255,.05)'
-const CHART_SUCCESS_BG = 'rgba(167,251,144,.55)'
-const CHART_DANGER_BG = 'rgba(239,68,68,.55)'
+const getPocketColors = () => [
+  readVar('--color-pocket-btc', '#F7931A'),
+  readVar('--color-pocket-mining', '#4ADE80'),
+  readVar('--color-pocket-stable', '#3B82F6'),
+  readVar('--color-pocket-reserve', '#A78BFA'),
+]
+
+const getBrandRgb = () => readVar('--brand-accent-rgb', '167, 251, 144')
+
+// Token-derived chart colors (frozen at module load for stable Chart.js theming)
+const CHART_TEXT_SECONDARY = readVar('--dashboard-text-muted', '#7A808A')
+const CHART_GRID_COLOR = readVar('--dashboard-overlay-05', 'rgba(255,255,255,0.05)')
+const CHART_SUCCESS_BG = `rgba(${getBrandRgb()}, 0.55)`
+const CHART_DANGER_BG = `rgba(${readVar('--color-error-rgb', '239, 68, 68')}, 0.55)`
 const CHART_FONT_SIZE_SMALL = 9
 const CHART_FONT_SIZE_MEDIUM = 10
 const CHART_BORDER_RADIUS = 4
 
 // Layout dimensions
-const SIDEBAR_WIDTH = '340px'
-const CHART_HEIGHT = '220px'
-const KPI_MIN_WIDTH = '150px'
+const SIDEBAR_WIDTH = 340
+const CHART_HEIGHT = 220
+const KPI_MIN_WIDTH = 150
 
 // ── Simulation engine ──────────────────────────────────────────────────
 

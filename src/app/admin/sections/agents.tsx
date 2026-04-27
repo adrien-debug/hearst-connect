@@ -48,30 +48,32 @@ const AGENT_META: Record<AgentName, { label: string; desc: string; icon: string;
     label: 'Market Watcher',
     desc: 'Surveille BTC, yields DeFi, Fear & Greed, hashprice en continu.',
     icon: '👁',
-    color: '#3B82F6',
+    color: T.colors.info,
   },
   strategy: {
     label: 'Strategy Optimizer',
     desc: 'Analyse les conditions et génère des signaux de rebalance si justifiés.',
     icon: '⚡',
-    color: '#F59E0B',
+    color: T.colors.warning,
   },
   audit: {
     label: 'Audit & Risk',
     desc: 'Audite les signaux pending, vérifie les risques, peut bloquer.',
     icon: '🛡',
-    color: '#10B981',
+    color: T.colors.success,
   },
 }
 
+/** Token-driven log tag styling. Hue from --color-log-*; bg uses color-mix
+ * to derive a low-opacity wash without committing to a fixed RGB triplet. */
 const TAG_STYLES: Record<LogLine['tag'], { bg: string; color: string }> = {
-  START: { bg: 'rgba(99,102,241,0.15)', color: '#818CF8' },
-  TOOL: { bg: 'rgba(59,130,246,0.15)', color: '#60A5FA' },
-  RESULT: { bg: 'rgba(16,185,129,0.12)', color: '#34D399' },
-  SIGNAL: { bg: 'rgba(245,158,11,0.15)', color: '#FBBF24' },
-  CLAUDE: { bg: 'rgba(139,92,246,0.12)', color: '#C4B5FD' },
-  ERROR: { bg: 'rgba(239,68,68,0.15)', color: '#F87171' },
-  DONE: { bg: 'rgba(16,185,129,0.15)', color: '#6EE7B7' },
+  START: { bg: `color-mix(in srgb, ${T.colors.logStart} 15%, transparent)`, color: T.colors.logStart },
+  TOOL: { bg: `color-mix(in srgb, ${T.colors.logTool} 15%, transparent)`, color: T.colors.logTool },
+  RESULT: { bg: `color-mix(in srgb, ${T.colors.logResult} 12%, transparent)`, color: T.colors.logResult },
+  SIGNAL: { bg: `color-mix(in srgb, ${T.colors.logSignal} 15%, transparent)`, color: T.colors.logSignal },
+  CLAUDE: { bg: `color-mix(in srgb, ${T.colors.logClaude} 12%, transparent)`, color: T.colors.logClaude },
+  ERROR: { bg: `color-mix(in srgb, ${T.colors.logError} 15%, transparent)`, color: T.colors.logError },
+  DONE: { bg: `color-mix(in srgb, ${T.colors.logResult} 15%, transparent)`, color: T.colors.logDone },
 }
 
 function genId() { return Math.random().toString(36).slice(2, 9) }
@@ -185,20 +187,20 @@ export default function AgentsSection() {
   const filteredLogs = activeFilter === 'all' ? logs : logs.filter(l => l.agent === activeFilter)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: T.spacing[8], paddingBottom: T.spacing[10] }}>
 
       {/* Header */}
       <div>
         <h1 style={{ fontSize: T.fontSizes.xl, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary, margin: 0 }}>
           Managed Agents
         </h1>
-        <p style={{ fontSize: T.fontSizes.sm, color: T.colors.textSecondary, margin: '6px 0 0' }}>
+        <p style={{ fontSize: T.fontSizes.sm, color: T.colors.textSecondary, margin: `${T.spacing[2]} 0 0` }}>
           Déclenchez un agent manuellement avec tool use natif Anthropic. Les logs s'affichent en temps réel.
         </p>
       </div>
 
       {/* Agent cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: T.spacing[4] }}>
         {(Object.entries(AGENT_META) as [AgentName, typeof AGENT_META[AgentName]][]).map(([key, meta]) => {
           const isRunning = runningAgent === key
           const isOtherRunning = runningAgent !== null && runningAgent !== key
@@ -209,10 +211,10 @@ export default function AgentsSection() {
                 background: T.colors.bgSurface,
                 border: `1px solid ${isRunning ? meta.color : T.colors.borderSubtle}`,
                 borderRadius: T.radius.lg,
-                padding: '20px',
+                padding: T.spacing[5],
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: T.spacing[3],
                 transition: T.transitions.base,
                 boxShadow: isRunning ? `0 0 0 1px ${meta.color}40` : 'none',
               }}
@@ -220,18 +222,18 @@ export default function AgentsSection() {
               {/* Card header */}
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '18px' }}>{meta.icon}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[2] }}>
+                    <span style={{ fontSize: T.fontSizes.md }}>{meta.icon}</span>
                     <span style={{ fontSize: T.fontSizes.md, fontWeight: T.fontWeights.semibold, color: T.colors.textPrimary }}>
                       {meta.label}
                     </span>
                   </div>
-                  <p style={{ fontSize: T.fontSizes.xs, color: T.colors.textSecondary, margin: '6px 0 0', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: T.fontSizes.xs, color: T.colors.textSecondary, margin: `${T.spacing[2]} 0 0`, lineHeight: T.lineHeight.relaxed }}>
                     {meta.desc}
                   </p>
                 </div>
                 {/* Status dot */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[2], flexShrink: 0 }}>
                   {isRunning ? (
                     <PulsingDot color={meta.color} />
                   ) : (
@@ -248,11 +250,11 @@ export default function AgentsSection() {
                 onClick={() => isRunning ? handleStop() : handleRun(key)}
                 disabled={isOtherRunning}
                 style={{
-                  padding: '10px 16px',
+                  padding: `${T.spacing[3]} ${T.spacing[4]}`,
                   borderRadius: T.radius.md,
-                  border: `1px solid ${isRunning ? '#F87171' : meta.color}`,
-                  background: isRunning ? 'rgba(239,68,68,0.1)' : `${meta.color}18`,
-                  color: isRunning ? '#F87171' : meta.color,
+                  border: `1px solid ${isRunning ? T.colors.logError : meta.color}`,
+                  background: isRunning ? `color-mix(in srgb, ${T.colors.danger} 10%, transparent)` : `${meta.color}18`,
+                  color: isRunning ? T.colors.logError : meta.color,
                   fontSize: T.fontSizes.sm,
                   fontWeight: T.fontWeights.semibold,
                   cursor: isOtherRunning ? 'not-allowed' : 'pointer',
@@ -271,7 +273,7 @@ export default function AgentsSection() {
 
       {/* Log terminal */}
       <div style={{
-        background: '#0A0A0A',
+        background: T.colors.bgApp,
         border: `1px solid ${T.colors.borderSubtle}`,
         borderRadius: T.radius.lg,
         overflow: 'hidden',
@@ -281,14 +283,14 @@ export default function AgentsSection() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 16px',
+          padding: `${T.spacing[3]} ${T.spacing[4]}`,
           borderBottom: `1px solid ${T.colors.borderSubtle}`,
-          background: '#111',
+          background: T.colors.bgSurface,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[3] }}>
             {/* macOS dots */}
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {['#FF5F57', '#FEBC2E', '#28C840'].map(c => (
+            <div style={{ display: 'flex', gap: T.spacing[2] }}>
+              {[T.colors.terminalRed, T.colors.terminalYellow, T.colors.terminalGreen].map(c => (
                 <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />
               ))}
             </div>
@@ -298,17 +300,17 @@ export default function AgentsSection() {
           </div>
 
           {/* Filter tabs */}
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: T.spacing[1] }}>
             {(['all', 'watcher', 'strategy', 'audit'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
                 style={{
-                  padding: '3px 10px',
-                  borderRadius: '4px',
+                  padding: `${T.spacing.half} ${T.spacing[3]}`,
+                  borderRadius: T.radius.sm,
                   border: 'none',
                   background: activeFilter === f ? T.colors.accent : 'transparent',
-                  color: activeFilter === f ? '#000' : T.colors.textGhost,
+                  color: activeFilter === f ? T.colors.bgApp : T.colors.textGhost,
                   fontSize: T.fontSizes.xs,
                   cursor: 'pointer',
                   fontFamily: T.fonts.sans,
@@ -329,7 +331,7 @@ export default function AgentsSection() {
               color: T.colors.textGhost,
               fontSize: T.fontSizes.xs,
               cursor: 'pointer',
-              padding: '3px 8px',
+              padding: `${T.spacing.half} ${T.spacing[2]}`,
               fontFamily: T.fonts.sans,
             }}
           >
@@ -339,12 +341,12 @@ export default function AgentsSection() {
 
         {/* Log lines */}
         <div style={{
-          height: '380px',
+          height: 380,
           overflowY: 'auto',
-          padding: '12px 16px',
+          padding: `${T.spacing[3]} ${T.spacing[4]}`,
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: T.spacing[1],
         }}>
           {filteredLogs.length === 0 ? (
             <div style={{
@@ -356,7 +358,7 @@ export default function AgentsSection() {
               fontSize: T.fontSizes.xs,
               fontFamily: MONO,
               flexDirection: 'column',
-              gap: '8px',
+              gap: T.spacing[2],
             }}>
               <span>$</span>
               <span>Cliquez sur "Run now" pour déclencher un agent</span>
@@ -365,28 +367,28 @@ export default function AgentsSection() {
             filteredLogs.map(line => {
               const style = TAG_STYLES[line.tag]
               return (
-                <div key={line.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <span style={{ color: '#4B5563', fontSize: '11px', fontFamily: MONO, flexShrink: 0, paddingTop: '1px' }}>
+                <div key={line.id} style={{ display: 'flex', gap: T.spacing[3], alignItems: 'flex-start' }}>
+                  <span style={{ color: T.colors.textGhost, fontSize: T.fontSizes.micro, fontFamily: MONO, flexShrink: 0, paddingTop: 1, opacity: 0.7 }}>
                     {line.ts}
                   </span>
                   <span style={{
-                    fontSize: '10px',
+                    fontSize: T.fontSizes.nano,
                     fontFamily: MONO,
-                    fontWeight: '600',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
+                    fontWeight: T.fontWeights.semibold,
+                    padding: `1px ${T.spacing[2]}`,
+                    borderRadius: T.radius.sm,
                     background: style.bg,
                     color: style.color,
                     flexShrink: 0,
-                    letterSpacing: '0.05em',
+                    letterSpacing: T.letterSpacing.loose,
                   }}>
                     {line.tag}
                   </span>
                   <span style={{
-                    fontSize: '12px',
+                    fontSize: T.fontSizes.xs,
                     fontFamily: MONO,
-                    color: line.tag === 'ERROR' ? '#F87171' : '#D1D5DB',
-                    lineHeight: '1.5',
+                    color: line.tag === 'ERROR' ? T.colors.logError : T.colors.textPrimary,
+                    lineHeight: T.lineHeight.relaxed,
                     wordBreak: 'break-word',
                   }}>
                     {line.text}
@@ -402,10 +404,10 @@ export default function AgentsSection() {
       {/* Run history */}
       {history.length > 0 && (
         <div>
-          <h2 style={{ fontSize: T.fontSizes.md, fontWeight: T.fontWeights.semibold, color: T.colors.textPrimary, margin: '0 0 12px' }}>
+          <h2 style={{ fontSize: T.fontSizes.md, fontWeight: T.fontWeights.semibold, color: T.colors.textPrimary, margin: `0 0 ${T.spacing[3]}` }}>
             Historique des runs
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: T.spacing[2] }}>
             {history.map(run => (
               <div
                 key={run.id}
@@ -413,39 +415,39 @@ export default function AgentsSection() {
                   background: T.colors.bgSurface,
                   border: `1px solid ${T.colors.borderSubtle}`,
                   borderRadius: T.radius.md,
-                  padding: '12px 16px',
+                  padding: `${T.spacing[3]} ${T.spacing[4]}`,
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '16px',
+                  gap: T.spacing[4],
                 }}
               >
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '2px',
-                  minWidth: '120px',
+                  gap: T.spacing.half,
+                  minWidth: 120,
                   flexShrink: 0,
                 }}>
                   <span style={{ fontSize: T.fontSizes.xs, fontWeight: T.fontWeights.semibold, color: AGENT_META[run.agent].color }}>
                     {AGENT_META[run.agent].icon} {AGENT_META[run.agent].label}
                   </span>
-                  <span style={{ fontSize: '11px', color: T.colors.textGhost, fontFamily: MONO }}>{run.ts}</span>
-                  <span style={{ fontSize: '11px', color: T.colors.textSecondary }}>
+                  <span style={{ fontSize: T.fontSizes.micro, color: T.colors.textGhost, fontFamily: MONO }}>{run.ts}</span>
+                  <span style={{ fontSize: T.fontSizes.micro, color: T.colors.textSecondary }}>
                     {(run.durationMs / 1000).toFixed(1)}s
                   </span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {run.signalsCreated.length > 0 && (
-                    <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: T.spacing[2], marginBottom: T.spacing[2], flexWrap: 'wrap' }}>
                       {run.signalsCreated.map((s, i) => (
                         <span key={i} style={{
-                          fontSize: '10px',
-                          padding: '2px 8px',
-                          borderRadius: '3px',
-                          background: 'rgba(245,158,11,0.15)',
-                          color: '#FBBF24',
+                          fontSize: T.fontSizes.nano,
+                          padding: `${T.spacing.half} ${T.spacing[2]}`,
+                          borderRadius: T.radius.sm,
+                          background: `color-mix(in srgb, ${T.colors.logSignal} 15%, transparent)`,
+                          color: T.colors.logSignal,
                           fontFamily: MONO,
-                          fontWeight: '600',
+                          fontWeight: T.fontWeights.semibold,
                         }}>
                           {s}
                         </span>
@@ -457,7 +459,7 @@ export default function AgentsSection() {
                       fontSize: T.fontSizes.xs,
                       color: T.colors.textSecondary,
                       margin: 0,
-                      lineHeight: '1.5',
+                      lineHeight: T.lineHeight.relaxed,
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',

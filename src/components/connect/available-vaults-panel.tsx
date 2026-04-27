@@ -148,12 +148,15 @@ interface AvailableVaultCardProps {
   onClick: () => void
 }
 
+/** Risk pill color drawn from CHART_PALETTE so the available-vaults grid
+ * stays visually consistent with the donut and timeline palettes. Indexes
+ * follow the palette spec in constants.ts: 0=accent, 1=sky, 3=amber, 2=fuchsia. */
 function riskColor(risk: string): string {
   const r = risk.toLowerCase()
-  if (r.includes('very low')) return '#7DD3FC'      // sky
-  if (r === 'low') return TOKENS.colors.accent       // citrus
-  if (r === 'medium') return '#FBBF24'               // amber
-  if (r === 'high') return '#F0ABFC'                 // fuchsia
+  if (r.includes('very low')) return CHART_PALETTE[1]
+  if (r === 'low') return CHART_PALETTE[0]
+  if (r === 'medium') return CHART_PALETTE[3]
+  if (r === 'high') return CHART_PALETTE[2]
   return TOKENS.colors.textGhost
 }
 
@@ -177,7 +180,7 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
         }),
         border: `1px solid ${TOKENS.colors.borderSubtle}`,
         cursor: 'pointer',
-        transition: 'all 200ms ease-out',
+        transition: TOKENS.transitions.base,
         display: 'flex',
         flexDirection: 'column',
         gap: TOKENS.spacing[4],
@@ -232,8 +235,8 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '4px',
-              padding: `2px ${TOKENS.spacing[2]}`,
+              gap: TOKENS.spacing[1],
+              padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
               borderRadius: TOKENS.radius.full,
               background: `${riskAccent}1f`,
               border: `1px solid ${riskAccent}66`,
@@ -248,7 +251,7 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
               {vault.risk} risk
             </span>
             <span style={{
-              padding: `2px ${TOKENS.spacing[2]}`,
+              padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
               borderRadius: TOKENS.radius.full,
               background: TOKENS.colors.bgTertiary,
               fontFamily: MONO,
@@ -323,7 +326,7 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
         borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
         marginTop: 'auto',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing.half, minWidth: 0 }}>
           <span style={{
             fontFamily: MONO,
             fontSize: TOKENS.fontSizes.micro,

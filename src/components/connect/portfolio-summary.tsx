@@ -549,7 +549,7 @@ function AllocationDonut({
                 strokeLinecap="round"
                 style={{
                   cursor: onSegmentClick ? 'pointer' : 'default',
-                  transition: 'all 150ms ease-out',
+                  transition: TOKENS.transitions.fast,
                   filter: isHovered ? `drop-shadow(0 0 8px ${seg.color})` : 'none',
                 }}
                 onMouseEnter={() => setHoveredId(seg.id)}
@@ -645,11 +645,11 @@ function AllocationDonut({
               background: TOKENS.colors.bgTertiary,
               border: `1px solid ${TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.md,
-              padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[4]}px`,
+              padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
               boxShadow: TOKENS.shadow.panel,
-              zIndex: 10,
+              zIndex: TOKENS.zIndex.tooltip,
               pointerEvents: 'none',
-              animation: 'fadeIn 150ms ease-out',
+              animation: `fadeIn ${TOKENS.transitions.durFast}`,
               minWidth: TOKENS.tooltip.minWidth,
             }}
           >
@@ -691,7 +691,7 @@ function AllocationDonut({
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '2px',
+        gap: TOKENS.spacing.half,
         width: '100%',
       }}>
         {data.slice(0, 3).map((vault) => (
@@ -706,7 +706,7 @@ function AllocationDonut({
               cursor: onSegmentClick ? 'pointer' : 'default',
               padding: `2px ${TOKENS.spacing[2]}`,
               borderRadius: TOKENS.radius.sm,
-              transition: 'all 120ms ease-out',
+              transition: TOKENS.transitions.fast,
               background: hoveredId === vault.id ? TOKENS.colors.bgTertiary : 'transparent',
             }}
             onMouseEnter={() => setHoveredId(vault.id)}
@@ -729,7 +729,7 @@ function AllocationDonut({
                 fontSize: TOKENS.fontSizes.micro,
                 fontWeight: TOKENS.fontWeights.bold,
                 color: hoveredId === vault.id ? TOKENS.colors.textPrimary : TOKENS.colors.textSecondary,
-                transition: 'color 120ms ease-out',
+                transition: `color ${TOKENS.transitions.durFast}`,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -1320,7 +1320,7 @@ function AvailableVaultTeaser({
         borderRadius: TOKENS.radius.lg,
         border: `1px solid ${TOKENS.colors.borderSubtle}`,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 150ms ease-out',
+        transition: TOKENS.transitions.fast,
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -1384,7 +1384,7 @@ function AvailableVaultTeaser({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1,
+          zIndex: TOKENS.zIndex.raised,
           transform: 'rotate(45deg)',
           boxShadow: TOKENS.shadow.card,
         }}>

@@ -154,7 +154,7 @@ export function SubscriptionComposer({
                 alignItems: 'center',
                 border: `${TOKENS.borders.thin} solid ${isValid && num > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
                 borderRadius: TOKENS.radius.md,
-                padding: `0 ${TOKENS.spacing[3]}px`,
+                padding: `0 ${TOKENS.spacing[3]}`,
                 background: TOKENS.colors.bgTertiary,
                 transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
                 height: TOKENS.control.heightLg,
@@ -221,7 +221,7 @@ export function SubscriptionComposer({
               aria-live="polite"
               style={{
                 marginTop: TOKENS.spacing[2],
-                minHeight: `${TOKENS.spacing[4]}px`,
+                minHeight: `${TOKENS.spacing[4]}`,
                 fontSize: TOKENS.fontSizes.xs,
                 fontWeight: TOKENS.fontWeights.bold,
                 color: showError ? TOKENS.colors.danger : showValidHint ? TOKENS.colors.accent : 'transparent',
@@ -410,7 +410,7 @@ function ProjectionLine({ label, value, highlight }: { label: string; value: str
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: `${TOKENS.spacing[1]}px 0`,
+        padding: `${TOKENS.spacing[1]} 0`,
         borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
       }}
     >
@@ -590,7 +590,7 @@ function VaultTabs({
                     left: 0,
                     right: 0,
                     bottom: -1,
-                    height: '2px',
+                    height: TOKENS.spacing.half,
                     background: TOKENS.colors.accent,
                   }}
                 />

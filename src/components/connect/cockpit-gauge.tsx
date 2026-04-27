@@ -44,8 +44,8 @@ export function CockpitGauge({
         textAlign: align,
         gap: fitValue(mode, {
           normal: TOKENS.spacing[1],
-          tight: '2px',
-          limit: '2px',
+          tight: TOKENS.spacing.half,
+          limit: TOKENS.spacing.half,
         }),
         cursor: onClick ? 'pointer' : 'default',
         padding: fitValue(mode, {
@@ -56,7 +56,7 @@ export function CockpitGauge({
         borderRadius: TOKENS.radius.md,
         background: active ? TOKENS.colors.accentSubtle : 'transparent',
         border: active ? `1px solid ${TOKENS.colors.accent}` : '1px solid transparent',
-        transition: 'all 120ms ease-out',
+        transition: TOKENS.transitions.fast,
       }}
       onMouseEnter={(e) => {
         if (onClick && !active) {

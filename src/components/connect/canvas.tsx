@@ -107,7 +107,7 @@ export function Canvas() {
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           paddingLeft: TOKENS.spacing[6],
           paddingRight: TOKENS.spacing[6],
-          zIndex: 100,
+          zIndex: TOKENS.zIndex.dropdown,
         }}
       >
         {/* Logo - aligné à gauche */}

@@ -41,19 +41,19 @@ export function DemoBanner() {
         left: 0,
         right: 0,
         height: `${BANNER_HEIGHT}px`,
-        zIndex: 9999,
+        zIndex: 'var(--z-banner)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 'var(--space-3, 12px)',
-        padding: '0 var(--space-4, 16px)',
-        background: 'linear-gradient(90deg, rgba(0,255,170,0.18), rgba(0,255,170,0.06))',
-        borderBottom: '1px solid rgba(0,255,170,0.4)',
+        gap: 'var(--space-3)',
+        padding: '0 var(--space-4)',
+        background: 'linear-gradient(90deg, rgba(var(--demo-accent-rgb), 0.18), rgba(var(--demo-accent-rgb), 0.06))',
+        borderBottom: '1px solid rgba(var(--demo-accent-rgb), 0.4)',
         color: 'var(--hc-text-primary, #fff)',
-        fontFamily: 'var(--font-mono, ui-monospace, monospace)',
-        fontSize: '11px',
-        fontWeight: 700,
-        letterSpacing: '0.08em',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 'var(--dashboard-font-size-xs)',
+        fontWeight: 'var(--weight-bold)',
+        letterSpacing: 'var(--dashboard-letter-spacing-caption)',
         textTransform: 'uppercase',
         backdropFilter: 'blur(6px)',
         pointerEvents: 'auto',
@@ -63,7 +63,7 @@ export function DemoBanner() {
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '6px',
+          gap: 'var(--space-2)',
         }}
       >
         <span
@@ -71,8 +71,8 @@ export function DemoBanner() {
             width: 6,
             height: 6,
             borderRadius: '50%',
-            background: '#00FFAA',
-            boxShadow: '0 0 8px #00FFAA',
+            background: 'var(--demo-accent)',
+            boxShadow: '0 0 8px var(--demo-accent)',
             animation: 'demoPulse 2s ease-in-out infinite',
           }}
         />
@@ -85,16 +85,16 @@ export function DemoBanner() {
           if (typeof window !== 'undefined') window.location.href = '/'
         }}
         style={{
-          marginLeft: 8,
-          padding: '2px 8px',
+          marginLeft: 'var(--space-2)',
+          padding: 'var(--space-0) var(--space-2)',
           background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.25)',
-          borderRadius: 4,
+          border: '1px solid var(--color-border-strong)',
+          borderRadius: 'var(--radius-sm)',
           color: 'inherit',
           fontFamily: 'inherit',
-          fontSize: '10px',
-          fontWeight: 700,
-          letterSpacing: '0.08em',
+          fontSize: 'var(--dashboard-text-dense-xs)',
+          fontWeight: 'var(--weight-bold)',
+          letterSpacing: 'var(--dashboard-letter-spacing-caption)',
           textTransform: 'uppercase',
           cursor: 'pointer',
         }}

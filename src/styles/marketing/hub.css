@@ -1095,7 +1095,7 @@
     /* Aligné sur logo hearst-connect.svg .st1 — #A7FB90 ; PMS print ~902 C (voir dashboard-vars.css) */
     --dashboard-accent: #A7FB90;
     --dashboard-accent-hover: #C4FFA8;
-    --dashboard-accent-dim: rgba(167, 251, 144, 0.12);
+    --dashboard-accent-dim: rgba(var(--brand-accent-rgb), 0.12);
     --dashboard-text-bright: #E6EAF0;
     --dashboard-text-primary: #E6EAF0;
     --dashboard-text-secondary: #A0A6B0;
@@ -1952,8 +1952,8 @@ box-sizing: border-box;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-accent, #c8f5b8);
-  background: var(--color-accent-dim, rgba(167, 251, 144, 0.18));
-  border: 1px solid var(--color-accent-subtle, rgba(167, 251, 144, 0.28));
+  background: var(--color-accent-dim, rgba(var(--brand-accent-rgb), 0.18));
+  border: 1px solid var(--color-accent-subtle, rgba(var(--brand-accent-rgb), 0.28));
   border-radius: 999px;
   width: fit-content;
 }
@@ -2115,7 +2115,7 @@ top: 50%;
 .hub-vault-product-card--prime {
 	box-shadow:
 		0 24px 48px rgba(0, 0, 0, 0.14),
-		0 0 0 1px rgba(167, 251, 144, 0.12);
+		0 0 0 1px rgba(var(--brand-accent-rgb), 0.12);
 }
 
 .hub-vault-product-card--growth {

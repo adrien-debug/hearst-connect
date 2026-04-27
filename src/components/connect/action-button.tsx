@@ -41,14 +41,14 @@ export function ActionButton({
   disabled = false
 }: ActionButtonProps) {
   const baseStyles: React.CSSProperties = {
-    padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+    padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
     borderRadius: TOKENS.radius.sm,
     fontSize: TOKENS.fontSizes.micro,
     fontWeight: TOKENS.fontWeights.black,
     textTransform: 'uppercase',
     letterSpacing: TOKENS.letterSpacing.wide,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 100ms ease-out',
+    transition: TOKENS.transitions.fast,
     whiteSpace: 'nowrap',
     opacity: disabled ? 0.5 : 1,
     filter: disabled ? 'grayscale(0.5)' : undefined,

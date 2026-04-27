@@ -21,7 +21,7 @@ export function EmptyState({
         alignItems: 'center',
         justifyContent: 'center',
         gap: TOKENS.spacing[3],
-        padding: `${TOKENS.spacing[8]}px ${TOKENS.spacing[6]}px`,
+        padding: `${TOKENS.spacing[8]} ${TOKENS.spacing[6]}`,
         textAlign: 'center',
         color: TOKENS.colors.textSecondary,
       }}
@@ -72,7 +72,7 @@ export function WalletNotConnected({ onConnect }: { onConnect?: () => void }) {
         <button
           onClick={onConnect}
           style={{
-            padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[4]}px`,
+            padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
             background: TOKENS.colors.accent,
             color: TOKENS.colors.black,
             border: 'none',

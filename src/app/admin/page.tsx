@@ -254,7 +254,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: TOKENS.fontSizes.sm,
     fontFamily: 'inherit',
     outline: 'none',
-    transition: 'border-color 0.15s ease',
+    transition: `border-color ${TOKENS.transitions.fast}`,
   },
   error: {
     padding: TOKENS.spacing[3],
@@ -265,7 +265,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: TOKENS.fontSizes.sm,
   },
   loginButton: {
-    padding: `${TOKENS.spacing[3]}px ${TOKENS.spacing[6]}px`,
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[6]}`,
     background: TOKENS.colors.accent,
     color: TOKENS.colors.black,
     border: 'none',

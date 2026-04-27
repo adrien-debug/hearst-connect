@@ -17,6 +17,16 @@
   --brand-accent-rgb: 167, 251, 144;
   --brand-accent-fg: #000000;
 
+  /* Demo mode signal — distinct from brand to flag mock data visually. */
+  --demo-accent: #00ffaa;
+  --demo-accent-rgb: 0, 255, 170;
+
+  /* RGB triplet versions for opacity composition (use with rgba()). */
+  --color-error-rgb: 239, 68, 68;
+  --color-warning-rgb: 245, 158, 11;
+  --color-info-rgb: 59, 130, 246;
+  --color-success-rgb: 45, 197, 88;
+
   /* Neutral palette (11 steps) */
   --color-gray-50: #fafafa;
   --color-gray-100: #f5f5f5;
@@ -106,18 +116,49 @@
 
   /* Z-index scale */
   --z-base: 0;
+  --z-raised: 1;
+  --z-tooltip: 10;
+  --z-dock: 40;
+  --z-dock-active: 50;
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-fixed: 300;
   --z-overlay: 400;
   --z-modal: 500;
   --z-toast: 600;
+  --z-banner: 9999;
 
   /* Pocket colors for dashboard */
   --color-pocket-btc: #F7931A;
   --color-pocket-mining: #4ADE80;
   --color-pocket-stable: #3B82F6;
   --color-pocket-reserve: #A78BFA;
+
+  /* Agent identification hues — admin sections (watcher / strategy / audit). */
+  --color-agent-watcher: #74b9ff;
+  --color-agent-strategy: #6c5ce7;
+  --color-agent-audit: #fdcb6e;
+
+  /* Signal-type hues — strategy decisions in admin & UI. */
+  --color-signal-take-profit: #00b894;
+  --color-signal-yield-rotate: #74b9ff;
+  --color-signal-rebalance: #6c5ce7;
+  --color-signal-increase-btc: #fdcb6e;
+  --color-signal-reduce-risk: #d63031;
+
+  /* Log-tag hues for agent run console (terminal-like). */
+  --color-log-start: #818CF8;
+  --color-log-tool: #60A5FA;
+  --color-log-result: #34D399;
+  --color-log-signal: #FBBF24;
+  --color-log-claude: #C4B5FD;
+  --color-log-error: #F87171;
+  --color-log-done: #6EE7B7;
+
+  /* Terminal traffic-light glyph (mac-style window dots). */
+  --color-terminal-red: #FF5F57;
+  --color-terminal-yellow: #FEBC2E;
+  --color-terminal-green: #28C840;
 
   /* Text on colored backgrounds */
   --color-on-accent: #000000;

@@ -22,7 +22,7 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 78% 62%, rgba(167, 251, 144, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 55% at 78% 62%, rgba(var(--brand-accent-rgb), 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255, 255, 255, 0.03) 0%, transparent 65%);
 }
 
@@ -192,7 +192,7 @@ a.intro-btn-wallet {
   border-radius: 50%;
   background: var(--color-accent);
   margin-top: 0.45rem;
-  box-shadow: 0 0 6px rgba(167, 251, 144, 0.7);
+  box-shadow: 0 0 6px rgba(var(--brand-accent-rgb), 0.7);
 }
 
 .intro-pillar-label {
@@ -226,13 +226,13 @@ a.intro-btn-wallet {
   text-decoration: none;
   background: var(--color-accent);
   color: #050a05;
-  box-shadow: 0 0 28px rgba(167, 251, 144, 0.32), 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 28px rgba(var(--brand-accent-rgb), 0.32), 0 4px 14px rgba(0, 0, 0, 0.35);
   transition: background 0.2s ease, box-shadow 0.2s ease, gap 0.2s ease;
 }
 .intro-cta-primary:hover {
   background: #c4ffa8;
   gap: 0.95rem;
-  box-shadow: 0 0 44px rgba(167, 251, 144, 0.52), 0 4px 18px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 44px rgba(var(--brand-accent-rgb), 0.52), 0 4px 18px rgba(0, 0, 0, 0.4);
 }
 .intro-cta-primary svg {
   width: 1rem;
@@ -259,7 +259,7 @@ a.intro-btn-wallet {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(167, 251, 144, 0.85);
+  color: rgba(var(--brand-accent-rgb), 0.85);
   margin: 0 0 0.75rem 0;
 }
 
@@ -462,7 +462,7 @@ a.intro-btn-wallet {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 78% 62%, rgba(167, 251, 144, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 55% at 78% 62%, rgba(var(--brand-accent-rgb), 0.07) 0%, transparent 70%),
     radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255, 255, 255, 0.03) 0%, transparent 65%);
 }
 
@@ -697,7 +697,7 @@ a.intro-btn-wallet {
   border-radius: 50%;
   background: var(--accent);
   margin-top: 0.4rem;
-  box-shadow: 0 0 6px rgba(167, 251, 144, 0.7);
+  box-shadow: 0 0 6px rgba(var(--brand-accent-rgb), 0.7);
 }
 
 .vaults-pillar-label {

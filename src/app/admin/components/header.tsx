@@ -94,9 +94,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: TOKENS.radius.md,
   },
   statusDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
+    width: 6,
+    height: 6,
+    borderRadius: TOKENS.radius.full,
     background: TOKENS.colors.accent,
   },
   statusText: {

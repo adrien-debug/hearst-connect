@@ -317,7 +317,7 @@ export function SimulationPanel() {
                   display: 'flex', 
                   background: TOKENS.colors.bgTertiary, 
                   borderRadius: TOKENS.radius.xl, 
-                  padding: `${TOKENS.spacing[1]}px`,
+                  padding: `${TOKENS.spacing[1]}`,
                   border: `1px solid ${TOKENS.colors.borderSubtle}`
                 }}>
                   {(['bear', 'base', 'bull'] as const).map(s => (
@@ -325,7 +325,7 @@ export function SimulationPanel() {
                       key={s}
                       onClick={() => setScenario(s)}
                       style={{
-                        padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[6]}px`,
+                        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[6]}`,
                         borderRadius: TOKENS.radius.xl,
                         background: scenario === s ? TOKENS.colors.accent : 'transparent',
                         color: scenario === s ? TOKENS.colors.black : TOKENS.colors.textSecondary,
@@ -335,7 +335,7 @@ export function SimulationPanel() {
                         letterSpacing: TOKENS.letterSpacing.display,
                         border: 'none',
                         cursor: 'pointer',
-                        transition: 'all 0.2s ease',
+                        transition: TOKENS.transitions.base,
                         boxShadow: scenario === s ? `0 2px 8px ${TOKENS.colors.accent}40` : 'none',
                       }}
                     >
@@ -350,7 +350,7 @@ export function SimulationPanel() {
                 style={{
                   display: 'grid',
                   gridTemplateColumns: isLimit ? '1fr' : '1fr 1fr',
-                  gap: `${TOKENS.spacing[6]}px`,
+                  gap: `${TOKENS.spacing[6]}`,
                 }}
               >
                 <RangeSlider
@@ -425,12 +425,12 @@ export function SimulationPanel() {
               <RecapRow label="Duration" value={`${months} Months`} />
               <RecapRow label="BTC Target" value={fmtUsd(active.expectedPrice)} />
               
-              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0`, flexShrink: 0 }} />
+              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]} 0`, flexShrink: 0 }} />
               
               <RecapRow label="Est. APY" value={formatPercent(active.annualApr * 100)} />
               <RecapRow label="Net Yield" value={`+${fmtUsd(active.cumulativeYield)}`} accent />
               
-              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]}px 0`, flexShrink: 0 }} />
+              <div style={{ height: 1, background: TOKENS.colors.borderSubtle, margin: `${TOKENS.spacing[2]} 0`, flexShrink: 0 }} />
               
               {/* Visual Ratio (Principal vs Yield) */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2], marginTop: TOKENS.spacing[2] }}>

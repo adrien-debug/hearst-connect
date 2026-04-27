@@ -61,7 +61,7 @@ export function PositionCard({ data, mode }: PositionCardProps) {
         }}>
           {data.isTargetReached && (
             <span style={{
-              padding: `${TOKENS.spacing[1]}px ${TOKENS.spacing[2]}px`,
+              padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[2]}`,
               background: TOKENS.colors.accentSubtle,
               borderRadius: TOKENS.radius.sm,
               fontSize: TOKENS.fontSizes.micro,
@@ -163,7 +163,7 @@ export function PositionCard({ data, mode }: PositionCardProps) {
         alignItems: 'center',
         gap: TOKENS.spacing[2],
         marginTop: TOKENS.spacing[3],
-        padding: `${TOKENS.spacing[2]}px ${TOKENS.spacing[3]}px`,
+        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
         background: TOKENS.colors.bgTertiary,
         borderRadius: TOKENS.radius.sm,
       }}>

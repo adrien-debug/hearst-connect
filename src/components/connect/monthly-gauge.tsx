@@ -82,7 +82,7 @@ export function MonthlyGauge({ deposited, apr, label, mode = 'normal' }: Monthly
           background: TOKENS.colors.black,
           padding: badgePadding,
           whiteSpace: 'nowrap' as const,
-          zIndex: 3,
+          zIndex: TOKENS.zIndex.raised,
         }}>
           DAY {String(dayOfMonth).padStart(2, '0')}
         </div>
@@ -90,7 +90,7 @@ export function MonthlyGauge({ deposited, apr, label, mode = 'normal' }: Monthly
         {/* Track */}
         <div style={{
           position: 'relative',
-          height: mode === 'limit' ? '10px' : '12px',
+          height: mode === 'limit' ? 10 : 12,
           background: TOKENS.colors.gray200,
           overflow: 'visible',
         }}>
@@ -102,17 +102,17 @@ export function MonthlyGauge({ deposited, apr, label, mode = 'normal' }: Monthly
             width: `${nowPct}%`,
             height: '100%',
             background: TOKENS.colors.accent,
-            zIndex: 1,
+            zIndex: TOKENS.zIndex.raised,
           }} />
           {/* NOW tick */}
           <div style={{
             position: 'absolute',
             left: `${nowPct}%`,
-            top: mode === 'limit' ? '-2px' : '-3px',
-            height: mode === 'limit' ? '14px' : '18px',
+            top: mode === 'limit' ? -2 : -3,
+            height: mode === 'limit' ? 14 : 18,
             width: TOKENS.borders.thick,
             background: TOKENS.colors.black,
-            zIndex: 4,
+            zIndex: TOKENS.zIndex.tooltip,
             transform: 'translateX(-1px)',
           }} />
         </div>
@@ -159,7 +159,7 @@ function MetricCell({
           fontWeight: TOKENS.fontWeights.bold,
           color: TOKENS.colors.textGhost,
           letterSpacing: TOKENS.letterSpacing.wide,
-          marginBottom: '2px',
+          marginBottom: TOKENS.spacing.half,
           lineHeight: LINE_HEIGHT.tight,
         }}>{label}</div>
       )}

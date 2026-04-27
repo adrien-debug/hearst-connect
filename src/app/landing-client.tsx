@@ -351,7 +351,7 @@ export default function HubPageClient() {
           <br />
           into structured yield.
         </h1>
-        <div className="hub-chapter" style={{ display: 'inline-flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="hub-chapter" style={{ display: 'inline-flex', gap: 'var(--space-3)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Link href={CTA_LINKS.launchApp.href} className="welcome-btn" prefetch>
             <span>{CTA_LINKS.launchApp.label}</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18" style={{ marginLeft: '4px' }}>

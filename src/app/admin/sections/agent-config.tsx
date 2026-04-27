@@ -225,14 +225,14 @@ export function AgentConfigSection() {
           <h4 style={st.sectionTitle}>Fréquence des agents</h4>
           <div style={st.timingGrid}>
             {[
-              { key: 'watcher_interval_ms', label: 'Watcher', desc: 'Collecte prix + yields', color: '#74b9ff' },
-              { key: 'strategy_interval_ms', label: 'Strategy', desc: 'Évaluation signaux', color: '#6c5ce7' },
-              { key: 'audit_interval_ms', label: 'Audit', desc: 'Vérification risques', color: '#fdcb6e' },
+              { key: 'watcher_interval_ms', label: 'Watcher', desc: 'Collecte prix + yields', color: T.colors.agentWatcher },
+              { key: 'strategy_interval_ms', label: 'Strategy', desc: 'Évaluation signaux', color: T.colors.agentStrategy },
+              { key: 'audit_interval_ms', label: 'Audit', desc: 'Vérification risques', color: T.colors.agentAudit },
             ].map(agent => {
               const ms = parseInt(draft[agent.key] || '60000', 10)
               return (
                 <div key={agent.key} style={st.timingCard}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: T.spacing[2] }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[2], marginBottom: T.spacing[2] }}>
                     <div style={{ ...st.timingDot, background: agent.color }} />
                     <span style={st.timingLabel}>{agent.label}</span>
                     <span style={{ ...st.timingValue, fontFamily: MONO }}>{msToLabel(ms)}</span>
@@ -250,14 +250,20 @@ export function AgentConfigSection() {
           <div style={st.cooldownGrid}>
             {['TAKE_PROFIT', 'YIELD_ROTATE', 'REBALANCE', 'INCREASE_BTC', 'REDUCE_RISK'].map(type => {
               const hours = cooldowns[type] ?? 24
-              const colors: Record<string, string> = { TAKE_PROFIT: '#00b894', YIELD_ROTATE: '#74b9ff', REBALANCE: '#6c5ce7', INCREASE_BTC: '#fdcb6e', REDUCE_RISK: '#d63031' }
+              const colors: Record<string, string> = {
+                TAKE_PROFIT: T.colors.signalTakeProfit,
+                YIELD_ROTATE: T.colors.signalYieldRotate,
+                REBALANCE: T.colors.signalRebalance,
+                INCREASE_BTC: T.colors.signalIncreaseBtc,
+                REDUCE_RISK: T.colors.signalReduceRisk,
+              }
               return (
                 <div key={type} style={st.cooldownCard}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: colors[type] }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[2], marginBottom: T.spacing[1] }}>
+                    <div style={{ width: 10, height: 10, borderRadius: T.radius.sm, background: colors[type] }} />
                     <span style={st.cooldownLabel}>{type.replace(/_/g, ' ')}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[2] }}>
                     <input type="range" min={1} max={72} step={1} value={hours} onChange={e => setCooldown(type, +e.target.value)} style={{ ...st.slider, flex: 1 }} />
                     <span style={{ ...st.cooldownValue, fontFamily: MONO }}>{hours}h</span>
                   </div>
@@ -275,12 +281,16 @@ export function AgentConfigSection() {
             const key = `${agent}_prompt_extra`
             const presets = PROMPT_PRESETS[agent]
             const currentPreset = presets.find(p => p.value === (draft[key] || ''))
-            const agentColors: Record<string, string> = { watcher: '#74b9ff', strategy: '#6c5ce7', audit: '#fdcb6e' }
+            const agentColors: Record<string, string> = {
+              watcher: T.colors.agentWatcher,
+              strategy: T.colors.agentStrategy,
+              audit: T.colors.agentAudit,
+            }
             const agentNames: Record<string, string> = { watcher: 'Watcher', strategy: 'Strategy', audit: 'Audit' }
             return (
               <div key={agent} style={st.card}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: T.spacing[3] }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: agentColors[agent] }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: T.spacing[3], marginBottom: T.spacing[3] }}>
+                  <div style={{ width: 12, height: 12, borderRadius: T.radius.sm, background: agentColors[agent] }} />
                   <h4 style={{ ...st.sectionTitle, margin: 0 }}>{agentNames[agent]}</h4>
                   {currentPreset && <span style={{ ...st.presetActiveBadge, borderColor: agentColors[agent], color: agentColors[agent] }}>{currentPreset.label}</span>}
                 </div>
@@ -350,53 +360,53 @@ const st: Record<string, React.CSSProperties> = {
   error: { background: `${T.colors.danger}20`, border: `1px solid ${T.colors.danger}40`, borderRadius: T.radius.md, padding: T.spacing[3], color: T.colors.danger, fontSize: T.fontSizes.sm, marginBottom: T.spacing[3] },
   presetBar: { display: 'flex', alignItems: 'center', gap: T.spacing[2], marginBottom: T.spacing[3], padding: `${T.spacing[2]} ${T.spacing[3]}`, background: T.colors.bgSurface, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.lg, flexWrap: 'wrap' },
   presetLabel: { fontSize: T.fontSizes.sm, color: T.colors.textSecondary, fontWeight: T.fontWeights.bold, marginRight: T.spacing[1] },
-  presetBtn: { padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: T.colors.bgTertiary, color: T.colors.textPrimary, display: 'flex', alignItems: 'center', gap: '6px', transition: 'all .15s' },
-  tabs: { display: 'flex', gap: T.spacing[1], marginBottom: T.spacing[3], background: T.colors.bgSurface, borderRadius: T.radius.lg, padding: '4px', border: `1px solid ${T.colors.borderSubtle}` },
-  tab: { flex: 1, padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: 'none', background: 'transparent', color: T.colors.textSecondary, transition: 'all .15s', textAlign: 'center' as const },
+  presetBtn: { padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: T.colors.bgTertiary, color: T.colors.textPrimary, display: 'flex', alignItems: 'center', gap: T.spacing[2], transition: T.transitions.all },
+  tabs: { display: 'flex', gap: T.spacing[1], marginBottom: T.spacing[3], background: T.colors.bgSurface, borderRadius: T.radius.lg, padding: T.spacing[1], border: `1px solid ${T.colors.borderSubtle}` },
+  tab: { flex: 1, padding: `${T.spacing[2]} ${T.spacing[3]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: 'none', background: 'transparent', color: T.colors.textSecondary, transition: T.transitions.all, textAlign: 'center' as const },
   tabActive: { background: T.colors.bgTertiary, color: T.colors.accent, boxShadow: `0 0 0 1px ${T.colors.borderSubtle}` },
   card: { background: T.colors.bgSurface, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.lg, padding: T.spacing[4], marginBottom: T.spacing[3] },
   sectionHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing[3] },
   sectionTitle: { fontSize: T.fontSizes.md, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary, margin: `0 0 ${T.spacing[2]}` },
   help: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary, marginBottom: T.spacing[2] },
-  slider: { width: '100%', WebkitAppearance: 'none' as 'none', height: '6px', background: T.colors.bgTertiary, borderRadius: '3px', border: 'none', cursor: 'pointer' },
-  sliderLabels: { display: 'flex', justifyContent: 'space-between', fontSize: T.fontSizes.micro, color: T.colors.textGhost, marginTop: '2px' },
+  slider: { width: '100%', WebkitAppearance: 'none' as 'none', height: 6, background: T.colors.bgTertiary, borderRadius: T.radius.sm, border: 'none', cursor: 'pointer' },
+  sliderLabels: { display: 'flex', justifyContent: 'space-between', fontSize: T.fontSizes.micro, color: T.colors.textGhost, marginTop: T.spacing.half },
   // Profit levels
   profitGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: T.spacing[2] },
   profitCard: { background: T.colors.bgTertiary, borderRadius: T.radius.md, padding: T.spacing[3], border: `1px solid ${T.colors.borderSubtle}` },
   profitHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing[2] },
-  profitBadge: { fontSize: T.fontSizes.micro, color: T.colors.accent, background: T.colors.accentSubtle, padding: '2px 8px', borderRadius: T.radius.sm, fontWeight: T.fontWeights.bold },
+  profitBadge: { fontSize: T.fontSizes.micro, color: T.colors.accent, background: T.colors.accentSubtle, padding: `${T.spacing.half} ${T.spacing[2]}`, borderRadius: T.radius.sm, fontWeight: T.fontWeights.bold },
   profitRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing[2] },
   profitLabel: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary },
   profitValue: { fontSize: T.fontSizes.md, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary },
-  removeBtn: { width: '20px', height: '20px', borderRadius: T.radius.sm, border: `1px solid ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.textGhost, cursor: 'pointer', fontSize: T.fontSizes.micro, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  removeBtn: { width: 20, height: 20, borderRadius: T.radius.sm, border: `1px solid ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.textGhost, cursor: 'pointer', fontSize: T.fontSizes.micro, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   addBtn: { padding: `${T.spacing[1]} ${T.spacing[3]}`, borderRadius: T.radius.sm, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px dashed ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.accent },
   // F&G
   fgContainer: { marginBottom: T.spacing[3] },
-  fgBar: { display: 'flex', height: '32px', borderRadius: T.radius.md, overflow: 'hidden', marginBottom: T.spacing[3], border: `1px solid ${T.colors.borderSubtle}` },
-  fgZone: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '40px' },
-  fgZoneLabel: { fontSize: T.fontSizes.micro, fontWeight: T.fontWeights.bold, letterSpacing: '0.1em', opacity: 0.7 },
+  fgBar: { display: 'flex', height: 32, borderRadius: T.radius.md, overflow: 'hidden', marginBottom: T.spacing[3], border: `1px solid ${T.colors.borderSubtle}` },
+  fgZone: { display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 40 },
+  fgZoneLabel: { fontSize: T.fontSizes.micro, fontWeight: T.fontWeights.bold, letterSpacing: T.letterSpacing.micro, opacity: 0.7 },
   fgSliders: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: T.spacing[3] },
   // Timings
   timingGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: T.spacing[2] },
   timingCard: { background: T.colors.bgTertiary, borderRadius: T.radius.md, padding: T.spacing[3] },
-  timingDot: { width: '10px', height: '10px', borderRadius: '3px' },
+  timingDot: { width: 10, height: 10, borderRadius: T.radius.sm },
   timingLabel: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary },
   timingValue: { fontSize: T.fontSizes.sm, color: T.colors.accent, marginLeft: 'auto' },
   timingDesc: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary, marginBottom: T.spacing[2] },
   // Cooldowns
   cooldownGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: T.spacing[2] },
   cooldownCard: { background: T.colors.bgTertiary, borderRadius: T.radius.md, padding: T.spacing[2] },
-  cooldownLabel: { fontSize: T.fontSizes.micro, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary, textTransform: 'uppercase' as const, letterSpacing: '0.05em' },
-  cooldownValue: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, color: T.colors.accent, minWidth: '32px', textAlign: 'right' as const },
+  cooldownLabel: { fontSize: T.fontSizes.micro, fontWeight: T.fontWeights.bold, color: T.colors.textPrimary, textTransform: 'uppercase' as const, letterSpacing: T.letterSpacing.loose },
+  cooldownValue: { fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, color: T.colors.accent, minWidth: 32, textAlign: 'right' as const },
   // Prompts
   promptPresetRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: T.spacing[2], marginBottom: T.spacing[3] },
-  promptPresetBtn: { padding: T.spacing[2], borderRadius: T.radius.md, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: T.colors.bgTertiary, color: T.colors.textPrimary, textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, gap: '2px', transition: 'all .15s', fontSize: T.fontSizes.sm },
+  promptPresetBtn: { padding: T.spacing[2], borderRadius: T.radius.md, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: T.colors.bgTertiary, color: T.colors.textPrimary, textAlign: 'left' as const, display: 'flex', flexDirection: 'column' as const, gap: T.spacing.half, transition: T.transitions.all, fontSize: T.fontSizes.sm },
   promptPresetDesc: { fontSize: T.fontSizes.micro, color: T.colors.textSecondary, fontWeight: T.fontWeights.regular },
-  presetActiveBadge: { fontSize: T.fontSizes.micro, padding: '1px 8px', borderRadius: T.radius.full, border: '1px solid', fontWeight: T.fontWeights.bold },
-  textarea: { width: '100%', background: T.colors.bgTertiary, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.md, padding: '10px 14px', color: T.colors.textPrimary, fontSize: T.fontSizes.sm, resize: 'vertical' as const, minHeight: '80px', fontFamily: 'inherit', lineHeight: 1.5 },
+  presetActiveBadge: { fontSize: T.fontSizes.micro, padding: `1px ${T.spacing[2]}`, borderRadius: T.radius.full, border: '1px solid', fontWeight: T.fontWeights.bold },
+  textarea: { width: '100%', background: T.colors.bgTertiary, border: `1px solid ${T.colors.borderSubtle}`, borderRadius: T.radius.md, padding: `${T.spacing[3]} ${T.spacing[4]}`, color: T.colors.textPrimary, fontSize: T.fontSizes.sm, resize: 'vertical' as const, minHeight: 80, fontFamily: 'inherit', lineHeight: T.lineHeights.relaxed },
   // Save bar
-  saveBar: { position: 'fixed' as const, bottom: 0, left: 0, right: 0, zIndex: 50, transition: 'opacity .2s', pointerEvents: 'auto' as const },
-  saveBarInner: { maxWidth: '900px', margin: '0 auto', padding: `${T.spacing[3]} ${T.spacing[4]}`, background: T.colors.bgSurface, borderTop: `1px solid ${T.colors.borderSubtle}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backdropFilter: 'blur(12px)' },
+  saveBar: { position: 'fixed' as const, bottom: 0, left: 0, right: 0, zIndex: T.zIndex.dock, transition: `opacity ${T.transitions.base}`, pointerEvents: 'auto' as const },
+  saveBarInner: { maxWidth: 900, margin: '0 auto', padding: `${T.spacing[3]} ${T.spacing[4]}`, background: T.colors.bgSurface, borderTop: `1px solid ${T.colors.borderSubtle}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backdropFilter: 'blur(12px)' },
   saveBtn: { padding: `${T.spacing[2]} ${T.spacing[4]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: 'none', background: T.colors.accent, color: 'var(--color-on-accent)' },
   cancelBtn: { padding: `${T.spacing[2]} ${T.spacing[4]}`, borderRadius: T.radius.md, fontSize: T.fontSizes.sm, fontWeight: T.fontWeights.bold, cursor: 'pointer', border: `1px solid ${T.colors.borderSubtle}`, background: 'transparent', color: T.colors.textSecondary },
 }

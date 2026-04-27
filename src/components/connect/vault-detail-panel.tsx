@@ -658,7 +658,7 @@ function PositionHeader({
                 letterSpacing: 'inherit',
                 textTransform: 'inherit',
                 cursor: 'pointer',
-                transition: 'all 120ms ease-out',
+                transition: TOKENS.transitions.fast,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.color = TOKENS.colors.accent
@@ -811,7 +811,7 @@ function HeaderActionButton({
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         cursor: 'pointer',
-        transition: 'all 120ms ease',
+        transition: TOKENS.transitions.fast,
         whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
@@ -1150,7 +1150,7 @@ function DetailPill({ label, icon }: { label: string; icon: 'risk' | 'chain' | '
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{ color: TOKENS.colors.accent, fontSize: '10px', lineHeight: 1 }}>{glyph}</span>
+      <span style={{ color: TOKENS.colors.accent, fontSize: TOKENS.fontSizes.nano, lineHeight: 1 }}>{glyph}</span>
       {label}
     </span>
   )
