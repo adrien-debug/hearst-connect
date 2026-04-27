@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -12,6 +13,16 @@ import {
 import { SIMULATION_VIEW_ID } from './view-ids'
 import { type VaultLine, type Aggregate } from './data'
 import { useVaultLines } from '@/hooks/useVaultLines'
+
+function readInitialSelection(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('vault') || params.get('view') || null
+  } catch {
+    return null
+  }
+}
 
 interface ConnectRoutingContextValue {
   vaults: VaultLine[]
@@ -29,6 +40,13 @@ const ConnectRoutingContext = createContext<ConnectRoutingContextValue | null>(n
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { vaults, agg, hasVaults, isLoading } = useVaultLines()
+
+  // Hydrate initial selection from URL (?vault=<id> or ?view=<id>) once mounted
+  // so demo screenshots can deep-link straight into a vault detail page.
+  useEffect(() => {
+    const initial = readInitialSelection()
+    if (initial) setSelectedId(initial)
+  }, [])
 
   const isSimulation = selectedId === SIMULATION_VIEW_ID
   const selected = useMemo(

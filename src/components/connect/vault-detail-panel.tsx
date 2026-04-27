@@ -18,6 +18,7 @@ import { useTransaction } from '@/hooks/useTransaction'
 import { Skeleton } from './skeleton'
 import { WalletNotConnected, VaultNotConfigured, OnChainError } from './empty-states'
 import { useLiveActions } from '@/hooks/useLiveActions'
+import { useUserData } from '@/hooks/useUserData'
 
 type ModalType = 'claim' | 'manage' | 'exit' | null
 
@@ -59,14 +60,13 @@ export function VaultDetailPanel({
   )
 
   const [activeModal, setActiveModal] = useState<ModalType>(null)
-  const [openStrategy, setOpenStrategy] = useState(false)
-  const [openTerms, setOpenTerms] = useState(false)
-  const [openTransactions, setOpenTransactions] = useState(false)
   const transaction = useTransaction()
 
   // Hooks must run on every render — keep BEFORE the early returns below
   // (Rules of Hooks: order must be stable across renders).
   const { claim: liveClaim, withdraw: liveWithdraw } = useLiveActions(vault.id)
+  const { activity: allActivity } = useUserData()
+  const vaultActivity = allActivity.filter((a) => a.vaultId === vault.id).slice(0, 4)
 
   if (!isVaultConfigured) {
     return (
@@ -319,43 +319,88 @@ export function VaultDetailPanel({
           mode={mode}
         />
 
-        {/* Strategy details (collapsible) */}
-        <CollapsibleSection
-          title="Strategy details"
-          isOpen={openStrategy}
-          onToggle={() => setOpenStrategy((v) => !v)}
-          mode={mode}
+        {/* 2-column detail layout — Description+Strategy on left, Terms+Activity on right */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: fitValue(mode, {
+              normal: '1.2fr 1fr',
+              tight: '1fr 1fr',
+              limit: '1fr',
+            }),
+            gap: shellGap,
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+          }}
         >
-          <StrategyDetailsBody
-            vault={vault}
-            risk={vaultConfig?.risk}
-          />
-        </CollapsibleSection>
+          {/* Left column — About + Strategy */}
+          <DetailCard title="About this vault" accent>
+            <p style={{
+              margin: 0,
+              fontSize: TOKENS.fontSizes.sm,
+              color: TOKENS.colors.textSecondary,
+              lineHeight: LINE_HEIGHT.body,
+            }}>
+              {vaultConfig?.description ?? vault.strategy}
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: TOKENS.spacing[2],
+              flexWrap: 'wrap',
+              marginTop: TOKENS.spacing[3],
+            }}>
+              <DetailPill label={vaultConfig?.risk ?? (vault.type === 'active' ? vault.risk : 'Medium')} icon="risk" />
+              <DetailPill label={vaultConfig?.chain?.name ?? 'Base'} icon="chain" />
+              <DetailPill label={vaultConfig?.fees?.split('·')[0]?.trim() ?? '—'} icon="fees" />
+            </div>
+            <div style={{
+              borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
+              marginTop: TOKENS.spacing[4],
+              paddingTop: TOKENS.spacing[3],
+            }}>
+              <div style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.micro,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                color: TOKENS.colors.textGhost,
+                marginBottom: TOKENS.spacing[2],
+              }}>
+                Strategy
+              </div>
+              <p style={{
+                margin: 0,
+                fontSize: TOKENS.fontSizes.xs,
+                color: TOKENS.colors.textSecondary,
+                lineHeight: LINE_HEIGHT.body,
+              }}>
+                {vault.strategy}
+              </p>
+            </div>
+          </DetailCard>
 
-        {/* Terms (collapsible) */}
-        <CollapsibleSection
-          title="Terms"
-          isOpen={openTerms}
-          onToggle={() => setOpenTerms((v) => !v)}
-          mode={mode}
-        >
-          <TermsBody
-            vault={vault}
-            vaultConfig={vaultConfig}
-            maturityDate={positionData?.unlockTimeline.maturityDate}
-            unlockDays={unlockDays}
-          />
-        </CollapsibleSection>
-
-        {/* Transactions (collapsible) */}
-        <CollapsibleSection
-          title="Transactions"
-          isOpen={openTransactions}
-          onToggle={() => setOpenTransactions((v) => !v)}
-          mode={mode}
-        >
-          <TransactionsBody />
-        </CollapsibleSection>
+          {/* Right column — Terms + Activity */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: shellGap,
+            minHeight: 0,
+          }}>
+            <DetailCard title="Terms">
+              <TermsBody
+                vault={vault}
+                vaultConfig={vaultConfig}
+                maturityDate={positionData?.unlockTimeline.maturityDate}
+                unlockDays={unlockDays}
+              />
+            </DetailCard>
+            <DetailCard title={`Activity (${vaultActivity.length})`}>
+              <VaultActivityTimeline activity={vaultActivity} />
+            </DetailCard>
+          </div>
+        </div>
       </div>
 
       {/* Claim Modal */}
@@ -571,12 +616,16 @@ function PositionHeader({
       }),
       borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
       flexShrink: 0,
-      background: TOKENS.colors.bgApp,
+      background: `
+        radial-gradient(ellipse 60% 100% at 100% 50%, ${TOKENS.colors.accentGlow} 0%, transparent 70%),
+        ${TOKENS.colors.bgApp}
+      `,
       display: 'flex',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
       gap: TOKENS.spacing[6],
       flexWrap: mode === 'limit' ? 'wrap' : 'nowrap',
+      position: 'relative',
     }}>
       {/* Left: LIVE pill + name + subtitle */}
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2] }}>
@@ -668,7 +717,7 @@ function PositionHeader({
         )}
       </div>
 
-      {/* Right: APY + actions */}
+      {/* Right: APY card + actions */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -676,47 +725,50 @@ function PositionHeader({
         gap: TOKENS.spacing[3],
         flexShrink: 0,
       }}>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: TOKENS.spacing[2],
-            justifyContent: 'flex-end',
+        {/* APY hero card with subtle border + accent */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: TOKENS.spacing[2],
+          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
+          background: `linear-gradient(135deg, ${TOKENS.colors.accentGlow}, transparent)`,
+          border: `1px solid ${TOKENS.colors.accent}`,
+          borderRadius: TOKENS.radius.md,
+        }}>
+          <span style={{
+            fontFamily: TOKENS.fonts.mono,
+            fontSize: TOKENS.fontSizes.micro,
+            fontWeight: TOKENS.fontWeights.bold,
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+            color: TOKENS.colors.textGhost,
           }}>
-            <span style={{
-              fontSize: fitValue(mode, {
-                normal: TOKENS.fontSizes.xxl,
-                tight: TOKENS.fontSizes.xl,
-                limit: TOKENS.fontSizes.lg,
-              }),
-              fontWeight: TOKENS.fontWeights.black,
-              letterSpacing: VALUE_LETTER_SPACING,
-              color: TOKENS.colors.textPrimary,
-              fontVariantNumeric: 'tabular-nums',
-              lineHeight: LINE_HEIGHT.tight,
-            }}>
-              {vault.apr}%
-            </span>
-            <span style={{
-              fontFamily: TOKENS.fonts.mono,
-              fontSize: TOKENS.fontSizes.xs,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              color: TOKENS.colors.textSecondary,
-            }}>
-              APY
-            </span>
-          </div>
+            APY
+          </span>
+          <span style={{
+            fontSize: fitValue(mode, {
+              normal: TOKENS.fontSizes.xxl,
+              tight: TOKENS.fontSizes.xl,
+              limit: TOKENS.fontSizes.lg,
+            }),
+            fontWeight: TOKENS.fontWeights.black,
+            letterSpacing: VALUE_LETTER_SPACING,
+            color: TOKENS.colors.accent,
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: LINE_HEIGHT.tight,
+          }}>
+            {vault.apr}%
+          </span>
         </div>
+        {/* Action buttons */}
         <div style={{ display: 'flex', gap: TOKENS.spacing[2], flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {accruedYield > 0 && (
-            <HeaderActionPill label="Claim" onClick={onClaim} accent />
+            <HeaderActionButton label={`Claim ${fmtUsdCompact(accruedYield)}`} onClick={onClaim} variant="accent" />
           )}
           {isReadyForExit ? (
-            <HeaderActionPill label="Exit" onClick={onExit} />
+            <HeaderActionButton label="Exit Position" onClick={onExit} variant="danger" />
           ) : (
-            <HeaderActionPill label="Manage" onClick={onManage} />
+            <HeaderActionButton label="Manage" onClick={onManage} variant="secondary" />
           )}
         </div>
       </div>
@@ -724,32 +776,54 @@ function PositionHeader({
   )
 }
 
-function HeaderActionPill({ label, onClick, accent = false }: { label: string; onClick: () => void; accent?: boolean }) {
+/** HeaderActionButton — Solid button used in PositionHeader. Replaces the
+ *  text-only HeaderActionPill which was hard to spot at a glance. */
+function HeaderActionButton({
+  label,
+  onClick,
+  variant,
+}: {
+  label: string
+  onClick: () => void
+  variant: 'accent' | 'secondary' | 'danger'
+}) {
+  const palette = {
+    accent: { bg: TOKENS.colors.accent, fg: TOKENS.colors.black, border: TOKENS.colors.accent },
+    secondary: { bg: 'transparent', fg: TOKENS.colors.textPrimary, border: TOKENS.colors.borderStrong },
+    danger: { bg: 'transparent', fg: TOKENS.colors.danger, border: TOKENS.colors.danger },
+  }[variant]
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
-        padding: 0,
-        background: 'transparent',
-        color: accent ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
-        border: 'none',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: TOKENS.spacing[2],
+        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
+        background: palette.bg,
+        color: palette.fg,
+        border: `1px solid ${palette.border}`,
+        borderRadius: TOKENS.radius.md,
         fontFamily: TOKENS.fonts.sans,
         fontSize: TOKENS.fontSizes.xs,
         fontWeight: TOKENS.fontWeights.black,
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         cursor: 'pointer',
-        transition: 'color 120ms ease',
+        transition: 'all 120ms ease',
+        whiteSpace: 'nowrap',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = accent ? TOKENS.colors.accent : TOKENS.colors.textPrimary
+        if (variant === 'accent') e.currentTarget.style.filter = 'brightness(1.08)'
+        else e.currentTarget.style.background = TOKENS.colors.bgTertiary
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = accent ? TOKENS.colors.accent : TOKENS.colors.textSecondary
+        e.currentTarget.style.filter = 'none'
+        e.currentTarget.style.background = palette.bg
       }}
     >
-      {label} →
+      {label}
     </button>
   )
 }
@@ -879,108 +953,6 @@ function CumulativeTargetProgress({
 }
 
 
-function CollapsibleSection({
-  title,
-  isOpen,
-  onToggle,
-  mode,
-  children,
-}: {
-  title: string
-  isOpen: boolean
-  onToggle: () => void
-  mode: SmartFitMode
-  children: React.ReactNode
-}) {
-  const verticalPadding = fitValue(mode, {
-    normal: TOKENS.spacing[3],
-    tight: TOKENS.spacing[3],
-    limit: TOKENS.spacing[2],
-  })
-  return (
-    <div style={{
-      flexShrink: 0,
-      borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
-    }}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          width: '100%',
-          padding: `${verticalPadding} 0`,
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: TOKENS.colors.textPrimary,
-          fontSize: TOKENS.fontSizes.sm,
-          fontWeight: TOKENS.fontWeights.black,
-          textAlign: 'left',
-          letterSpacing: TOKENS.letterSpacing.normal,
-        }}
-      >
-        <span>{title}</span>
-        <ChevronGlyph open={isOpen} />
-      </button>
-      {isOpen && (
-        <div style={{ paddingBottom: verticalPadding }}>
-          {children}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ChevronGlyph({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={TOKENS.colors.textSecondary}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      style={{
-        transition: 'transform 200ms ease',
-        transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-        flexShrink: 0,
-      }}
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
-
-
-function StrategyDetailsBody({
-  vault,
-  risk,
-}: {
-  vault: ActiveVault | MaturedVault
-  risk?: string
-}) {
-  const resolvedRisk = risk ?? (vault.type === 'active' ? vault.risk : undefined)
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3] }}>
-      <p style={{
-        margin: 0,
-        fontSize: TOKENS.fontSizes.sm,
-        color: TOKENS.colors.textSecondary,
-        lineHeight: LINE_HEIGHT.body,
-      }}>
-        {vault.strategy}
-      </p>
-      {resolvedRisk && <MetaRow label="Risk" value={resolvedRisk} />}
-    </div>
-  )
-}
-
 function TermsBody({
   vault,
   vaultConfig,
@@ -1047,21 +1019,6 @@ function MetaRow({ label, value, mono = false }: { label: string; value: string;
   )
 }
 
-function TransactionsBody() {
-  return (
-    <div style={{
-      padding: `${TOKENS.spacing[3]} 0`,
-      fontSize: TOKENS.fontSizes.xs,
-      color: TOKENS.colors.textGhost,
-      fontFamily: TOKENS.fonts.mono,
-      letterSpacing: TOKENS.letterSpacing.display,
-      textTransform: 'uppercase',
-    }}>
-      No transactions yet
-    </div>
-  )
-}
-
 function ManageOption({
   title,
   description,
@@ -1107,6 +1064,196 @@ function ManageOption({
       </span>
     </button>
   )
+}
+
+/** DetailCard — Container for the 2-col grid sections of vault detail page. */
+function DetailCard({
+  title,
+  accent = false,
+  children,
+}: {
+  title: string
+  accent?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      style={{
+        background: TOKENS.colors.black,
+        border: `1px solid ${TOKENS.colors.borderSubtle}`,
+        borderRadius: TOKENS.radius.lg,
+        padding: TOKENS.spacing[5],
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+        overflow: 'hidden',
+        flex: 1,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: TOKENS.spacing[2],
+          marginBottom: TOKENS.spacing[3],
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            width: 3,
+            height: 14,
+            background: accent ? TOKENS.colors.accent : TOKENS.colors.borderStrong,
+            borderRadius: TOKENS.radius.full,
+            display: 'inline-block',
+          }}
+        />
+        <span
+          style={{
+            fontFamily: TOKENS.fonts.mono,
+            fontSize: TOKENS.fontSizes.xs,
+            fontWeight: TOKENS.fontWeights.bold,
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+            color: TOKENS.colors.textSecondary,
+          }}
+        >
+          {title}
+        </span>
+      </div>
+      <div style={{ minHeight: 0, overflow: 'auto', flex: 1 }} className="hide-scrollbar">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/** DetailPill — Small pill with an inline icon, used in the About card. */
+function DetailPill({ label, icon }: { label: string; icon: 'risk' | 'chain' | 'fees' }) {
+  const glyph = icon === 'risk' ? '◆' : icon === 'chain' ? '⬡' : '%'
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: TOKENS.spacing[2],
+        padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
+        background: TOKENS.colors.bgTertiary,
+        border: `1px solid ${TOKENS.colors.borderSubtle}`,
+        borderRadius: TOKENS.radius.full,
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.micro,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
+        textTransform: 'uppercase',
+        color: TOKENS.colors.textSecondary,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span style={{ color: TOKENS.colors.accent, fontSize: '10px', lineHeight: 1 }}>{glyph}</span>
+      {label}
+    </span>
+  )
+}
+
+/** VaultActivityTimeline — Compact list of recent events for this vault. */
+function VaultActivityTimeline({
+  activity,
+}: {
+  activity: Array<{
+    id: string
+    type: 'deposit' | 'claim' | 'withdraw'
+    amount: number
+    timestamp: number
+  }>
+}) {
+  if (activity.length === 0) {
+    return (
+      <div
+        style={{
+          padding: `${TOKENS.spacing[4]} 0`,
+          textAlign: 'center',
+          fontSize: TOKENS.fontSizes.xs,
+          color: TOKENS.colors.textGhost,
+        }}
+      >
+        No activity recorded yet
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {activity.map((event, i) => {
+        const isWithdraw = event.type === 'withdraw'
+        const accent = isWithdraw ? TOKENS.colors.danger : TOKENS.colors.accent
+        const label = event.type === 'claim' ? 'Yield claimed'
+          : event.type === 'withdraw' ? 'Position withdrawn'
+          : 'Capital deposited'
+        return (
+          <div
+            key={event.id}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '20px 1fr auto',
+              alignItems: 'center',
+              gap: TOKENS.spacing[3],
+              padding: `${TOKENS.spacing[3]} 0`,
+              borderBottom: i < activity.length - 1 ? `1px solid ${TOKENS.colors.borderSubtle}` : 'none',
+            }}
+          >
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: `${accent}30`,
+                border: `1.5px solid ${accent}`,
+                justifySelf: 'center',
+              }}
+            />
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                color: TOKENS.colors.textPrimary,
+              }}>
+                {label}
+              </div>
+              <div style={{
+                fontSize: TOKENS.fontSizes.micro,
+                color: TOKENS.colors.textGhost,
+                fontFamily: TOKENS.fonts.mono,
+              }}>
+                {formatAgo(event.timestamp)}
+              </div>
+            </div>
+            <span
+              style={{
+                fontFamily: TOKENS.fonts.mono,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.black,
+                color: accent,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {isWithdraw ? '-' : '+'}{fmtUsdCompact(event.amount)}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function formatAgo(timestamp: number): string {
+  const delta = Math.max(0, Date.now() - timestamp)
+  const minutes = Math.floor(delta / 60_000)
+  if (minutes < 60) return `${Math.max(1, minutes)}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
 
 

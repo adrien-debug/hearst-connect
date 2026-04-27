@@ -35,6 +35,7 @@ export interface MaturedVault extends BaseVault {
 
 export interface AvailableVault extends BaseVault {
   type: 'available'
+  description?: string
   minDeposit: number
   lockPeriod: string
   term: string

@@ -15,6 +15,7 @@ export function toAvailableVault(config: VaultConfig): AvailableVault {
     target: config.target,
     strategy: config.strategy,
     image: config.image,
+    description: config.description,
     minDeposit: config.minDeposit,
     lockPeriod: lockLabel,
     term: termLabel,

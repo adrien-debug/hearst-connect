@@ -1,6 +1,5 @@
 'use client'
 
-import { Label } from '@/components/ui/label'
 import { TOKENS, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING, MONO, CHART_PALETTE } from './constants'
 import { formatVaultName } from './formatting'
 import type { AvailableVault } from './data'
@@ -149,9 +148,18 @@ interface AvailableVaultCardProps {
   onClick: () => void
 }
 
+function riskColor(risk: string): string {
+  const r = risk.toLowerCase()
+  if (r.includes('very low')) return '#7DD3FC'      // sky
+  if (r === 'low') return TOKENS.colors.accent       // citrus
+  if (r === 'medium') return '#FBBF24'               // amber
+  if (r === 'high') return '#F0ABFC'                 // fuchsia
+  return TOKENS.colors.textGhost
+}
+
 function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardProps) {
   const accentColor = CHART_PALETTE[index % CHART_PALETTE.length]
-  const targetPct = parseFloat(vault.target.replace('%', '')) || 0
+  const riskAccent = riskColor(vault.risk)
 
   return (
     <div
@@ -163,7 +171,7 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
         background: TOKENS.colors.black,
         borderRadius: TOKENS.radius.lg,
         padding: fitValue(mode, {
-          normal: TOKENS.spacing[6],
+          normal: TOKENS.spacing[5],
           tight: TOKENS.spacing[4],
           limit: TOKENS.spacing[3],
         }),
@@ -173,186 +181,187 @@ function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardP
         display: 'flex',
         flexDirection: 'column',
         gap: TOKENS.spacing[4],
+        position: 'relative',
+        overflow: 'hidden',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = TOKENS.colors.accent
-        e.currentTarget.style.background = TOKENS.colors.bgSecondary
+        e.currentTarget.style.borderColor = accentColor
+        e.currentTarget.style.transform = 'translateY(-2px)'
+        e.currentTarget.style.boxShadow = `0 8px 24px ${accentColor}1a`
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
-        e.currentTarget.style.background = TOKENS.colors.black
+        e.currentTarget.style.transform = 'none'
+        e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      {/* Header */}
+      {/* Top accent bar */}
+      <span style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        background: `linear-gradient(90deg, ${accentColor}, transparent)`,
+      }} />
+
+      {/* Header — name + APY */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[3] }}>
-          {vault.image && (
-            <img
-              src={vault.image}
-              alt={vault.name}
-              style={{
-          width: TOKENS.icon.xl,
-          height: TOKENS.icon.xl,
-                borderRadius: TOKENS.radius.md,
-                objectFit: 'cover',
-              }}
-            />
-          )}
-          <div>
-            <div style={{
-              fontSize: TOKENS.fontSizes.md,
-              fontWeight: TOKENS.fontWeights.black,
-              textTransform: 'uppercase',
-              letterSpacing: VALUE_LETTER_SPACING,
-              color: TOKENS.colors.textPrimary,
-            }}>
-              {vault.name}
-            </div>
-            <div style={{
-              fontSize: TOKENS.fontSizes.xs,
-              color: TOKENS.colors.textSecondary,
-              marginTop: TOKENS.spacing[1],
-            }}>
-              {vault.strategy}
-            </div>
-          </div>
-        </div>
-        <div style={{
-          fontSize: fitValue(mode, {
-            normal: TOKENS.fontSizes.xl,
-            tight: TOKENS.fontSizes.lg,
-            limit: TOKENS.fontSizes.md,
-          }),
-          fontWeight: TOKENS.fontWeights.black,
-          letterSpacing: VALUE_LETTER_SPACING,
-          color: accentColor,
-        }}>
-          {vault.apr}%
-        </div>
-      </div>
-
-      {/* Key Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: TOKENS.spacing[3],
       }}>
-        <StatItem label="Target" value={vault.target} />
-        <StatItem label="Lock Period" value={vault.lockPeriod} />
-        <StatItem label="Min Deposit" value={fmtUsdCompact(vault.minDeposit)} />
-        <StatItem label="Risk" value={vault.risk} />
-      </div>
-
-      {/* Target Progress Preview */}
-      <div style={{
-        background: TOKENS.colors.bgSecondary,
-        borderRadius: TOKENS.radius.md,
-        padding: TOKENS.spacing[3],
-      }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{
+            fontSize: TOKENS.fontSizes.md,
+            fontWeight: TOKENS.fontWeights.black,
+            textTransform: 'uppercase',
+            letterSpacing: VALUE_LETTER_SPACING,
+            color: TOKENS.colors.textPrimary,
+          }}>
+            {vault.name}
+          </div>
+          {/* Risk + Lock pills */}
+          <div style={{
+            display: 'flex',
+            gap: TOKENS.spacing[2],
+            marginTop: TOKENS.spacing[2],
+            flexWrap: 'wrap',
+          }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: `2px ${TOKENS.spacing[2]}`,
+              borderRadius: TOKENS.radius.full,
+              background: `${riskAccent}1f`,
+              border: `1px solid ${riskAccent}66`,
+              fontFamily: MONO,
+              fontSize: TOKENS.fontSizes.micro,
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              color: riskAccent,
+            }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: riskAccent }} />
+              {vault.risk} risk
+            </span>
+            <span style={{
+              padding: `2px ${TOKENS.spacing[2]}`,
+              borderRadius: TOKENS.radius.full,
+              background: TOKENS.colors.bgTertiary,
+              fontFamily: MONO,
+              fontSize: TOKENS.fontSizes.micro,
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              color: TOKENS.colors.textSecondary,
+            }}>
+              {vault.lockPeriod}
+            </span>
+          </div>
+        </div>
+        {/* APY badge */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: TOKENS.spacing[2],
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 0,
+          flexShrink: 0,
         }}>
           <span style={{
-            fontSize: TOKENS.fontSizes.xs,
+            fontSize: fitValue(mode, {
+              normal: TOKENS.fontSizes.xxl,
+              tight: TOKENS.fontSizes.xl,
+              limit: TOKENS.fontSizes.lg,
+            }),
+            fontWeight: TOKENS.fontWeights.black,
+            letterSpacing: VALUE_LETTER_SPACING,
+            color: accentColor,
+            lineHeight: 1,
+          }}>
+            {vault.apr}%
+          </span>
+          <span style={{
+            fontFamily: MONO,
+            fontSize: TOKENS.fontSizes.micro,
             fontWeight: TOKENS.fontWeights.bold,
             letterSpacing: TOKENS.letterSpacing.display,
             textTransform: 'uppercase',
-            color: TOKENS.colors.textSecondary,
+            color: TOKENS.colors.textGhost,
+            marginTop: '2px',
           }}>
-            Target Yield
+            APY · target {vault.target}
           </span>
-          <span style={{
-            fontSize: TOKENS.fontSizes.xs,
-            fontWeight: TOKENS.fontWeights.black,
-            color: accentColor,
-          }}>
-            {vault.target}
-          </span>
-        </div>
-        <div style={{
-          height: TOKENS.spacing[1],
-          background: TOKENS.colors.black,
-          borderRadius: TOKENS.radius.full,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            width: '0%',
-            height: '100%',
-            background: accentColor,
-            borderRadius: TOKENS.radius.full,
-          }} />
-        </div>
-        <div style={{
-          marginTop: TOKENS.spacing[2],
-          fontSize: TOKENS.fontSizes.micro,
-          color: TOKENS.colors.textGhost,
-        }}>
-          Potential return: ~{targetPct}% cumulative over {vault.lockPeriod.toLowerCase()}
         </div>
       </div>
 
-      {/* Fees & CTA */}
+      {/* Description */}
+      {vault.description && (
+        <p style={{
+          margin: 0,
+          fontSize: TOKENS.fontSizes.xs,
+          color: TOKENS.colors.textSecondary,
+          lineHeight: LINE_HEIGHT.body,
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {vault.description}
+        </p>
+      )}
+
+      {/* Footer stats — Min deposit + Fees + CTA */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
+        gap: TOKENS.spacing[3],
         paddingTop: TOKENS.spacing[3],
         borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
+        marginTop: 'auto',
       }}>
-        <span style={{
-          fontSize: TOKENS.fontSizes.xs,
-          color: TOKENS.colors.textGhost,
-        }}>
-          {vault.fees}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+          <span style={{
+            fontFamily: MONO,
+            fontSize: TOKENS.fontSizes.micro,
+            fontWeight: TOKENS.fontWeights.bold,
+            letterSpacing: TOKENS.letterSpacing.display,
+            textTransform: 'uppercase',
+            color: TOKENS.colors.textGhost,
+          }}>
+            Min · {fmtUsdCompact(vault.minDeposit)}
+          </span>
+          <span style={{
+            fontSize: TOKENS.fontSizes.micro,
+            color: TOKENS.colors.textGhost,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {vault.fees}
+          </span>
+        </div>
         <button style={{
           padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
           background: TOKENS.colors.accent,
           border: 'none',
           borderRadius: TOKENS.radius.md,
           color: TOKENS.colors.black,
-          fontSize: TOKENS.fontSizes.sm,
+          fontFamily: TOKENS.fonts.sans,
+          fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.black,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
           cursor: 'pointer',
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
         }}>
-          Subscribe
+          Subscribe →
         </button>
       </div>
     </div>
   )
 }
-
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div style={{
-        fontSize: TOKENS.fontSizes.micro,
-        fontWeight: TOKENS.fontWeights.bold,
-        fontFamily: MONO,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-        color: TOKENS.colors.textSecondary,
-        marginBottom: TOKENS.spacing[2],
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontSize: TOKENS.fontSizes.sm,
-        fontWeight: TOKENS.fontWeights.black,
-        letterSpacing: VALUE_LETTER_SPACING,
-        color: TOKENS.colors.textPrimary,
-      }}>
-        {value}
-      </div>
-    </div>
-  )
-}
-
