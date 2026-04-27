@@ -76,6 +76,26 @@ export function PortfolioSummary({
     [portfolioValue, safeAgg.avgApr],
   )
   const recentActivity = mounted ? userActivity.slice(0, 5) : []
+
+  // Cockpit sparklines — generated client-side only (mounted guard prevents SSR mismatch)
+  const portfolioSparkline = useMemo(
+    () => (mounted && valueHistory.length > 1 ? valueHistory.slice(-12) : []),
+    [mounted, valueHistory],
+  )
+  const yieldSparkline = useMemo(() => {
+    if (!mounted || totalYieldEarned <= 0) return []
+    return Array.from({ length: 12 }, (_, i) => {
+      const t = (i + 1) / 12
+      return totalYieldEarned * (t * t * 0.25 + t * 0.75)
+    })
+  }, [mounted, totalYieldEarned])
+  const distributionSparkline = useMemo(() => {
+    if (!mounted || safeAgg.totalClaimable <= 0) return []
+    return Array.from({ length: 24 }, (_, h) => {
+      const base = safeAgg.totalClaimable * (h + 1) / 24
+      return base + Math.sin(h * 1.3) * safeAgg.totalClaimable * 0.018
+    })
+  }, [mounted, safeAgg.totalClaimable])
   const donutData = useMemo(() => {
     return activeVaults.map((vault, index) => ({
       id: vault.id,
@@ -153,6 +173,7 @@ export function PortfolioSummary({
             mode={mode}
             primary
             align="center"
+            sparkline={portfolioSparkline}
           />
 
           {/* Yield Earned to Date — Accent */}
@@ -164,6 +185,7 @@ export function PortfolioSummary({
             mode={mode}
             accent
             align="center"
+            sparkline={yieldSparkline}
           />
 
           {/* Next Distribution — daily 00:00 UTC */}
@@ -174,6 +196,7 @@ export function PortfolioSummary({
             subtext={nextDistribution?.absolute ?? ''}
             mode={mode}
             align="center"
+            sparkline={distributionSparkline}
           />
         </div>
       </div>
