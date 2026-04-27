@@ -42,7 +42,8 @@
 
   /* Typography */
   --font-sans: 'Satoshi Variable', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  /* Mono = Satoshi Variable with tabular nums (font-variant-numeric: tabular-nums on consumers) */
+  --font-mono: 'Satoshi Variable', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Spacing (4px base) */
   --space-0: 0px;

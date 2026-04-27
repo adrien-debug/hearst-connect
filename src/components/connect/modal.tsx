@@ -60,9 +60,9 @@ export function Modal({
   if (!isOpen) return null
 
   const sizeStyles = {
-    sm: { maxWidth: TOKENS.spacing[32] },
-    md: { maxWidth: `${Number(TOKENS.spacing[32].replace('px', '')) + 120}px` },
-    lg: { maxWidth: `${Number(TOKENS.spacing[32].replace('px', '')) + 320}px` },
+    sm: { maxWidth: '420px' },
+    md: { maxWidth: '560px' },
+    lg: { maxWidth: '720px' },
   }
 
   return (
@@ -126,9 +126,8 @@ export function Modal({
                 tight: TOKENS.fontSizes.md,
                 limit: TOKENS.fontSizes.md,
               }),
-              fontWeight: TOKENS.fontWeights.black,
-              textTransform: 'uppercase',
-              letterSpacing: TOKENS.letterSpacing.tight,
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.normal,
               color: TOKENS.colors.textPrimary,
               margin: 0,
             }}

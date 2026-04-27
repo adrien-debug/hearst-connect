@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect, type ReactNode } from 'react'
+import { useMemo, useState, useEffect, useRef, type ReactNode } from 'react'
 import { EmptyState } from './empty-states'
 import { VaultCardCompact } from './vault-card-compact'
 import { TOKENS, fmtUsdCompact, fmtUsd, VALUE_LETTER_SPACING, CHART_PALETTE } from './constants'
@@ -120,7 +120,7 @@ export function PortfolioSummary({
           }),
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
-          background: TOKENS.colors.bgApp,
+          background: TOKENS.colors.black,
         }}
       >
         {/* Main cockpit gauges — Large figures */}
@@ -207,8 +207,13 @@ export function PortfolioSummary({
             gridTemplateColumns: fitValue(mode, {
               normal: '240px 1fr',
               tight: '200px 1fr',
-              limit: '1fr',
+              limit: '160px 1fr',
             }),
+            // Lock the row to the container height. Without this, the LineChartArea
+            // SVG (preserveAspectRatio="none" + 600:240 viewBox) reports an intrinsic
+            // height of cellWidth/2.5, which inflates the auto-sized grid row past
+            // the card's fixed height — clipping the donut legend below.
+            gridTemplateRows: 'minmax(0, 1fr)',
             gap: fitValue(mode, {
               normal: TOKENS.spacing[6],
               tight: TOKENS.spacing[4],
@@ -223,9 +228,9 @@ export function PortfolioSummary({
               limit: TOKENS.spacing[3],
             }),
             height: fitValue(mode, {
-              normal: '260px',
-              tight: '220px',
-              limit: '200px',
+              normal: '300px',
+              tight: '260px',
+              limit: '240px',
             }),
             flex: 'none',
             overflow: 'hidden',
@@ -235,10 +240,12 @@ export function PortfolioSummary({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRight: mode !== 'limit' ? `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}` : 'none',
-              borderBottom: mode === 'limit' ? `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}` : 'none',
-              paddingRight: mode !== 'limit' ? TOKENS.spacing[6] : 0,
-              paddingBottom: mode === 'limit' ? TOKENS.spacing[6] : 0,
+              borderRight: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+              paddingRight: fitValue(mode, {
+                normal: TOKENS.spacing[6],
+                tight: TOKENS.spacing[4],
+                limit: TOKENS.spacing[3],
+              }),
             }}>
               <AllocationDonut
                 data={donutData}
@@ -253,7 +260,11 @@ export function PortfolioSummary({
               display: 'flex',
               flexDirection: 'column',
               minWidth: 0,
-              paddingLeft: mode !== 'limit' ? TOKENS.spacing[4] : 0,
+              paddingLeft: fitValue(mode, {
+                normal: TOKENS.spacing[4],
+                tight: TOKENS.spacing[3],
+                limit: TOKENS.spacing[2],
+              }),
               paddingTop: TOKENS.spacing[2],
             }}>
               <LineChartArea
@@ -499,7 +510,7 @@ function AllocationDonut({
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: TOKENS.spacing[4],
+      gap: fitValue(mode, { normal: TOKENS.spacing[4], tight: TOKENS.spacing[3], limit: TOKENS.spacing[2] }),
       position: 'relative',
     }}>
       {/* Donut Chart */}
@@ -796,11 +807,30 @@ function LineChartArea({
   const change = startValue > 0 ? ((portfolioValue - startValue) / startValue) * 100 : 0
   const isPositive = change >= 0
 
-  const width = 600
-  const height = 240
-  const padding = { top: 20, right: 10, bottom: 28, left: 70 }
-  const chartWidth = width - padding.left - padding.right
-  const chartHeight = height - padding.top - padding.bottom
+  // Measure container so the SVG renders at real pixel dimensions instead of
+  // stretching a fixed viewBox — keeps the curve in its true proportions at
+  // any cell size.
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ width: 0, height: 0 })
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect
+      setDims({ width: Math.round(width), height: Math.round(height) })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const { width, height } = dims
+  const padding = {
+    normal: { top: 16, right: 8, bottom: 24, left: 64 },
+    tight: { top: 12, right: 8, bottom: 20, left: 56 },
+    limit: { top: 8, right: 4, bottom: 18, left: 48 },
+  }[mode]
+  const chartWidth = Math.max(0, width - padding.left - padding.right)
+  const chartHeight = Math.max(0, height - padding.top - padding.bottom)
 
   const points = data.map((value, i) => ({
     x: padding.left + (i / Math.max(1, data.length - 1)) * chartWidth,
@@ -898,84 +928,91 @@ function LineChartArea({
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }} preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={TOKENS.colors.accent} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={TOKENS.colors.accent} stopOpacity="0" />
-            </linearGradient>
-          </defs>
+      <div ref={containerRef} style={{ flex: 1, minHeight: 0 }}>
+        {width > 0 && height > 0 && (
+          <svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ display: 'block' }}
+          >
+            <defs>
+              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={TOKENS.colors.accent} stopOpacity="0.4" />
+                <stop offset="100%" stopColor={TOKENS.colors.accent} stopOpacity="0" />
+              </linearGradient>
+            </defs>
 
-          {ticks.map((tick, i) => {
-            const yPos = padding.top + chartHeight * (1 - tick.ratio)
-            return (
-              <g key={i}>
-                <line
-                  x1={padding.left}
-                  y1={yPos}
-                  x2={width - padding.right}
-                  y2={yPos}
-                  stroke={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.borderMain}
-                  strokeWidth={tick.ratio === 0 ? "1" : "0.5"}
-                  strokeDasharray={tick.ratio === 0 ? "none" : "4,4"}
-                />
+            {ticks.map((tick, i) => {
+              const yPos = padding.top + chartHeight * (1 - tick.ratio)
+              return (
+                <g key={i}>
+                  <line
+                    x1={padding.left}
+                    y1={yPos}
+                    x2={width - padding.right}
+                    y2={yPos}
+                    stroke={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.borderMain}
+                    strokeWidth={tick.ratio === 0 ? "1" : "0.5"}
+                    strokeDasharray={tick.ratio === 0 ? "none" : "4,4"}
+                  />
+                  <text
+                    x={padding.left - 8}
+                    y={yPos + 4}
+                    textAnchor="end"
+                    fill={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.textGhost}
+                    fontSize={TOKENS.fontSizes.nano}
+                    fontFamily={TOKENS.fonts.mono}
+                    fontWeight={tick.ratio === 0 ? TOKENS.fontWeights.bold : TOKENS.fontWeights.regular}
+                  >
+                    {tick.label}
+                  </text>
+                </g>
+              )
+            })}
+
+            <path d={areaPath} fill="url(#areaGradient)" />
+
+            <path
+              d={linePath}
+              fill="none"
+              stroke={TOKENS.colors.accent}
+              strokeWidth={TOKENS.chart.lineStroke}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ filter: 'drop-shadow(0 4px 6px rgba(var(--brand-accent-rgb), 0.25))' }}
+            />
+
+            <circle
+              cx={points[points.length - 1].x}
+              cy={points[points.length - 1].y}
+              r={TOKENS.chart.dotRadius}
+              fill={TOKENS.colors.accent}
+              stroke={TOKENS.colors.black}
+              strokeWidth={TOKENS.chart.dotStroke}
+              style={{ filter: `drop-shadow(0 0 8px ${TOKENS.colors.accent})` }}
+            />
+
+            {labels.map((label, i) => {
+              const x = padding.left + (i / Math.max(1, labels.length - 1)) * chartWidth
+              const isFirst = i === 0
+              const isLast = i === labels.length - 1
+              return (
                 <text
-                  x={padding.left - 12}
-                  y={yPos + 4}
-                  textAnchor="end"
-                  fill={tick.ratio === 0 ? TOKENS.colors.textSecondary : TOKENS.colors.textGhost}
+                  key={`${label}-${i}`}
+                  x={x}
+                  y={height - 4}
+                  textAnchor={isFirst ? 'start' : isLast ? 'end' : 'middle'}
+                  fill={TOKENS.colors.textGhost}
                   fontSize={TOKENS.fontSizes.nano}
                   fontFamily={TOKENS.fonts.mono}
-                  fontWeight={tick.ratio === 0 ? TOKENS.fontWeights.bold : TOKENS.fontWeights.regular}
                 >
-                  {tick.label}
+                  {label}
                 </text>
-              </g>
-            )
-          })}
-
-          <path d={areaPath} fill="url(#areaGradient)" />
-
-          <path
-            d={linePath}
-            fill="none"
-            stroke={TOKENS.colors.accent}
-            strokeWidth={TOKENS.chart.lineStroke}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ filter: 'drop-shadow(0 4px 6px rgba(var(--brand-accent-rgb), 0.25))' }}
-          />
-
-          <circle
-            cx={points[points.length - 1].x}
-            cy={points[points.length - 1].y}
-            r={TOKENS.chart.dotRadius}
-            fill={TOKENS.colors.accent}
-            stroke={TOKENS.colors.black}
-            strokeWidth={TOKENS.chart.dotStroke}
-            style={{ filter: `drop-shadow(0 0 8px ${TOKENS.colors.accent})` }}
-          />
-
-          {labels.map((label, i) => {
-            const x = padding.left + (i / Math.max(1, labels.length - 1)) * chartWidth
-            const isFirst = i === 0
-            const isLast = i === labels.length - 1
-            return (
-              <text
-                key={`${label}-${i}`}
-                x={x}
-                y={height - 4}
-                textAnchor={isFirst ? 'start' : isLast ? 'end' : 'middle'}
-                fill={TOKENS.colors.textGhost}
-                fontSize={TOKENS.fontSizes.nano}
-                fontFamily={TOKENS.fonts.mono}
-              >
-                {label}
-              </text>
-            )
-          })}
-        </svg>
+              )
+            })}
+          </svg>
+        )}
       </div>
     </div>
   )

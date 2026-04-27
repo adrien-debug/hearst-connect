@@ -51,7 +51,7 @@ export function Canvas() {
             justifyContent: 'space-between',
             height: TOKENS.spacing[16],
             width: '100%',
-            background: TOKENS.colors.bgApp,
+            background: TOKENS.colors.black,
             borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
             paddingLeft: TOKENS.spacing[6],
             paddingRight: TOKENS.spacing[6],
@@ -72,10 +72,18 @@ export function Canvas() {
         </header>
         <main
           className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden"
-          style={{ paddingBottom: `calc(6 * ${TOKENS.spacing[4]})` }}
         >
           <LoadingState />
         </main>
+        <footer
+          style={{
+            height: TOKENS.spacing[16],
+            width: '100%',
+            background: TOKENS.colors.black,
+            borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+            flexShrink: 0,
+          }}
+        />
         <DockRadial onSelect={setSelectedId} />
       </div>
     )
@@ -103,7 +111,7 @@ export function Canvas() {
           justifyContent: 'space-between',
           height: TOKENS.spacing[16],
           width: '100%',
-          background: TOKENS.colors.bgApp,
+          background: TOKENS.colors.black,
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           paddingLeft: TOKENS.spacing[6],
           paddingRight: TOKENS.spacing[6],
@@ -129,9 +137,8 @@ export function Canvas() {
         </div>
       </header>
 
-      <main 
+      <main
         className="flex min-h-0 min-w-0 flex-1 overflow-hidden"
-        style={{ paddingBottom: `calc(6 * ${TOKENS.spacing[4]})` }}
       >
         <section
           className="connect-main-scene min-h-0 min-w-0 flex-1 overflow-hidden"
@@ -151,6 +158,16 @@ export function Canvas() {
           </div>
         </section>
       </main>
+
+      <footer
+        style={{
+          height: TOKENS.spacing[16],
+          width: '100%',
+          background: TOKENS.colors.black,
+          borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+          flexShrink: 0,
+        }}
+      />
 
       {/* Dock Radial Navigation */}
       <DockRadial onSelect={handleSelect} />

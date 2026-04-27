@@ -10,12 +10,13 @@ import '@/styles/theme/tokens.css';
 import '@/styles/components/subscription.css';
 import '@/styles/admin/admin.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 
-const inter = Inter({
-  subsets: ['latin'],
+const satoshi = localFont({
+  src: '../../public/fonts/Satoshi-Variable.woff2',
   variable: '--font-sans',
   display: 'swap',
+  weight: '300 900',
 });
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`antialiased ${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`antialiased ${satoshi.variable}`}>
       <head>
         {/* Inline in head: Next <Script> children warn in RSC; this runs before paint (FOUC). */}
         <script

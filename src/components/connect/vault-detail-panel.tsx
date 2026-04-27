@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { Label } from '@/components/ui/label'
 import { TOKENS, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING, CHART_PALETTE } from './constants'
 import { formatVaultName } from './formatting'
 import { Modal, TransactionState } from './modal'
@@ -260,7 +259,7 @@ export function VaultDetailPanel({
       {/* HEADER — LIVE pill, name, APY */}
       <PositionHeader
         vault={vault}
-        description={vaultConfig?.description}
+        subtitle={vault.strategy}
         chainName={vaultConfig?.chain?.name}
         accruedYield={accruedYield}
         statusLabel={statusLabel}
@@ -285,12 +284,12 @@ export function VaultDetailPanel({
           overflow: 'hidden',
         }}
       >
-        {/* KPI row — 5 cells (Deposited, Current value, Yield paid, Performance, Matures) */}
+        {/* KPI row — 4 cells: Deposited / Current value / Yield paid / Matures */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: fitValue(mode, {
-            normal: 'repeat(5, 1fr)',
-            tight: 'repeat(3, 1fr)',
+            normal: 'repeat(4, 1fr)',
+            tight: 'repeat(4, 1fr)',
             limit: 'repeat(2, 1fr)',
           }),
           gap: fitValue(mode, {
@@ -317,15 +316,7 @@ export function VaultDetailPanel({
             label="Yield paid"
             value={fmtUsdCompact(accruedYield)}
             valueAccent={accruedYield > 0}
-          />
-          <KpiCell
-            label="Performance"
-            value={`${realizedApr.toFixed(1)}%`}
-            valueAccent={aprDelta >= 0}
-            subtext={aprDelta >= 0
-              ? `+${aprDelta.toFixed(1)}pp vs ${targetApr.toFixed(1)}%`
-              : `${aprDelta.toFixed(1)}pp vs ${targetApr.toFixed(1)}%`}
-            subtextAccent={aprDelta >= 0}
+            subtext="USDC"
           />
           <KpiCell
             label="Matures"
@@ -369,7 +360,7 @@ export function VaultDetailPanel({
             overflow: 'hidden',
           }}
         >
-          {/* LEFT: About+History → Strategy+Composition */}
+          {/* LEFT: Yield paid 12mo → Strategy details */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -377,45 +368,24 @@ export function VaultDetailPanel({
             minHeight: 0,
             overflow: 'auto',
           }}>
-            <DetailCard title="About this vault" accent>
-              <p style={{
-                margin: 0,
-                fontSize: TOKENS.fontSizes.sm,
-                color: TOKENS.colors.textSecondary,
-                lineHeight: LINE_HEIGHT.body,
-              }}>
-                {vaultConfig?.description ?? vault.strategy}
-              </p>
-              <div style={{
-                display: 'flex',
-                gap: TOKENS.spacing[2],
-                flexWrap: 'wrap',
-                marginTop: TOKENS.spacing[3],
-              }}>
-                <DetailPill label={vaultConfig?.risk ?? (vault.type === 'active' ? vault.risk : 'Medium')} icon="risk" />
-                <DetailPill label={vaultConfig?.chain?.name ?? 'Base'} icon="chain" />
-                <DetailPill label={vaultConfig?.fees?.split('·')[0]?.trim() ?? '—'} icon="fees" />
-              </div>
-              {vaultConfig?.historicalReturns && vaultConfig.historicalReturns.length > 1 && (
-                <VaultHistoryChart returns={vaultConfig.historicalReturns} targetApr={targetApr} />
-              )}
-              {(vaultConfig?.tvl != null || vaultConfig?.investorCount != null || vaultConfig?.inception != null) && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: TOKENS.spacing[3],
-                  marginTop: TOKENS.spacing[4],
-                  paddingTop: TOKENS.spacing[3],
-                  borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+            <DetailCard title="Yield paid — last 12 months" accent>
+              {vaultConfig?.historicalReturns && vaultConfig.historicalReturns.length > 1 ? (
+                <YieldPaidBars
+                  returns={vaultConfig.historicalReturns}
+                  capitalDeployed={capitalDeployed}
+                />
+              ) : (
+                <p style={{
+                  margin: 0,
+                  fontSize: TOKENS.fontSizes.sm,
+                  color: TOKENS.colors.textGhost,
                 }}>
-                  {vaultConfig?.tvl != null && <MicroStat label="TVL" value={fmtUsdCompact(vaultConfig.tvl)} />}
-                  {vaultConfig?.investorCount != null && <MicroStat label="Investors" value={vaultConfig.investorCount.toLocaleString('en-US')} />}
-                  {vaultConfig?.inception != null && <MicroStat label="Inception" value={new Date(vaultConfig.inception).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />}
-                </div>
+                  No distribution history yet.
+                </p>
               )}
             </DetailCard>
 
-            <DetailCard title="Strategy & composition">
+            <DetailCard title="Strategy details">
               <VaultStrategyList vault={vault} vaultConfig={vaultConfig} />
               {vaultConfig?.composition && vaultConfig.composition.length > 0 && (
                 <VaultCompositionBars composition={vaultConfig.composition} />
@@ -423,7 +393,7 @@ export function VaultDetailPanel({
             </DetailCard>
           </div>
 
-          {/* RIGHT: Terms (enriched) → Activity (with filters) */}
+          {/* RIGHT: Capital recovery → Transactions */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -431,16 +401,11 @@ export function VaultDetailPanel({
             minHeight: 0,
             overflow: 'auto',
           }}>
-            <DetailCard title="Terms">
-              <TermsBody
-                vault={vault}
-                vaultConfig={vaultConfig}
-                maturityDate={positionData?.unlockTimeline.maturityDate}
-                unlockDays={unlockDays}
-              />
+            <DetailCard title="Capital recovery status">
+              <CapitalRecoveryStatus />
             </DetailCard>
             <DetailCard
-              title={`Activity (${vaultActivityRaw.length})`}
+              title={`Transactions (${vaultActivityRaw.length})`}
               headerRight={
                 <ActivityFilterTabs value={activityFilter} onChange={setActivityFilter} />
               }
@@ -629,7 +594,7 @@ function formatMaturityDate(iso: string | undefined, fallbackDays: number): stri
 
 function PositionHeader({
   vault,
-  description,
+  subtitle,
   chainName,
   accruedYield,
   statusLabel,
@@ -642,7 +607,7 @@ function PositionHeader({
   shellPadding,
 }: {
   vault: ActiveVault | MaturedVault
-  description?: string
+  subtitle?: string
   chainName?: string
   accruedYield: number
   statusLabel: string
@@ -654,7 +619,6 @@ function PositionHeader({
   mode: SmartFitMode
   shellPadding: number
 }) {
-  const subtitle = description ?? vault.strategy
   return (
     <div style={{
       padding: fitValue(mode, {
@@ -664,16 +628,12 @@ function PositionHeader({
       }),
       borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
       flexShrink: 0,
-      background: `
-        radial-gradient(ellipse 60% 100% at 100% 50%, ${TOKENS.colors.accentGlow} 0%, transparent 70%),
-        ${TOKENS.colors.bgApp}
-      `,
+      background: TOKENS.colors.black,
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'space-between',
       gap: TOKENS.spacing[6],
       flexWrap: mode === 'limit' ? 'wrap' : 'nowrap',
-      position: 'relative',
     }}>
       {/* Left: LIVE pill + name + subtitle */}
       <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[2] }}>
@@ -743,12 +703,12 @@ function PositionHeader({
         <h2 style={{
           margin: 0,
           fontSize: fitValue(mode, {
-            normal: TOKENS.fontSizes.xxl,
-            tight: TOKENS.fontSizes.xl,
-            limit: TOKENS.fontSizes.lg,
+            normal: TOKENS.fontSizes.xl,
+            tight: TOKENS.fontSizes.lg,
+            limit: TOKENS.fontSizes.md,
           }),
-          fontWeight: TOKENS.fontWeights.black,
-          letterSpacing: TOKENS.letterSpacing.tight,
+          fontWeight: TOKENS.fontWeights.semibold,
+          letterSpacing: TOKENS.letterSpacing.normal,
           color: TOKENS.colors.textPrimary,
           lineHeight: LINE_HEIGHT.tight,
         }}>
@@ -758,7 +718,7 @@ function PositionHeader({
           <div style={{
             fontSize: TOKENS.fontSizes.sm,
             color: TOKENS.colors.textSecondary,
-            lineHeight: LINE_HEIGHT.body,
+            lineHeight: LINE_HEIGHT.tight,
           }}>
             {subtitle}
           </div>
@@ -773,39 +733,48 @@ function PositionHeader({
         gap: TOKENS.spacing[3],
         flexShrink: 0,
       }}>
-        {/* APY hero card with subtle border + accent */}
+        {/* APY — flat, cockpit gauge style + 'Daily distribution' caption */}
         <div style={{
           display: 'flex',
-          alignItems: 'baseline',
-          gap: TOKENS.spacing[2],
-          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-          background: `linear-gradient(135deg, ${TOKENS.colors.accentGlow}, transparent)`,
-          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
-          borderRadius: TOKENS.radius.md,
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: TOKENS.spacing[1],
         }}>
-          <span style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-            color: TOKENS.colors.textGhost,
+          <div style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: TOKENS.spacing[2],
           }}>
-            APY
-          </span>
+            <span style={{
+              fontSize: fitValue(mode, {
+                normal: TOKENS.fontSizes.xxl,
+                tight: TOKENS.fontSizes.xl,
+                limit: TOKENS.fontSizes.lg,
+              }),
+              fontWeight: TOKENS.fontWeights.black,
+              letterSpacing: VALUE_LETTER_SPACING,
+              color: TOKENS.colors.accent,
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: LINE_HEIGHT.tight,
+            }}>
+              {vault.apr}%
+            </span>
+            <span style={{
+              fontFamily: TOKENS.fonts.mono,
+              fontSize: TOKENS.fontSizes.micro,
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              color: TOKENS.colors.textGhost,
+            }}>
+              APY
+            </span>
+          </div>
           <span style={{
-            fontSize: fitValue(mode, {
-              normal: TOKENS.fontSizes.xxl,
-              tight: TOKENS.fontSizes.xl,
-              limit: TOKENS.fontSizes.lg,
-            }),
-            fontWeight: TOKENS.fontWeights.black,
-            letterSpacing: VALUE_LETTER_SPACING,
-            color: TOKENS.colors.accent,
-            fontVariantNumeric: 'tabular-nums',
-            lineHeight: LINE_HEIGHT.tight,
+            fontSize: TOKENS.fontSizes.xs,
+            color: TOKENS.colors.textSecondary,
           }}>
-            {vault.apr}%
+            Daily distribution
           </span>
         </div>
         {/* Action buttons */}
@@ -836,7 +805,7 @@ function HeaderActionButton({
   variant: 'accent' | 'secondary' | 'danger'
 }) {
   const palette = {
-    accent: { bg: TOKENS.colors.accent, fg: TOKENS.colors.black, border: TOKENS.colors.accent },
+    accent: { bg: TOKENS.colors.accentSubtle, fg: TOKENS.colors.accent, border: TOKENS.colors.accent },
     secondary: { bg: 'transparent', fg: TOKENS.colors.textPrimary, border: TOKENS.colors.borderStrong },
     danger: { bg: 'transparent', fg: TOKENS.colors.danger, border: TOKENS.colors.danger },
   }[variant]
@@ -961,10 +930,10 @@ function CumulativeTargetProgress({
           fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
-          color: TOKENS.colors.textSecondary,
+          color: isTargetReached ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
           fontVariantNumeric: 'tabular-nums',
         }}>
-          {progress}% of {targetLabel}
+          {progress}% of {targetLabel}{isTargetReached ? ' · reached' : ''}
         </span>
       </div>
 
@@ -979,7 +948,6 @@ function CumulativeTargetProgress({
           width: `${fillPct}%`,
           background: TOKENS.colors.accent,
           borderRadius: TOKENS.radius.full,
-          boxShadow: `0 0 12px ${TOKENS.colors.accentGlow}`,
           transition: 'width 1s ease',
         }} />
       </div>
@@ -990,109 +958,12 @@ function CumulativeTargetProgress({
         color: TOKENS.colors.textSecondary,
         lineHeight: LINE_HEIGHT.body,
       }}>
-        Capital unlocks when the {targetLabel} cumulative target is reached or at {maturityLabel},
-        whichever comes first.
-        {isTargetReached && (
-          <span style={{ color: TOKENS.colors.accent }}> Target reached.</span>
-        )}
+        Capital unlocks when the {targetLabel} target is reached or at {maturityLabel}, whichever comes first.
       </p>
     </div>
   )
 }
 
-
-function TermsBody({
-  vault,
-  vaultConfig,
-  maturityDate,
-  unlockDays,
-}: {
-  vault: ActiveVault | MaturedVault
-  vaultConfig: VaultConfig | null
-  maturityDate: string | undefined
-  unlockDays: number
-}) {
-  const lockPeriod = vaultConfig?.lockPeriodDays
-    ? `${vaultConfig.lockPeriodDays} days`
-    : vault.maturity
-  const formattedMaturity = formatMaturityDate(maturityDate, unlockDays)
-  const minDeposit = vaultConfig?.minDeposit != null ? fmtUsdCompact(vaultConfig.minDeposit) : undefined
-  const truncatedVault = vaultConfig?.vaultAddress
-    ? `${vaultConfig.vaultAddress.slice(0, 6)}…${vaultConfig.vaultAddress.slice(-4)}`
-    : undefined
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[4] }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        columnGap: TOKENS.spacing[6],
-        rowGap: TOKENS.spacing[3],
-      }}>
-        <MetaRow label="Lock period" value={lockPeriod} />
-        <MetaRow label="Maturity" value={formattedMaturity} />
-        <MetaRow label="Target unlock" value={vault.target} />
-        {minDeposit && <MetaRow label="Min deposit" value={minDeposit} />}
-        {vaultConfig?.fees && <MetaRow label="Fees" value={vaultConfig.fees} />}
-        {vaultConfig?.chain?.name && <MetaRow label="Chain" value={vaultConfig.chain.name} />}
-        {truncatedVault && <MetaRow label="Vault" value={truncatedVault} mono />}
-        {vaultConfig?.earlyWithdrawalPenalty && (
-          <MetaRow label="Early exit" value={vaultConfig.earlyWithdrawalPenalty} />
-        )}
-        {vaultConfig?.custodian && (
-          <MetaRow label="Custodian" value={vaultConfig.custodian} />
-        )}
-      </div>
-      {vaultConfig?.auditReports && vaultConfig.auditReports.length > 0 && (
-        <div style={{
-          paddingTop: TOKENS.spacing[3],
-          borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
-        }}>
-          <div style={{
-            fontFamily: TOKENS.fonts.mono,
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-            color: TOKENS.colors.textGhost,
-            marginBottom: TOKENS.spacing[2],
-          }}>
-            Audit reports
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: TOKENS.spacing[2] }}>
-            {vaultConfig.auditReports.map((r) => (
-              <a
-                key={r.label}
-                href={r.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: TOKENS.spacing[1],
-                  padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
-                  background: TOKENS.colors.bgTertiary,
-                  border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-                  borderRadius: TOKENS.radius.full,
-                  fontFamily: TOKENS.fonts.mono,
-                  fontSize: TOKENS.fontSizes.nano,
-                  fontWeight: TOKENS.fontWeights.bold,
-                  letterSpacing: TOKENS.letterSpacing.display,
-                  textTransform: 'uppercase',
-                  color: TOKENS.colors.textSecondary,
-                  textDecoration: 'none',
-                }}
-              >
-                <span style={{ color: TOKENS.colors.accent, fontSize: TOKENS.fontSizes.nano, lineHeight: 1 }}>↗</span>
-                {r.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 function MetaRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
@@ -1216,8 +1087,9 @@ function DetailCard({
               flexShrink: 0,
             }}
           />
-          <span
+          <h3
             style={{
+              margin: 0,
               fontFamily: TOKENS.fonts.mono,
               fontSize: TOKENS.fontSizes.xs,
               fontWeight: TOKENS.fontWeights.bold,
@@ -1230,7 +1102,7 @@ function DetailCard({
             }}
           >
             {title}
-          </span>
+          </h3>
         </div>
         {headerRight && <div style={{ flexShrink: 0 }}>{headerRight}</div>}
       </div>
@@ -1241,109 +1113,116 @@ function DetailCard({
   )
 }
 
-/** Compact label-over-value stat — used in About card footer (TVL / Investors / Inception). */
-function MicroStat({ label, value }: { label: string; value: string }) {
+/** YieldPaidBars — compact vertical bar sparkline of monthly yield distributions
+ * in USD, derived from historical yield % × current capital deployed. */
+function YieldPaidBars({
+  returns,
+  capitalDeployed,
+}: {
+  returns: Array<{ month: string; yieldPct: number }>
+  capitalDeployed: number
+}) {
+  const monthly = returns.map((r) => (r.yieldPct / 100 / 12) * capitalDeployed)
+  const max = Math.max(1, ...monthly)
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing.half, minWidth: 0 }}>
-      <span style={{
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: TOKENS.spacing[2],
+      width: '100%',
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        gap: TOKENS.spacing.half,
+        height: 72,
+      }}>
+        {monthly.map((v, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: `${(v / max) * 100}%`,
+              minHeight: 2,
+              background: TOKENS.colors.accentDim,
+              borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
+              borderTopLeftRadius: TOKENS.radius.xs,
+              borderTopRightRadius: TOKENS.radius.xs,
+            }}
+            title={`M${i + 1} · ${fmtUsdCompact(v)}`}
+          />
+        ))}
+      </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: TOKENS.spacing.half,
         fontFamily: TOKENS.fonts.mono,
         fontSize: TOKENS.fontSizes.nano,
         fontWeight: TOKENS.fontWeights.bold,
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         color: TOKENS.colors.textGhost,
-      }}>{label}</span>
-      <span style={{
-        fontSize: TOKENS.fontSizes.sm,
-        fontWeight: TOKENS.fontWeights.black,
-        color: TOKENS.colors.textPrimary,
-        fontFamily: TOKENS.fonts.sans,
-        fontVariantNumeric: 'tabular-nums',
-      }}>{value}</span>
+      }}>
+        {monthly.map((_, i) => (
+          <span key={i} style={{ flex: 1, textAlign: 'center' }}>M{i + 1}</span>
+        ))}
+      </div>
     </div>
   )
 }
 
-/** VaultHistoryChart — 12-month yield curve sparkline, drawn inline as SVG so
- * we don't pull Chart.js into the user-facing bundle. The dotted target line
- * sets the visual baseline (vault APR) and the citrus area underlines wins. */
-function VaultHistoryChart({
-  returns,
-  targetApr,
-}: {
-  returns: Array<{ month: string; yieldPct: number }>
-  targetApr: number
-}) {
-  const W = 100
-  const H = 40
-  const min = Math.min(targetApr, ...returns.map((r) => r.yieldPct)) * 0.85
-  const max = Math.max(targetApr, ...returns.map((r) => r.yieldPct)) * 1.10
-  const span = Math.max(0.01, max - min)
-  const stepX = returns.length > 1 ? W / (returns.length - 1) : W
-  const ptY = (v: number) => H - ((v - min) / span) * H
-  const linePath = returns.map((r, i) => `${i === 0 ? 'M' : 'L'} ${(i * stepX).toFixed(2)} ${ptY(r.yieldPct).toFixed(2)}`).join(' ')
-  const areaPath = `${linePath} L ${(W).toFixed(2)} ${H} L 0 ${H} Z`
-  const targetY = ptY(targetApr)
-  const last = returns[returns.length - 1]
-  const first = returns[0]
-
+/** CapitalRecoveryStatus — static safeguard message + auto badge. */
+function CapitalRecoveryStatus() {
   return (
-    <div style={{ marginTop: TOKENS.spacing[4] }}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: TOKENS.spacing[3],
+    }}>
       <div style={{
         display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginBottom: TOKENS.spacing[2],
+        gap: TOKENS.spacing[3],
       }}>
         <span style={{
+          fontSize: TOKENS.fontSizes.sm,
+          fontWeight: TOKENS.fontWeights.black,
+          color: TOKENS.colors.accent,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: TOKENS.spacing[2],
+        }}>
+          <span aria-hidden>✓</span>
+          Safeguard active — not triggered
+        </span>
+        <span style={{
           fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.micro,
+          fontSize: TOKENS.fontSizes.nano,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
           color: TOKENS.colors.textGhost,
+          padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
+          background: TOKENS.colors.bgTertiary,
+          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+          borderRadius: TOKENS.radius.full,
         }}>
-          Yield history · {returns.length}mo
-        </span>
-        <span style={{
-          fontFamily: TOKENS.fonts.mono,
-          fontSize: TOKENS.fontSizes.xs,
-          fontWeight: TOKENS.fontWeights.bold,
-          color: TOKENS.colors.accent,
-          fontVariantNumeric: 'tabular-nums',
-        }}>
-          {last?.yieldPct.toFixed(1)}% · target {targetApr.toFixed(1)}%
+          auto
         </span>
       </div>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
-        width="100%"
-        height={48}
-        aria-label="Vault historical yield"
-      >
-        <path d={areaPath} fill={TOKENS.colors.accentGlow} />
-        {/* Target baseline */}
-        <line
-          x1="0" y1={targetY} x2={W} y2={targetY}
-          stroke={TOKENS.colors.borderStrong}
-          strokeWidth={0.4}
-          strokeDasharray="1.6 1.6"
-        />
-        <path d={linePath} fill="none" stroke={TOKENS.colors.accent} strokeWidth={1.4} strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={(returns.length - 1) * stepX} cy={ptY(last?.yieldPct ?? targetApr)} r={1.6} fill={TOKENS.colors.accent} />
-      </svg>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        marginTop: TOKENS.spacing[1],
-        fontFamily: TOKENS.fonts.mono,
-        fontSize: TOKENS.fontSizes.nano,
-        color: TOKENS.colors.textGhost,
+      <p style={{
+        margin: 0,
+        fontSize: TOKENS.fontSizes.xs,
+        color: TOKENS.colors.textSecondary,
+        lineHeight: LINE_HEIGHT.body,
       }}>
-        <span>{first?.month}</span>
-        <span>{last?.month}</span>
-      </div>
+        If principal is below initial deposit at maturity, mining infrastructure
+        continues operating up to 2 additional years, output directed exclusively
+        to capital recovery.
+      </p>
     </div>
   )
 }
@@ -1532,34 +1411,6 @@ function ActivityFilterTabs({
         )
       })}
     </div>
-  )
-}
-
-/** DetailPill — Small pill with an inline icon, used in the About card. */
-function DetailPill({ label, icon }: { label: string; icon: 'risk' | 'chain' | 'fees' }) {
-  const glyph = icon === 'risk' ? '◆' : icon === 'chain' ? '⬡' : '%'
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: TOKENS.spacing[2],
-        padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
-        background: TOKENS.colors.bgTertiary,
-        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-        borderRadius: TOKENS.radius.full,
-        fontFamily: TOKENS.fonts.mono,
-        fontSize: TOKENS.fontSizes.micro,
-        fontWeight: TOKENS.fontWeights.bold,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-        color: TOKENS.colors.textSecondary,
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <span style={{ color: TOKENS.colors.accent, fontSize: TOKENS.fontSizes.nano, lineHeight: 1 }}>{glyph}</span>
-      {label}
-    </span>
   )
 }
 

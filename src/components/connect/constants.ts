@@ -233,23 +233,6 @@ export const TOKENS = {
 
 export const MONO = TOKENS.fonts.mono
 
-/**
- * VALUE_LETTER_SPACING — tighter tracking for financial figures.
- * Mapped to CSS token for consistency.
- */
-export const SHELL_PADDING: Record<'normal' | 'tight' | 'limit', number> = {
-  normal: 24,
-  tight: 16,
-  limit: 12,
-}
-
-/** Shell gap values by responsive mode (px) */
-export const SHELL_GAP: Record<'normal' | 'tight' | 'limit', number> = {
-  normal: 24,
-  tight: 16,
-  limit: 12,
-}
-
 export const LINE_HEIGHT = {
   tight: 'var(--dashboard-line-height-tight)',
   display: 1.1,

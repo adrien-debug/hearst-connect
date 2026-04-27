@@ -55,7 +55,7 @@ export function DockRadial({ onSelect }: DockRadialProps) {
           width: TOKENS.dock.buttonSize,
           height: TOKENS.dock.buttonSize,
           borderRadius: TOKENS.radius.full,
-          background: TOKENS.colors.accentSubtle,
+          background: TOKENS.colors.black,
           border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
           cursor: 'pointer',
           display: 'flex',

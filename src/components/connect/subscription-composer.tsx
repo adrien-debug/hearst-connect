@@ -24,10 +24,9 @@ const VAULT_TABS: ReadonlyArray<{ id: VaultTab; label: string }> = [
 /** Maps risk string → display color token (green+grey spectrum only) */
 function riskColor(risk: string): string {
   const r = risk.toLowerCase()
-  if (r.includes('very low')) return '#52c97a'
-  if (r === 'low') return TOKENS.colors.accent
-  if (r === 'medium' || r === 'moderate') return '#71717a'
-  if (r === 'high') return '#d4d4d8'
+  if (r.includes('very low') || r === 'low') return TOKENS.colors.accent
+  if (r === 'medium' || r === 'moderate') return TOKENS.colors.textGhost
+  if (r === 'high') return TOKENS.colors.textSecondary
   return TOKENS.colors.textGhost
 }
 
@@ -151,24 +150,8 @@ export function SubscriptionComposer({
               limit:  `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
             }),
             flexShrink: 0,
-            position: 'relative',
-            overflow: 'hidden',
           }}>
-            {/* Subtle dot-grid texture */}
-            <div aria-hidden style={{
-              position: 'absolute', inset: 0, pointerEvents: 'none',
-              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px)',
-              backgroundSize: '22px 22px',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%)',
-            }} />
-            {/* Accent glow corner */}
-            <div aria-hidden style={{
-              position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-              background: `linear-gradient(90deg, transparent, rgba(var(--brand-accent-rgb), 0.4) 40%, rgba(var(--brand-accent-rgb), 0.4) 60%, transparent)`,
-            }} />
-
-            <div style={{ position: 'relative' }}>
+            <div>
               {/* Risk badge */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: TOKENS.spacing[2] }}>
                 <span style={{
@@ -350,15 +333,7 @@ export function SubscriptionComposer({
             borderRadius: TOKENS.radius.lg,
             padding: TOKENS.spacing[5],
             flexShrink: 0,
-            position: 'relative',
-            overflow: 'hidden',
           }}>
-            {isValid && num > 0 && (
-              <div aria-hidden style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-                background: `linear-gradient(90deg, transparent, rgba(var(--brand-accent-rgb), 0.6) 50%, transparent)`,
-              }} />
-            )}
             <label
               htmlFor={idAmount}
               id={idAmountHint}
@@ -378,9 +353,8 @@ export function SubscriptionComposer({
               border: `${TOKENS.borders.thin} solid ${isValid && num > 0 ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.md,
               padding: `0 ${TOKENS.spacing[4]}`,
-              background: isValid && num > 0 ? 'rgba(var(--brand-accent-rgb), 0.04)' : TOKENS.colors.bgTertiary,
+              background: isValid && num > 0 ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
               height: TOKENS.control.heightLg,
-              boxShadow: isValid && num > 0 ? `0 0 0 1px rgba(var(--brand-accent-rgb), 0.2), 0 0 16px rgba(var(--brand-accent-rgb), 0.08)` : 'none',
               transition: 'all var(--transition-fast)',
             }}>
               <span style={{
@@ -446,18 +420,12 @@ export function SubscriptionComposer({
           {/* PROJECTIONS CARD — accent highlight when active */}
           {num > 0 ? (
             <div style={{
-              background: 'rgba(var(--brand-accent-rgb), 0.03)',
-              border: `${TOKENS.borders.thin} solid rgba(var(--brand-accent-rgb), 0.2)`,
+              background: TOKENS.colors.black,
+              border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
               borderRadius: TOKENS.radius.lg,
               padding: TOKENS.spacing[5],
               flexShrink: 0,
-              position: 'relative',
-              overflow: 'hidden',
             }}>
-              <div aria-hidden style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-                background: `linear-gradient(90deg, transparent, rgba(var(--brand-accent-rgb), 0.5) 50%, transparent)`,
-              }} />
               <div style={{
                 fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.micro,
                 fontWeight: TOKENS.fontWeights.bold,
@@ -475,7 +443,7 @@ export function SubscriptionComposer({
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
                 paddingTop: TOKENS.spacing[4], marginTop: TOKENS.spacing[2],
-                borderTop: `${TOKENS.borders.thin} solid rgba(var(--brand-accent-rgb), 0.15)`,
+                borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
               }}>
                 <span style={{
                   fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs,
@@ -494,16 +462,15 @@ export function SubscriptionComposer({
                     letterSpacing: VALUE_LETTER_SPACING,
                     fontVariantNumeric: 'tabular-nums',
                     lineHeight: LINE_HEIGHT.tight,
-                    filter: `drop-shadow(0 0 10px rgba(var(--brand-accent-rgb), 0.5))`,
                   }}>
                     {fmtUsd(num + totalYield)}
                   </span>
                   <span style={{
                     fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.micro,
                     fontWeight: TOKENS.fontWeights.bold,
-                    color: TOKENS.colors.accent, opacity: 0.65,
+                    color: TOKENS.colors.accent,
                     padding: `1px ${TOKENS.spacing[2]}`,
-                    background: 'rgba(var(--brand-accent-rgb), 0.1)',
+                    background: TOKENS.colors.accentSubtle,
                     borderRadius: TOKENS.radius.full,
                     letterSpacing: TOKENS.letterSpacing.display,
                   }}>
@@ -536,7 +503,7 @@ export function SubscriptionComposer({
           {/* TERMS + CTA */}
           <div style={{
             background: TOKENS.colors.black,
-            border: `${TOKENS.borders.thin} solid ${isReady ? 'rgba(var(--brand-accent-rgb), 0.3)' : TOKENS.colors.borderSubtle}`,
+            border: `${TOKENS.borders.thin} solid ${isReady ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
             borderRadius: TOKENS.radius.lg,
             padding: TOKENS.spacing[5],
             display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3],
@@ -607,7 +574,8 @@ function PremiumCard({
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         gap: TOKENS.spacing[3], marginBottom: TOKENS.spacing[4], flexShrink: 0,
       }}>
-        <span style={{
+        <h3 style={{
+          margin: 0,
           fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
@@ -616,7 +584,7 @@ function PremiumCard({
           paddingLeft: TOKENS.spacing[3],
         }}>
           {title}
-        </span>
+        </h3>
         {headerRight}
       </div>
       <div style={{ minHeight: 0, flex: 1 }}>{children}</div>
@@ -648,9 +616,9 @@ function RiskBadge({ risk }: { risk: string }) {
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase', color,
         padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
-        background: 'rgba(var(--brand-accent-rgb), 0.06)',
+        background: TOKENS.colors.bgTertiary,
         borderRadius: TOKENS.radius.full,
-        border: `${TOKENS.borders.thin} solid rgba(var(--brand-accent-rgb), 0.18)`,
+        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
       }}>
         {risk}
       </span>
@@ -782,7 +750,7 @@ function YieldHistoryChart({
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: TOKENS.spacing[2],
             padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
-            background: isAboveTarget ? 'rgba(var(--brand-accent-rgb), 0.10)' : 'rgba(var(--color-error-rgb), 0.10)',
+            background: isAboveTarget ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
             borderRadius: TOKENS.radius.full,
             fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.xs,
             fontWeight: TOKENS.fontWeights.black,
@@ -885,12 +853,9 @@ function YieldHistoryChart({
               />
               <circle cx={hoverPt.x} cy={hoverPt.y} r={4.5}
                 fill={TOKENS.colors.accent} stroke={TOKENS.colors.black} strokeWidth={2}
-                style={{ filter: `drop-shadow(0 0 5px ${TOKENS.colors.accent})` }}
                 pointerEvents="none"
               />
               <g pointerEvents="none">
-                <rect x={tx + 1} y={ty + 2} width={TW} height={TH} rx={4}
-                  fill="rgba(0,0,0,0.35)" />
                 <rect x={tx} y={ty} width={TW} height={TH} rx={4}
                   fill={TOKENS.colors.black} stroke={tipColor} strokeWidth={0.8} strokeOpacity={0.45} />
                 <text x={tx + TW / 2} y={ty + 16} textAnchor="middle"
@@ -1018,8 +983,6 @@ function CompositionDonut({
                 <span style={{
                   width: TOKENS.dot.sm, height: TOKENS.dot.sm,
                   borderRadius: TOKENS.radius.full, background: color, flexShrink: 0,
-                  boxShadow: isHov ? `0 0 6px ${color}` : 'none',
-                  transition: 'box-shadow var(--transition-fast)',
                 }} />
                 <span style={{
                   fontSize: TOKENS.fontSizes.micro, fontWeight: TOKENS.fontWeights.bold,
@@ -1102,11 +1065,9 @@ function MaturityProjectionChart({ principal, totalYield, lockPeriodDays }: {
         <path d={areaPath} fill="url(#projGrad)" />
         <path d={linePath} fill="none" stroke={TOKENS.colors.accent} strokeWidth={2}
           strokeLinejoin="round" strokeLinecap="round"
-          style={{ filter: 'drop-shadow(0 2px 6px rgba(var(--brand-accent-rgb), 0.3))' }}
         />
         <circle cx={last.x} cy={last.y} r={4}
           fill={TOKENS.colors.accent} stroke={TOKENS.colors.black} strokeWidth={1.5}
-          style={{ filter: `drop-shadow(0 0 6px ${TOKENS.colors.accent})` }}
         />
         {/* X labels */}
         <text x={pad.left} y={H - 2} textAnchor="start"
@@ -1282,9 +1243,9 @@ function StrategyTabBody({ vault, vaultConfig }: { vault: AvailableVault; vaultC
                   fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold,
                   color: TOKENS.colors.accent, textDecoration: 'none',
                   padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
-                  background: 'rgba(var(--brand-accent-rgb), 0.08)',
+                  background: TOKENS.colors.accentSubtle,
                   borderRadius: TOKENS.radius.full,
-                  border: `${TOKENS.borders.thin} solid rgba(var(--brand-accent-rgb), 0.2)`,
+                  border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
                   transition: 'background var(--transition-fast)',
                 }}>
                 {r.label} ↗
@@ -1326,9 +1287,8 @@ function TermsTabBody({ vault, vaultConfig, lockPeriodDays }: {
         <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2], position: 'relative' }}>
           {/* Start dot */}
           <div style={{
-            width: 8, height: 8, borderRadius: TOKENS.radius.full,
+            width: TOKENS.dot.sm, height: TOKENS.dot.sm, borderRadius: TOKENS.radius.full,
             background: TOKENS.colors.accent, flexShrink: 0,
-            boxShadow: `0 0 8px rgba(var(--brand-accent-rgb), 0.5)`,
           }} />
           {/* Bar */}
           <div style={{
@@ -1345,7 +1305,7 @@ function TermsTabBody({ vault, vaultConfig, lockPeriodDays }: {
           </div>
           {/* End dot */}
           <div style={{
-            width: 8, height: 8, borderRadius: TOKENS.radius.full,
+            width: TOKENS.dot.sm, height: TOKENS.dot.sm, borderRadius: TOKENS.radius.full,
             background: TOKENS.colors.bgTertiary,
             border: `${TOKENS.borders.thick} solid ${TOKENS.colors.borderStrong}`,
             flexShrink: 0,
@@ -1404,9 +1364,9 @@ function ScenarioGrid({ apr, principal, lockPeriodDays }: {
 }) {
   const termYears = lockPeriodDays / 365
   const scenarios = [
-    { label: 'Bear', mult: 0.65, color: TOKENS.colors.danger },
+    { label: 'Bear', mult: 0.65, color: TOKENS.colors.textSecondary },
     { label: 'Base', mult: 1.00, color: TOKENS.colors.accent },
-    { label: 'Bull', mult: 1.35, color: '#52c97a' },
+    { label: 'Bull', mult: 1.35, color: TOKENS.colors.accent },
   ]
   return (
     <div style={{ marginTop: TOKENS.spacing[5] }}>
@@ -1429,19 +1389,12 @@ function ScenarioGrid({ apr, principal, lockPeriodDays }: {
           const isBase = s.mult === 1.0
           return (
             <div key={s.label} style={{
-              background: isBase ? 'rgba(var(--brand-accent-rgb), 0.05)' : TOKENS.colors.bgTertiary,
-              border: `${TOKENS.borders.thin} solid ${isBase ? 'rgba(var(--brand-accent-rgb), 0.2)' : TOKENS.colors.borderSubtle}`,
+              background: isBase ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
+              border: `${TOKENS.borders.thin} solid ${isBase ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.md,
               padding: TOKENS.spacing[3],
               display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[1],
-              position: 'relative', overflow: 'hidden',
             }}>
-              {isBase && (
-                <div aria-hidden style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-                  background: 'linear-gradient(90deg, transparent, rgba(var(--brand-accent-rgb), 0.5), transparent)',
-                }} />
-              )}
               <span style={{
                 fontFamily: TOKENS.fonts.mono, fontSize: TOKENS.fontSizes.micro,
                 fontWeight: TOKENS.fontWeights.black,
@@ -1484,7 +1437,7 @@ function ProjectionRow({ label, value }: { label: string; value: string }) {
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: `${TOKENS.spacing[2]} 0`,
-      borderBottom: `${TOKENS.borders.thin} solid rgba(var(--brand-accent-rgb), 0.1)`,
+      borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
     }}>
       <span style={{ fontSize: TOKENS.fontSizes.xs, fontWeight: TOKENS.fontWeights.bold, color: TOKENS.colors.textSecondary }}>
         {label}
@@ -1516,7 +1469,7 @@ function AmountPresets({ minDeposit, currentAmount, onSelect }: {
             style={{
               flex: '1 1 auto', minWidth: 0,
               padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-              background: active ? 'rgba(var(--brand-accent-rgb), 0.12)' : TOKENS.colors.bgTertiary,
+              background: active ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
               border: `${TOKENS.borders.thin} solid ${active ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
               borderRadius: TOKENS.radius.full,
               color: active ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
@@ -1524,7 +1477,6 @@ function AmountPresets({ minDeposit, currentAmount, onSelect }: {
               fontWeight: TOKENS.fontWeights.bold,
               letterSpacing: TOKENS.letterSpacing.display,
               cursor: 'pointer', transition: 'all var(--transition-fast)',
-              boxShadow: active ? `0 0 10px rgba(var(--brand-accent-rgb), 0.18)` : 'none',
             }}
             aria-pressed={active}
           >
@@ -1540,20 +1492,17 @@ function AmountPresets({ minDeposit, currentAmount, onSelect }: {
 function DeployButton({ isReady, isDepositing, num, onClick }: {
   isReady: boolean; isDepositing: boolean; num: number; onClick: () => void
 }) {
-  const [hovered, setHovered] = useState(false)
   return (
     <button
       type="button"
       disabled={!isReady || isDepositing}
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
         width: '100%',
         height: TOKENS.control.heightXl,
         padding: `0 ${TOKENS.spacing[5]}`,
-        background: isReady ? TOKENS.colors.accent : TOKENS.colors.bgTertiary,
-        color: isReady ? TOKENS.colors.black : TOKENS.colors.textGhost,
+        background: isReady ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
+        color: isReady ? TOKENS.colors.accent : TOKENS.colors.textGhost,
         border: `${TOKENS.borders.thin} solid ${isReady ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
         borderRadius: TOKENS.radius.md,
         fontSize: TOKENS.fontSizes.sm,
@@ -1562,17 +1511,10 @@ function DeployButton({ isReady, isDepositing, num, onClick }: {
         letterSpacing: TOKENS.letterSpacing.display,
         textTransform: 'uppercase',
         cursor: isReady && !isDepositing ? 'pointer' : 'not-allowed',
-        transition: 'all var(--transition-fast)',
+        transition: 'background var(--transition-fast)',
         opacity: isDepositing ? 0.7 : 1,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         gap: TOKENS.spacing[2],
-        boxShadow: isReady
-          ? hovered
-            ? `0 4px 20px rgba(var(--brand-accent-rgb), 0.45), 0 0 0 1px rgba(var(--brand-accent-rgb), 0.3)`
-            : `0 0 16px rgba(var(--brand-accent-rgb), 0.25)`
-          : 'none',
-        transform: isReady && hovered ? 'translateY(-1px)' : 'translateY(0)',
-        filter: isReady && hovered ? 'brightness(1.08)' : 'none',
       }}
       aria-label={isReady ? `Deploy ${fmtUsd(num)}` : 'Complete form to deploy'}
       aria-disabled={!isReady || isDepositing}

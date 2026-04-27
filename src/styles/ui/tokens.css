@@ -83,7 +83,8 @@
 
   /* Font families */
   --font-sans: 'Satoshi Variable', 'Inter', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  /* Mono = Satoshi Variable; numeric tabular handled via font-variant-numeric */
+  --font-mono: 'Satoshi Variable', 'Inter', system-ui, sans-serif;
 
   /* Font sizes (stepped scale) */
   --text-xs: 11px;
