@@ -159,7 +159,8 @@ function LoginScreen({
 const styles: Record<string, React.CSSProperties> = {
   layout: {
     display: 'flex',
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - var(--demo-banner-h, 0px))',
+    marginTop: 'var(--demo-banner-h, 0px)',
     background: TOKENS.colors.bgApp,
     color: TOKENS.colors.textPrimary,
     fontFamily: TOKENS.fonts.sans,

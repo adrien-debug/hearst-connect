@@ -1,10 +1,35 @@
 'use client'
 
+import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { useDemoMode, setDemoMode } from '@/lib/demo/use-demo-mode'
+
+const BANNER_HEIGHT = 28 // px
 
 export function DemoBanner() {
   const isDemo = useDemoMode()
-  if (!isDemo) return null
+  const pathname = usePathname()
+  // Only show on app/admin surfaces — keep the marketing landing clean.
+  const isMarketingRoute = pathname === '/' || pathname?.startsWith('/(marketing)')
+  const visible = isDemo && !isMarketingRoute
+
+  // Reserve space at the top of the viewport so the banner never overlaps app chrome.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const root = document.documentElement
+    root.style.setProperty('--demo-banner-h', visible ? `${BANNER_HEIGHT}px` : '0px')
+    if (visible) {
+      root.dataset.demoBanner = 'on'
+    } else {
+      delete root.dataset.demoBanner
+    }
+    return () => {
+      root.style.setProperty('--demo-banner-h', '0px')
+      delete root.dataset.demoBanner
+    }
+  }, [visible])
+
+  if (!visible) return null
 
   return (
     <div
@@ -15,12 +40,13 @@ export function DemoBanner() {
         top: 0,
         left: 0,
         right: 0,
+        height: `${BANNER_HEIGHT}px`,
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 'var(--space-3, 12px)',
-        padding: '6px var(--space-4, 16px)',
+        padding: '0 var(--space-4, 16px)',
         background: 'linear-gradient(90deg, rgba(0,255,170,0.18), rgba(0,255,170,0.06))',
         borderBottom: '1px solid rgba(0,255,170,0.4)',
         color: 'var(--hc-text-primary, #fff)',

@@ -241,6 +241,7 @@ export function VaultDetailPanel({
         accruedYield={accruedYield}
         statusLabel={statusLabel}
         isReadyForExit={isPositionReadyForExit}
+        onBack={onBack}
         onClaim={() => setActiveModal('claim')}
         onManage={() => setActiveModal('manage')}
         onExit={() => setActiveModal('exit')}
@@ -538,6 +539,7 @@ function PositionHeader({
   accruedYield,
   statusLabel,
   isReadyForExit,
+  onBack,
   onClaim,
   onManage,
   onExit,
@@ -550,6 +552,7 @@ function PositionHeader({
   accruedYield: number
   statusLabel: string
   isReadyForExit: boolean
+  onBack?: () => void
   onClaim: () => void
   onManage: () => void
   onExit: () => void
@@ -585,6 +588,40 @@ function PositionHeader({
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
         }}>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: TOKENS.spacing[2],
+                background: 'transparent',
+                border: `1px solid ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.sm,
+                padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[2]}`,
+                color: TOKENS.colors.textSecondary,
+                fontFamily: 'inherit',
+                fontSize: 'inherit',
+                fontWeight: 'inherit',
+                letterSpacing: 'inherit',
+                textTransform: 'inherit',
+                cursor: 'pointer',
+                transition: 'all 120ms ease-out',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = TOKENS.colors.accent
+                e.currentTarget.style.borderColor = TOKENS.colors.accent
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = TOKENS.colors.textSecondary
+                e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
+              }}
+              aria-label="Back to portfolio"
+            >
+              ← Portfolio
+            </button>
+          )}
           <span style={{
             display: 'inline-flex',
             alignItems: 'center',

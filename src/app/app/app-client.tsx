@@ -49,9 +49,10 @@ const ACCESS_GATE_CSS = `
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--space-6);
+  padding: clamp(var(--space-6), 4vw, var(--space-10)) clamp(var(--space-4), 5vw, var(--space-8));
   min-height: 0;
   min-width: 0;
+  transition: padding 240ms ease-out;
 }
 
 .access-gate__pane--marketing {
@@ -77,7 +78,7 @@ const ACCESS_GATE_CSS = `
 
 @media (min-width: 900px) {
   .access-gate {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
     grid-template-rows: 1fr;
     overflow: hidden;
   }
@@ -85,8 +86,11 @@ const ACCESS_GATE_CSS = `
     border-bottom: 0;
     border-right: 1px solid var(--hc-border-subtle);
   }
-  .access-gate__pane {
-    padding: var(--space-10) var(--space-8);
+}
+
+@media (min-width: 1200px) {
+  .access-gate {
+    grid-template-columns: 1.1fr 1fr;
   }
 }
 

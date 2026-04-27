@@ -34,7 +34,8 @@ export function Canvas() {
   if (isLoading) {
     return (
       <div
-        className="connect-scope fixed inset-0 z-1 flex h-dvh flex-col overflow-hidden antialiased isolate"
+        className="connect-scope fixed inset-0 z-1 flex flex-col overflow-hidden antialiased isolate"
+      data-demo-offset="canvas"
         style={{
           background: TOKENS.colors.bgApp,
           color: TOKENS.colors.textPrimary,
@@ -81,8 +82,11 @@ export function Canvas() {
 
   return (
     <div
-      className="connect-scope fixed inset-0 z-1 flex h-dvh flex-col overflow-hidden antialiased isolate"
+      className="connect-scope fixed inset-0 z-1 flex flex-col overflow-hidden antialiased isolate"
+      data-demo-offset="canvas"
       style={{
+        top: 'var(--demo-banner-h, 0px)',
+        height: 'calc(100dvh - var(--demo-banner-h, 0px))',
         background: TOKENS.colors.bgApp,
         color: TOKENS.colors.textPrimary,
         fontFamily: TOKENS.fonts.sans,
@@ -209,57 +213,43 @@ function WalletButton() {
     if (connector) connect({ connector })
   }
 
-  // Demo mode: show fake address + exit button
+  // Demo mode: compact pill with address only (banner already says "Demo Mode")
   if (isDemo) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: TOKENS.spacing[2] }}>
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: TOKENS.spacing[2],
+          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
+          background: TOKENS.colors.bgTertiary,
+          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+          borderRadius: TOKENS.radius.md,
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: TOKENS.colors.accent,
+            boxShadow: `0 0 6px ${TOKENS.colors.accent}`,
+            flexShrink: 0,
+          }}
+        />
         <span
           style={{
             fontFamily: MONO,
             fontSize: TOKENS.fontSizes.xs,
             fontWeight: TOKENS.fontWeights.bold,
             letterSpacing: TOKENS.letterSpacing.display,
-            color: TOKENS.colors.accent,
+            color: TOKENS.colors.textPrimary,
             textTransform: 'uppercase',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: TOKENS.spacing[2],
+            whiteSpace: 'nowrap',
           }}
         >
-          <span
-            style={{
-              width: TOKENS.spacing[2],
-              height: TOKENS.spacing[2],
-              borderRadius: '50%',
-              background: TOKENS.colors.accent,
-              boxShadow: `0 0 6px ${TOKENS.colors.accent}`,
-            }}
-          />
-          Demo · {formatAddress(DEMO_WALLET_ADDRESS)}
+          {formatAddress(DEMO_WALLET_ADDRESS)}
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            setDemoMode(false)
-            if (typeof window !== 'undefined') window.location.href = '/'
-          }}
-          style={{
-            padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[3]}`,
-            background: 'transparent',
-            border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-            borderRadius: TOKENS.radius.md,
-            cursor: 'pointer',
-            color: TOKENS.colors.textSecondary,
-            fontFamily: MONO,
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-          }}
-          title="Exit demo mode"
-        >
-          Exit
-        </button>
       </div>
     )
   }
