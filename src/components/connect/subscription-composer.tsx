@@ -242,10 +242,15 @@ export function SubscriptionComposer({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing[3], flex: 1 }}>
+            {vault.risk && /medium|high/i.test(vault.risk) && (
+              <RiskWarning risk={vault.risk} />
+            )}
+
             {num > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <ProjectionLine label="Est. annual yield" value={`+${fmtUsd(yearlyYield)}`} highlight />
-                <ProjectionLine label="Target yield" value={`+${fmtUsd(totalYield)}`} highlight />
+                <ProjectionLine label="Yield at 1 month" value={`+${fmtUsd(yearlyYield / 12)}`} />
+                <ProjectionLine label="Yield at 6 months" value={`+${fmtUsd(yearlyYield / 2)}`} />
+                <ProjectionLine label={`Yield at maturity (${vault.lockPeriod})`} value={`+${fmtUsd(totalYield)}`} highlight />
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -839,6 +844,36 @@ function CollapsiblePreFlight({
   )
 }
 
+
+function RiskWarning({ risk }: { risk: string }) {
+  const isHigh = /high/i.test(risk)
+  const color = isHigh ? TOKENS.colors.danger : TOKENS.colors.warning
+  return (
+    <div
+      role="alert"
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: TOKENS.spacing[2],
+        padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[3]}`,
+        background: `color-mix(in srgb, ${color} 10%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+        borderRadius: TOKENS.radius.md,
+        fontSize: TOKENS.fontSizes.xs,
+        color,
+        lineHeight: 1.5,
+      }}
+    >
+      <span aria-hidden style={{ flexShrink: 0 }}>{isHigh ? '⚠' : 'ℹ'}</span>
+      <span>
+        <strong>Risk: {risk}.</strong>{' '}
+        {isHigh
+          ? 'This vault carries elevated risk. Capital may be subject to drawdown. Only invest what you can afford to lose.'
+          : 'This vault carries moderate risk. Review strategy and terms carefully before deploying capital.'}
+      </span>
+    </div>
+  )
+}
 
 /** Compact axis label: $1.2M / $680K / $500. Avoids label clipping at any amount. */
 function fmtUsdAxis(n: number): string {

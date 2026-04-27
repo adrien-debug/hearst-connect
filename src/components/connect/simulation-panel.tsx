@@ -261,9 +261,23 @@ export function SimulationPanel() {
                         strokeWidth="0.3"
                       />
                     ))}
-                    <polyline points={series.bear} fill="none" stroke={scenario === 'bear' ? TOKENS.colors.accent : TOKENS.colors.textGhost} strokeWidth={scenario === 'bear' ? "0.8" : "0.3"} />
-                    <polyline points={series.base} fill="none" stroke={scenario === 'base' ? TOKENS.colors.accent : TOKENS.colors.textGhost} strokeWidth={scenario === 'base' ? "0.8" : "0.3"} />
-                    <polyline points={series.bull} fill="none" stroke={scenario === 'bull' ? TOKENS.colors.accent : TOKENS.colors.textGhost} strokeWidth={scenario === 'bull' ? "0.8" : "0.3"} />
+                    {([
+                      { key: 'bear', color: TOKENS.colors.danger },
+                      { key: 'base', color: TOKENS.colors.textSecondary },
+                      { key: 'bull', color: TOKENS.colors.accent },
+                    ] as const).map(({ key, color }) => {
+                      const active = scenario === key
+                      return (
+                        <polyline
+                          key={key}
+                          points={series[key]}
+                          fill="none"
+                          stroke={color}
+                          strokeWidth={active ? '1.2' : '0.4'}
+                          strokeOpacity={active ? 1 : 0.35}
+                        />
+                      )
+                    })}
                   </svg>
                 </div>
               </div>
@@ -320,28 +334,36 @@ export function SimulationPanel() {
                   padding: `${TOKENS.spacing[1]}`,
                   border: `1px solid ${TOKENS.colors.borderSubtle}`
                 }}>
-                  {(['bear', 'base', 'bull'] as const).map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setScenario(s)}
-                      style={{
-                        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[6]}`,
-                        borderRadius: TOKENS.radius.xl,
-                        background: scenario === s ? TOKENS.colors.accent : 'transparent',
-                        color: scenario === s ? TOKENS.colors.black : TOKENS.colors.textSecondary,
-                        fontSize: TOKENS.fontSizes.xs,
-                        fontWeight: TOKENS.fontWeights.bold,
-                        textTransform: 'uppercase',
-                        letterSpacing: TOKENS.letterSpacing.display,
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: TOKENS.transitions.base,
-                        boxShadow: scenario === s ? `0 2px 8px ${TOKENS.colors.accent}40` : 'none',
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  {([
+                    { key: 'bear', color: TOKENS.colors.danger },
+                    { key: 'base', color: TOKENS.colors.textSecondary },
+                    { key: 'bull', color: TOKENS.colors.accent },
+                  ] as const).map(({ key, color }) => {
+                    const active = scenario === key
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setScenario(key)}
+                        style={{
+                          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[6]}`,
+                          borderRadius: TOKENS.radius.xl,
+                          background: active ? color : 'transparent',
+                          color: active ? TOKENS.colors.black : color,
+                          fontSize: TOKENS.fontSizes.xs,
+                          fontWeight: TOKENS.fontWeights.bold,
+                          textTransform: 'uppercase',
+                          letterSpacing: TOKENS.letterSpacing.display,
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: TOKENS.transitions.base,
+                          boxShadow: active ? `0 2px 8px ${color}40` : 'none',
+                          opacity: active ? 1 : 0.65,
+                        }}
+                      >
+                        {key}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
