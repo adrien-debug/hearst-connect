@@ -40,10 +40,15 @@
   --color-gray-900: #171717;
   --color-gray-950: #0a0a0a;
 
-  /* Typography */
-  --font-sans: 'Satoshi Variable', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  /* Mono = Satoshi Variable with tabular nums (font-variant-numeric: tabular-nums on consumers) */
-  --font-mono: 'Satoshi Variable', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Typography
+   * --font-sans is defined by next/font/local in src/app/layout.tsx and
+   * cascades from the <html> element. We do NOT redefine it here, otherwise
+   * the literal 'Satoshi Variable' would override the @font-face hashed
+   * name and Satoshi would never load.
+   * --font-mono is aliased to --font-sans (single typographic system).
+   * Tabular figures are obtained via `font-variant-numeric: tabular-nums`
+   * on the consuming element. */
+  --font-mono: var(--font-sans);
 
   /* Spacing (4px base) */
   --space-0: 0px;

@@ -81,10 +81,9 @@
      TYPOGRAPHY SYSTEM
      ─────────────────────────────────────────────────────────────── */
 
-  /* Font families */
-  --font-sans: 'Satoshi Variable', 'Inter', system-ui, sans-serif;
-  /* Mono = Satoshi Variable; numeric tabular handled via font-variant-numeric */
-  --font-mono: 'Satoshi Variable', 'Inter', system-ui, sans-serif;
+  /* Font families — --font-sans is owned by next/font/local (layout.tsx).
+   * Do not redeclare here. --font-mono is aliased to it. */
+  --font-mono: var(--font-sans);
 
   /* Font sizes (stepped scale) */
   --text-xs: 11px;

@@ -3,10 +3,10 @@
  */
 
 :root {
-  --font-body: 'Satoshi Variable', Inter, -apple-system, sans-serif;
-  /* Mono alias = Satoshi Variable; figures use font-variant-numeric: tabular-nums */
-  --font-mono: 'Satoshi Variable', Inter, -apple-system, sans-serif;
-  --font-unbounded: 'Satoshi Variable', Inter, sans-serif;
+  --font-body: var(--font-sans);
+  /* Mono alias = Satoshi; figures use font-variant-numeric: tabular-nums */
+  --font-mono: var(--font-sans);
+  --font-unbounded: var(--font-sans);
   --dashboard-page: #0A0A0A;
   --dashboard-page-translucent: color-mix(in srgb, var(--dashboard-page) 40%, transparent);
   --dashboard-surface: #111117;
