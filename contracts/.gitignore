@@ -1,0 +1,10 @@
+out/
+cache/
+broadcast/
+.env
+.env.local
+docs/
+
+# Vendor deps installed via `npm run contracts:install` (pinned versions).
+# Not committed to keep the repo lean; reproducible from foundry.toml.
+lib/
