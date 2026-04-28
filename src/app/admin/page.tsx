@@ -12,7 +12,7 @@ import { MarketSection } from './sections/market'
 import { SimulatorSection } from './sections/simulator'
 import { AgentConfigSection } from './sections/agent-config'
 import AgentsSection from './sections/agents'
-import { useAdminAuth } from '@/hooks/useAdminAuth'
+import { useSiweAuth } from '@/hooks/useSiweAuth'
 import { ADMIN_TOKENS as TOKENS } from './constants'
 import { useDemoMode } from '@/lib/demo/use-demo-mode'
 
@@ -46,16 +46,30 @@ export default function AdminPage() {
 }
 
 function AdminContent() {
-  const { isAuthenticated, isLoading, error, login, logout } = useAdminAuth()
+  const {
+    isAuthenticated,
+    isAdmin,
+    address,
+    sessionChecked,
+    logout,
+  } = useSiweAuth()
   const isDemo = useDemoMode()
   const [activeSection, setActiveSection] = useState('dashboard')
 
-  if (isLoading && !isDemo) {
-    return <LoadingScreen />
-  }
-
-  if (!isAuthenticated && !isDemo) {
-    return <LoginScreen onLogin={login} error={error} />
+  // Demo bypass: skip every auth gate so screen-shares / pitches always reach
+  // the admin shell. Real-mode access requires a SIWE-signed cookie issued
+  // server-side (the same one used by /app), with the connected address
+  // present in process.env.ADMIN_ADDRESSES.
+  if (!isDemo) {
+    if (!sessionChecked) {
+      return <LoadingScreen />
+    }
+    if (!isAuthenticated) {
+      return <NoSessionScreen />
+    }
+    if (!isAdmin) {
+      return <NotAdminScreen address={address} onLogout={logout} />
+    }
   }
 
   const CurrentSection = SECTIONS[activeSection]
@@ -66,7 +80,9 @@ function AdminContent() {
       <AdminSidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        onLogout={logout}
+        onLogout={() => {
+          void logout()
+        }}
       />
       <div style={styles.main}>
         <AdminHeader title={sectionInfo.title} subtitle={sectionInfo.subtitle} />
@@ -86,71 +102,76 @@ function LoadingScreen() {
   )
 }
 
-function LoginScreen({
-  onLogin,
-  error,
-}: {
-  onLogin: (email: string, password: string) => Promise<boolean>
-  error: string | null
-}) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoggingIn(true)
-    await onLogin(email, password)
-    setIsLoggingIn(false)
-  }
-
+/** NoSessionScreen — Shown when there is no SIWE cookie at all. We can't
+ * trigger the wallet flow from here (it lives in /app's AccessGate), so the
+ * shortest path is a deep-link back to /app where the user connects + signs
+ * once, then returns. */
+function NoSessionScreen() {
   return (
     <div style={styles.loginScreen}>
       <div style={styles.loginBox}>
         <div style={styles.loginHeader}>
           <img src="/logos/hearst.svg" alt="Hearst" style={styles.logo} />
           <h1 style={styles.loginTitle}>Admin Console</h1>
-          <p style={styles.loginSubtitle}>Secure access required</p>
+          <p style={styles.loginSubtitle}>
+            Sign in with an admin wallet to access the console.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.loginForm}>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={styles.input}
-              required
-            />
+        <a href="/app" style={styles.primaryLink}>
+          Connect &amp; sign in →
+        </a>
+
+        <p style={styles.helper}>
+          You will be sent to the main app to connect your wallet and sign the
+          authentication message. Return here once authenticated.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/** NotAdminScreen — Shown when the user has a valid SIWE session but their
+ * wallet isn't in the ADMIN_ADDRESSES whitelist. Lets them log out (in case
+ * they want to retry with a different wallet) without leaving the page. */
+function NotAdminScreen({
+  address,
+  onLogout,
+}: {
+  address: string | null
+  onLogout: () => Promise<void>
+}) {
+  return (
+    <div style={styles.loginScreen}>
+      <div style={styles.loginBox}>
+        <div style={styles.loginHeader}>
+          <img src="/logos/hearst.svg" alt="Hearst" style={styles.logo} />
+          <h1 style={styles.loginTitle}>Not authorized</h1>
+          <p style={styles.loginSubtitle}>
+            This wallet is not on the admin whitelist.
+          </p>
+        </div>
+
+        {address && (
+          <div style={styles.connectedAddress}>
+            <span style={styles.connectedLabel}>Connected</span>
+            <span style={styles.connectedValue}>
+              {`${address.slice(0, 6)}…${address.slice(-4)}`}
+            </span>
           </div>
+        )}
 
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              required
-            />
-          </div>
+        <button
+          type="button"
+          onClick={() => {
+            void onLogout()
+          }}
+          style={styles.loginButton}
+        >
+          Disconnect &amp; try another wallet
+        </button>
 
-          {error && <div style={styles.error}>{error}</div>}
-
-          <button
-            type="submit"
-            disabled={isLoggingIn}
-            style={{
-              ...styles.loginButton,
-              opacity: isLoggingIn ? 0.7 : 1,
-            }}
-          >
-            {isLoggingIn ? 'Authenticating...' : 'Sign In'}
-          </button>
-        </form>
-
-        <a href="/app" style={styles.backLink}>← Back to App</a>
+        <a href="/app" style={styles.backLink}>← Back to app</a>
       </div>
     </div>
   )
@@ -227,44 +248,9 @@ const styles: Record<string, React.CSSProperties> = {
     color: TOKENS.colors.textSecondary,
     margin: 0,
   },
-  loginForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[4],
-  },
-  fieldGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: TOKENS.spacing[2],
-  },
-  label: {
-    fontSize: TOKENS.fontSizes.xs,
-    fontWeight: TOKENS.fontWeights.bold,
-    textTransform: 'uppercase',
-    color: TOKENS.colors.textSecondary,
-    letterSpacing: TOKENS.letterSpacing.normal,
-  },
-  input: {
-    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[4]}`,
-
-    background: TOKENS.colors.bgTertiary,
-    border: `1px solid ${TOKENS.colors.borderSubtle}`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.textPrimary,
-    fontSize: TOKENS.fontSizes.sm,
-    fontFamily: 'inherit',
-    outline: 'none',
-    transition: `border-color ${TOKENS.transitions.fast}`,
-  },
-  error: {
-    padding: TOKENS.spacing[3],
-    background: `${TOKENS.colors.danger}15`,
-    border: `1px solid ${TOKENS.colors.danger}40`,
-    borderRadius: TOKENS.radius.md,
-    color: TOKENS.colors.danger,
-    fontSize: TOKENS.fontSizes.sm,
-  },
-  loginButton: {
+  primaryLink: {
+    display: 'block',
+    textAlign: 'center',
     padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[6]}`,
     background: TOKENS.colors.accent,
     color: TOKENS.colors.black,
@@ -273,9 +259,53 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: TOKENS.fontSizes.sm,
     fontWeight: TOKENS.fontWeights.bold,
     textTransform: 'uppercase',
-    cursor: 'pointer',
+    textDecoration: 'none',
     letterSpacing: TOKENS.letterSpacing.normal,
     marginTop: TOKENS.spacing[2],
+  },
+  helper: {
+    margin: `${TOKENS.spacing[5]} 0 0`,
+    fontSize: TOKENS.fontSizes.xs,
+    color: TOKENS.colors.textSecondary,
+    lineHeight: 1.5,
+    textAlign: 'center',
+  },
+  connectedAddress: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: TOKENS.spacing[3],
+    margin: `0 0 ${TOKENS.spacing[4]} 0`,
+    background: TOKENS.colors.bgTertiary,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+  },
+  connectedLabel: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: TOKENS.fontSizes.micro,
+    fontWeight: TOKENS.fontWeights.bold,
+    letterSpacing: TOKENS.letterSpacing.display,
+    textTransform: 'uppercase',
+    color: TOKENS.colors.textGhost,
+  },
+  connectedValue: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    color: TOKENS.colors.textPrimary,
+  },
+  loginButton: {
+    padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[6]}`,
+    background: 'transparent',
+    color: TOKENS.colors.textPrimary,
+    border: `1px solid ${TOKENS.colors.borderSubtle}`,
+    borderRadius: TOKENS.radius.md,
+    fontSize: TOKENS.fontSizes.sm,
+    fontWeight: TOKENS.fontWeights.bold,
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    letterSpacing: TOKENS.letterSpacing.normal,
+    width: '100%',
   },
   backLink: {
     display: 'block',

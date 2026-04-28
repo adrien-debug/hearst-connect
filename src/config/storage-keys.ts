@@ -4,9 +4,6 @@
  */
 
 export const STORAGE_KEYS = {
-  // Admin
-  ADMIN_SESSION: 'hearst:admin-session',
-
   // Vault
   VAULT_REGISTRY: 'hearst:vault-registry',
 } as const

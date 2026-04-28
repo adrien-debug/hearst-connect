@@ -17,6 +17,7 @@ import { SIMULATION_VIEW_ID, AVAILABLE_VAULTS_VIEW_ID } from './view-ids'
 import { DockRadial } from './dock-radial'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
+import { DemoToggle } from '@/components/demo/demo-toggle'
 import { useDemoMode } from '@/lib/demo/use-demo-mode'
 import { DEMO_WALLET_ADDRESS } from '@/lib/demo/demo-data'
 import { useLiveActions } from '@/hooks/useLiveActions'
@@ -137,6 +138,7 @@ export function Canvas() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: TOKENS.spacing[3] }}>
+          <DemoToggle />
           <ThemeToggle variant="minimal" size="sm" />
           <WalletButton />
         </div>
@@ -429,8 +431,11 @@ function WalletButton() {
     if (connector) connect({ connector })
   }
 
-  // Demo mode: compact pill with address only (banner already says "Demo Mode")
-  if (isDemo) {
+  // Demo mode without a connected wallet: fall back to the synthetic demo
+  // address so screenshots/pitches still show a wallet pill. When the user
+  // IS connected, we let the real-mode branches below render their real
+  // address — "demo IRL" preserves wallet identity while swapping the data.
+  if (isDemo && (!mounted || !isConnected)) {
     return (
       <div
         style={{

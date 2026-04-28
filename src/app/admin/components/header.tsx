@@ -2,6 +2,7 @@
 
 import { ADMIN_TOKENS as TOKENS, MONO } from '../constants'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
+import { DemoToggle } from '@/components/demo/demo-toggle'
 
 interface AdminHeaderProps {
   title: string
@@ -21,6 +22,7 @@ export function AdminHeader({ title, subtitle }: AdminHeaderProps) {
         <p style={styles.subtitle}>{subtitle}</p>
       </div>
       <div style={styles.meta}>
+        <DemoToggle variant="admin" />
         <ThemeToggle variant="minimal" size="sm" />
         <span style={styles.version}>v1.0.0</span>
         <div style={styles.status}>
