@@ -8,3 +8,7 @@ node_modules
 _cloned-repos
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# SQLite transient WAL journal files (never commit these)
+data/*.db-shm
+data/*.db-wal
