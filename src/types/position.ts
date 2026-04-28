@@ -15,7 +15,12 @@ export interface EpochData {
 
 export interface PositionData {
   capitalDeployed: number
+  /** Yield currently pending claim (on-chain pendingRewards). */
   accruedYield: number
+  /** Cumulative yield distributed to this position since inception. On-chain
+   * positions need event indexing to compute this; falls back to accruedYield
+   * until the indexer ships. */
+  cumulativeYieldPaid: number
   positionValue: number
   unlockTimeline: UnlockTimeline
   epoch: EpochData

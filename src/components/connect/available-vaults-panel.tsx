@@ -1,34 +1,28 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { TOKENS, fmtUsdCompact, LINE_HEIGHT, VALUE_LETTER_SPACING, MONO, CHART_PALETTE } from './constants'
+import { TOKENS, VALUE_LETTER_SPACING, LINE_HEIGHT } from './constants'
 import { formatVaultName } from './formatting'
 import type { AvailableVault } from './data'
 import { useSmartFit, useShellPadding, fitValue } from './smart-fit'
-import type { SmartFitMode } from './smart-fit'
-import { CockpitGauge } from './cockpit-gauge'
+import { StepProgress } from './invest/step-progress'
 
 interface AvailableVaultsPanelProps {
   vaults: AvailableVault[]
   onVaultSelect: (vaultId: string) => void
 }
 
-type RiskFilter = 'all' | 'very low' | 'low' | 'medium' | 'high'
-type SortKey = 'apr' | 'lock' | 'min'
-
-function lockDays(lockPeriod: string): number {
-  // Inputs look like "12 months", "30 days", etc — coerce to days for sorting.
-  const m = lockPeriod.match(/(\d+(?:\.\d+)?)\s*(day|month|year|d|m|y)/i)
-  if (!m) return 0
-  const n = parseFloat(m[1])
-  const unit = m[2].toLowerCase()
-  if (unit.startsWith('y')) return n * 365
-  if (unit.startsWith('m')) return n * 30
-  return n
+/** Maps risk string → display color token (accent for low/very-low, grey ladder
+ * for higher risk). Exported for legacy usages. */
+export function riskColor(risk: string): string {
+  const r = risk.toLowerCase()
+  if (r.includes('very low') || r === 'low') return TOKENS.colors.accent
+  if (r === 'medium' || r === 'moderate') return TOKENS.colors.textGhost
+  if (r === 'high' || r === 'growth') return TOKENS.colors.textSecondary
+  return TOKENS.colors.textGhost
 }
 
 export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsPanelProps) {
-  const { mode } = useSmartFit({
+  const { mode, isLimit } = useSmartFit({
     tightHeight: 880,
     limitHeight: 720,
     tightWidth: 1280,
@@ -37,34 +31,6 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
     reserveWidth: 280,
   })
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
-
-  const [riskFilter, setRiskFilter] = useState<RiskFilter>('all')
-  const [sortKey, setSortKey] = useState<SortKey>('apr')
-
-  // Get top 3 vaults for cockpit gauges (sorted by APR)
-  const topVaults = useMemo(() => [...vaults].sort((a, b) => b.apr - a.apr).slice(0, 3), [vaults])
-  const displayVaults = topVaults.length >= 3 ? topVaults : [...topVaults, ...Array(3 - topVaults.length).fill(null)]
-
-  const filteredSortedVaults = useMemo(() => {
-    let list = riskFilter === 'all'
-      ? vaults
-      : vaults.filter((v) => v.risk.toLowerCase() === riskFilter)
-    list = [...list].sort((a, b) => {
-      if (sortKey === 'apr') return b.apr - a.apr
-      if (sortKey === 'min') return a.minDeposit - b.minDeposit
-      return lockDays(a.lockPeriod) - lockDays(b.lockPeriod)
-    })
-    return list
-  }, [vaults, riskFilter, sortKey])
-
-  const riskCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: vaults.length, 'very low': 0, low: 0, medium: 0, high: 0 }
-    for (const v of vaults) {
-      const k = v.risk.toLowerCase()
-      if (k in counts) counts[k]++
-    }
-    return counts
-  }, [vaults])
 
   return (
     <div
@@ -80,8 +46,9 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
         color: TOKENS.colors.textPrimary,
       }}
     >
-      <h1 className="sr-only">Available vaults</h1>
-      {/* COCKPIT HEADER — Same structure as dashboard */}
+      <h1 className="sr-only">Invest — Select a product</h1>
+
+      {/* Wizard progress + intro */}
       <div
         style={{
           padding: fitValue(mode, {
@@ -89,61 +56,18 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
             tight: `${shellPadding * 0.75}px`,
             limit: `${shellPadding * 0.5}px`,
           }),
-          borderBottom: `1px solid ${TOKENS.colors.borderSubtle}`,
+          borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+          background: TOKENS.colors.black,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: TOKENS.spacing[4],
           flexShrink: 0,
-          background: TOKENS.colors.bgApp,
         }}
       >
-        {/* Top row — Context */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          marginBottom: TOKENS.spacing[3],
-        }}>
-          <div style={{
-            fontFamily: MONO,
-            fontSize: TOKENS.fontSizes.micro,
-            color: TOKENS.colors.textGhost,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-          }}>
-            {vaults.length} Available
-          </div>
-        </div>
-
-        {/* Main cockpit gauges — Top 3 vaults */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: fitValue(mode, {
-            normal: 'repeat(3, 1fr)',
-            tight: 'repeat(3, 1fr)',
-            limit: '1fr',
-          }),
-          gap: fitValue(mode, {
-            normal: TOKENS.spacing[6],
-            tight: TOKENS.spacing[4],
-            limit: TOKENS.spacing[3],
-          }),
-        }}>
-          {displayVaults.map((vault, index) => (
-            <CockpitGauge
-              key={vault?.id || `empty-${index}`}
-              label={vault ? formatVaultName(vault.name) : '—'}
-              value={vault ? `${vault.apr}%` : '—'}
-              valueCompact={vault ? `${vault.apr}%` : '—'}
-              subtext={vault ? `${vault.target} target · ${vault.lockPeriod}` : 'No vault'}
-              mode={mode}
-              primary={index === 0}
-              accent={index === 0}
-              onClick={vault ? () => onVaultSelect(vault.id) : undefined}
-              align="center"
-            />
-          ))}
-        </div>
+        <StepProgress active="select" />
       </div>
 
-      {/* Vault Cards Grid */}
+      {/* Cards grid */}
       <div
         className="hide-scrollbar"
         style={{
@@ -156,47 +80,31 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
           overflow: 'auto',
         }}
       >
-        {/* Filter / sort toolbar */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: TOKENS.spacing[3],
-        }}>
-          <FilterPills value={riskFilter} onChange={setRiskFilter} counts={riskCounts} />
-          <SortMenu value={sortKey} onChange={setSortKey} />
-        </div>
-
         <div style={{
           display: 'grid',
-          gridTemplateColumns: fitValue(mode, {
-            normal: 'repeat(2, 1fr)',
-            tight: 'repeat(2, 1fr)',
-            limit: '1fr',
-          }),
-          gap: TOKENS.spacing[4],
+          gridTemplateColumns: isLimit ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: shellGap,
         }}>
-          {filteredSortedVaults.length === 0 ? (
-            <div style={{
-              gridColumn: '1 / -1',
-              padding: TOKENS.spacing[8],
-              textAlign: 'center',
-              color: TOKENS.colors.textGhost,
-              fontSize: TOKENS.fontSizes.sm,
-              fontFamily: TOKENS.fonts.mono,
-              border: `${TOKENS.borders.thin} dashed ${TOKENS.colors.borderSubtle}`,
-              borderRadius: TOKENS.radius.lg,
-            }}>
-              No vaults match the current filter.
+          {vaults.length === 0 ? (
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                padding: TOKENS.spacing[8],
+                textAlign: 'center',
+                color: TOKENS.colors.textGhost,
+                fontSize: TOKENS.fontSizes.sm,
+                fontFamily: TOKENS.fonts.mono,
+                border: `${TOKENS.borders.thin} dashed ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.lg,
+              }}
+            >
+              No products available right now.
             </div>
           ) : (
-            filteredSortedVaults.map((vault, index) => (
-              <AvailableVaultCard
+            vaults.map((vault) => (
+              <ProductSelectCard
                 key={vault.id}
                 vault={vault}
-                index={index}
-                mode={mode}
                 onClick={() => onVaultSelect(vault.id)}
               />
             ))
@@ -207,359 +115,167 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
   )
 }
 
-/** Risk filter pills — shows live counts so users see at a glance how the
- * universe slices. Mirrors the AvailableVaultCard risk badge palette. */
-function FilterPills({
-  value,
-  onChange,
-  counts,
+/** ProductSelectCard — Step 1 card for picking a product (Prime or Growth).
+ * Mirrors the Hearst Connect Invest mockups: LIVE pill, title, big APY,
+ * description paragraph, key info row (lock / min deposit / risk) and a
+ * single "Select →" CTA. */
+function ProductSelectCard({
+  vault,
+  onClick,
 }: {
-  value: RiskFilter
-  onChange: (v: RiskFilter) => void
-  counts: Record<string, number>
-}) {
-  const opts: Array<{ id: RiskFilter; label: string; hue?: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'very low', label: 'Very Low', hue: CHART_PALETTE[1] },
-    { id: 'low', label: 'Low', hue: CHART_PALETTE[0] },
-    { id: 'medium', label: 'Medium', hue: CHART_PALETTE[3] },
-    { id: 'high', label: 'High', hue: CHART_PALETTE[2] },
-  ]
-  return (
-    <div style={{
-      display: 'inline-flex',
-      flexWrap: 'wrap',
-      gap: TOKENS.spacing[2],
-    }}>
-      {opts.map((opt) => {
-        const active = value === opt.id
-        return (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => onChange(opt.id)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[2],
-              padding: `${TOKENS.spacing[1]} ${TOKENS.spacing[3]}`,
-              borderRadius: TOKENS.radius.full,
-              border: `${TOKENS.borders.thin} solid ${active && opt.hue ? opt.hue : active ? TOKENS.colors.accent : TOKENS.colors.borderSubtle}`,
-              background: active ? TOKENS.colors.accentSubtle : TOKENS.colors.bgTertiary,
-              color: active && opt.hue ? opt.hue : active ? TOKENS.colors.accent : TOKENS.colors.textSecondary,
-              fontFamily: MONO,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              transition: TOKENS.transitions.fast,
-            }}
-          >
-            {opt.hue && (
-              <span style={{ width: 6, height: 6, borderRadius: TOKENS.radius.full, background: opt.hue }} />
-            )}
-            <span>{opt.label}</span>
-            <span style={{
-              fontSize: TOKENS.fontSizes.nano,
-              color: active ? 'currentColor' : TOKENS.colors.textGhost,
-              opacity: 0.85,
-            }}>
-              {counts[opt.id] ?? 0}
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Sort menu — dense pill triple (APR / Lock / Min). Stays inline with filters. */
-function SortMenu({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
-  const opts: Array<{ id: SortKey; label: string }> = [
-    { id: 'apr', label: 'APR' },
-    { id: 'lock', label: 'Lock' },
-    { id: 'min', label: 'Min deposit' },
-  ]
-  return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: TOKENS.spacing[2],
-    }}>
-      <span style={{
-        fontFamily: MONO,
-        fontSize: TOKENS.fontSizes.nano,
-        fontWeight: TOKENS.fontWeights.bold,
-        color: TOKENS.colors.textGhost,
-        letterSpacing: TOKENS.letterSpacing.display,
-        textTransform: 'uppercase',
-      }}>
-        Sort by
-      </span>
-      <div style={{
-        display: 'inline-flex',
-        gap: TOKENS.spacing.half,
-        padding: TOKENS.spacing.half,
-        background: TOKENS.colors.bgTertiary,
-        borderRadius: TOKENS.radius.full,
-        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-      }}>
-        {opts.map((opt) => {
-          const active = value === opt.id
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => onChange(opt.id)}
-              style={{
-                padding: `${TOKENS.spacing.half} ${TOKENS.spacing[3]}`,
-                borderRadius: TOKENS.radius.full,
-                border: 'none',
-                background: active ? TOKENS.colors.accent : 'transparent',
-                color: active ? TOKENS.colors.bgApp : TOKENS.colors.textSecondary,
-                fontFamily: MONO,
-                fontSize: TOKENS.fontSizes.nano,
-                fontWeight: TOKENS.fontWeights.bold,
-                letterSpacing: TOKENS.letterSpacing.display,
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                transition: TOKENS.transitions.fast,
-              }}
-            >
-              {opt.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-interface AvailableVaultCardProps {
   vault: AvailableVault
-  index: number
-  mode: SmartFitMode
   onClick: () => void
-}
-
-/** Risk pill color drawn from CHART_PALETTE so the available-vaults grid
- * stays visually consistent with the donut and timeline palettes. Indexes
- * follow the palette spec in constants.ts: 0=accent, 1=sky, 3=amber, 2=fuchsia. */
-export function riskColor(risk: string): string {
-  const r = risk.toLowerCase()
-  if (r.includes('very low')) return CHART_PALETTE[1]
-  if (r === 'low') return CHART_PALETTE[0]
-  if (r === 'medium') return CHART_PALETTE[3]
-  if (r === 'high') return CHART_PALETTE[2]
-  return TOKENS.colors.textGhost
-}
-
-export function AvailableVaultCard({ vault, index, mode, onClick }: AvailableVaultCardProps) {
-  const accentColor = CHART_PALETTE[index % CHART_PALETTE.length]
-  const riskAccent = riskColor(vault.risk)
-
+}) {
   return (
     <div
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick() }}
       style={{
         background: TOKENS.colors.black,
-        borderRadius: TOKENS.radius.lg,
-        padding: fitValue(mode, {
-          normal: TOKENS.spacing[5],
-          tight: TOKENS.spacing[4],
-          limit: TOKENS.spacing[3],
-        }),
         border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
-        cursor: 'pointer',
-        transition: TOKENS.transitions.base,
+        borderRadius: TOKENS.radius.lg,
+        padding: TOKENS.spacing[6],
         display: 'flex',
         flexDirection: 'column',
         gap: TOKENS.spacing[4],
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = accentColor
-        e.currentTarget.style.transform = 'translateY(-2px)'
-        e.currentTarget.style.boxShadow = TOKENS.shadow.cardHover
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = TOKENS.colors.borderSubtle
-        e.currentTarget.style.transform = 'none'
-        e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      {/* Top accent bar */}
+      {/* LIVE pill */}
       <span style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: TOKENS.borders.thick,
-        background: accentColor,
-      }} />
-
-      {/* Header — name + APY */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: TOKENS.spacing[3],
-      }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{
-            fontSize: TOKENS.fontSizes.md,
-            fontWeight: TOKENS.fontWeights.black,
-            textTransform: 'uppercase',
-            letterSpacing: VALUE_LETTER_SPACING,
-            color: TOKENS.colors.textPrimary,
-          }}>
-            {vault.name}
-          </div>
-          {/* Risk + Lock pills */}
-          <div style={{
-            display: 'flex',
-            gap: TOKENS.spacing[2],
-            marginTop: TOKENS.spacing[2],
-            flexWrap: 'wrap',
-          }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: TOKENS.spacing[1],
-              padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
-              borderRadius: TOKENS.radius.full,
-              background: TOKENS.colors.accentSubtle,
-              border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
-              fontFamily: MONO,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              color: riskAccent,
-            }}>
-              <span style={{ width: 5, height: 5, borderRadius: TOKENS.radius.full, background: riskAccent }} />
-              {vault.risk} risk
-            </span>
-            <span style={{
-              padding: `${TOKENS.spacing.half} ${TOKENS.spacing[2]}`,
-              borderRadius: TOKENS.radius.full,
-              background: TOKENS.colors.bgTertiary,
-              fontFamily: MONO,
-              fontSize: TOKENS.fontSizes.micro,
-              fontWeight: TOKENS.fontWeights.bold,
-              letterSpacing: TOKENS.letterSpacing.display,
-              textTransform: 'uppercase',
-              color: TOKENS.colors.textSecondary,
-            }}>
-              {vault.lockPeriod}
-            </span>
-          </div>
-        </div>
-        {/* APY badge */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 0,
-          flexShrink: 0,
-        }}>
-          <span style={{
-            fontSize: fitValue(mode, {
-              normal: TOKENS.fontSizes.xxl,
-              tight: TOKENS.fontSizes.xl,
-              limit: TOKENS.fontSizes.lg,
-            }),
-            fontWeight: TOKENS.fontWeights.black,
-            letterSpacing: VALUE_LETTER_SPACING,
-            color: accentColor,
-            lineHeight: 1,
-          }}>
-            {vault.apr}%
-          </span>
-          <span style={{
-            fontFamily: MONO,
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-            color: TOKENS.colors.textGhost,
-            marginTop: TOKENS.spacing.half,
-          }}>
-            APY · target {vault.target}
-          </span>
-        </div>
-      </div>
-
-      {/* Description */}
-      {vault.description && (
-        <p style={{
-          margin: 0,
-          fontSize: TOKENS.fontSizes.xs,
-          color: TOKENS.colors.textSecondary,
-          lineHeight: LINE_HEIGHT.body,
-          display: '-webkit-box',
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {vault.description}
-        </p>
-      )}
-
-      {/* Footer stats — Min deposit + Fees + CTA */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: TOKENS.spacing[3],
-        paddingTop: TOKENS.spacing[3],
-        borderTop: `1px solid ${TOKENS.colors.borderSubtle}`,
-        marginTop: 'auto',
+        gap: TOKENS.spacing[2],
+        padding: `${TOKENS.spacing.half} ${TOKENS.spacing[3]}`,
+        background: TOKENS.colors.accentSubtle,
+        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
+        borderRadius: TOKENS.radius.full,
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.micro,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
+        textTransform: 'uppercase',
+        color: TOKENS.colors.accent,
+        width: 'fit-content',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing.half, minWidth: 0 }}>
-          <span style={{
-            fontFamily: MONO,
-            fontSize: TOKENS.fontSizes.micro,
-            fontWeight: TOKENS.fontWeights.bold,
-            letterSpacing: TOKENS.letterSpacing.display,
-            textTransform: 'uppercase',
-            color: TOKENS.colors.textGhost,
-          }}>
-            Min · {fmtUsdCompact(vault.minDeposit)}
-          </span>
-          <span style={{
-            fontSize: TOKENS.fontSizes.micro,
-            color: TOKENS.colors.textGhost,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
-            {vault.fees}
-          </span>
-        </div>
-        <button style={{
-          padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-          background: TOKENS.colors.accentSubtle,
-          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
-          borderRadius: TOKENS.radius.md,
+        <span style={{
+          width: TOKENS.dot.sm,
+          height: TOKENS.dot.sm,
+          borderRadius: TOKENS.radius.full,
+          background: TOKENS.colors.accent,
+        }} />
+        Live
+      </span>
+
+      {/* Title + APY headline */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: TOKENS.spacing[3], flexWrap: 'wrap' }}>
+        <h2 style={{
+          margin: 0,
+          fontSize: TOKENS.fontSizes.xl,
+          fontWeight: TOKENS.fontWeights.black,
+          color: TOKENS.colors.textPrimary,
+          letterSpacing: TOKENS.letterSpacing.tight,
+        }}>
+          {formatVaultName(vault.name)}
+        </h2>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: TOKENS.spacing[2] }}>
+        <span style={{
+          fontSize: TOKENS.fontSizes.xxxl,
+          fontWeight: TOKENS.fontWeights.black,
           color: TOKENS.colors.accent,
-          fontFamily: TOKENS.fonts.sans,
-          fontSize: TOKENS.fontSizes.xs,
+          letterSpacing: VALUE_LETTER_SPACING,
+          fontVariantNumeric: 'tabular-nums',
+          lineHeight: LINE_HEIGHT.tight,
+        }}>
+          {vault.apr}
+        </span>
+        <span style={{
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.micro,
           fontWeight: TOKENS.fontWeights.bold,
           letterSpacing: TOKENS.letterSpacing.display,
           textTransform: 'uppercase',
-          cursor: 'pointer',
-          flexShrink: 0,
-          whiteSpace: 'nowrap',
+          color: TOKENS.colors.textGhost,
         }}>
-          Subscribe →
-        </button>
+          % APY
+        </span>
       </div>
+
+      {/* Description */}
+      <p style={{
+        margin: 0,
+        fontSize: TOKENS.fontSizes.sm,
+        color: TOKENS.colors.textSecondary,
+        lineHeight: LINE_HEIGHT.body,
+      }}>
+        {vault.description ?? vault.strategy}
+      </p>
+
+      {/* Key info row */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: TOKENS.spacing[4],
+        marginTop: TOKENS.spacing[2],
+        paddingTop: TOKENS.spacing[4],
+        borderTop: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+      }}>
+        <KeyCell label="Lock"        value={vault.lockPeriod} />
+        <KeyCell label="Min deposit" value={`$${formatCompactDollar(vault.minDeposit)}`} />
+        <KeyCell label="Risk"        value={vault.risk} accent={riskColor(vault.risk)} />
+      </div>
+
+      {/* CTA */}
+      <button
+        type="button"
+        onClick={onClick}
+        style={{
+          marginTop: TOKENS.spacing[2],
+          padding: `${TOKENS.spacing[3]} ${TOKENS.spacing[5]}`,
+          background: TOKENS.colors.accentSubtle,
+          color: TOKENS.colors.accent,
+          border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
+          borderRadius: TOKENS.radius.md,
+          fontFamily: TOKENS.fonts.mono,
+          fontSize: TOKENS.fontSizes.sm,
+          fontWeight: TOKENS.fontWeights.black,
+          letterSpacing: TOKENS.letterSpacing.display,
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          transition: 'background var(--transition-fast)',
+        }}
+      >
+        Select →
+      </button>
     </div>
   )
+}
+
+function KeyCell({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: TOKENS.spacing.half, minWidth: 0 }}>
+      <span style={{
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.micro,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
+        textTransform: 'uppercase',
+        color: TOKENS.colors.textGhost,
+      }}>
+        {label}
+      </span>
+      <span style={{
+        fontSize: TOKENS.fontSizes.sm,
+        fontWeight: TOKENS.fontWeights.black,
+        color: accent ?? TOKENS.colors.textPrimary,
+        fontVariantNumeric: 'tabular-nums',
+      }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function formatCompactDollar(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(0)}K`
+  return n.toLocaleString('en-US')
 }

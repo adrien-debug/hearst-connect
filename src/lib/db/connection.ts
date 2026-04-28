@@ -171,6 +171,22 @@ export function initDb(): void {
     CREATE INDEX IF NOT EXISTS idx_signals_timestamp ON rebalance_signals(timestamp DESC);
   `)
 
+  // Idempotent migration: add on-chain execution metadata columns to rebalance_signals.
+  // SQLite doesn't support `IF NOT EXISTS` on ALTER, so we probe pragma first.
+  const signalCols = database
+    .prepare(`PRAGMA table_info(rebalance_signals)`)
+    .all() as { name: string }[]
+  const colNames = new Set(signalCols.map((c) => c.name))
+  if (!colNames.has('tx_hash')) {
+    database.exec(`ALTER TABLE rebalance_signals ADD COLUMN tx_hash TEXT`)
+  }
+  if (!colNames.has('chain_id')) {
+    database.exec(`ALTER TABLE rebalance_signals ADD COLUMN chain_id INTEGER`)
+  }
+  if (!colNames.has('executor')) {
+    database.exec(`ALTER TABLE rebalance_signals ADD COLUMN executor TEXT`)
+  }
+
   // Agent logs table - operational logs from all agents
   database.exec(`
     CREATE TABLE IF NOT EXISTS agent_logs (

@@ -1,0 +1,12 @@
+{
+  "chainId": 8453,
+  "chainName": "base",
+  "deployedAt": null,
+  "txHash": null,
+  "contracts": {
+    "HearstVault": null,
+    "HearstVaultImpl": null,
+    "HearstPosition": null,
+    "HearstPositionImpl": null
+  }
+}

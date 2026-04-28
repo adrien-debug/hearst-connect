@@ -5,9 +5,21 @@ import type { Address } from 'viem'
 import type { PositionData, PositionError } from '@/types/position'
 import { useVaultPosition, useVaultGlobal } from './useVault'
 import { useVaultById } from './useVaultRegistry'
+import { useUserData } from './useUserData'
 import { MS_PER_DAY, EPOCH_PROGRESS_NEAR_END, EPOCH_PROGRESS_DEFAULT } from '@/lib/constants'
 import { useDemoMode } from '@/lib/demo/use-demo-mode'
 import { getDemoPositionData } from '@/lib/demo/demo-data'
+
+/** resolveCumulativeYieldPaid — pure helper extracted for unit-testing.
+ * Picks the backend's lifetime `currentYield` when we can match the active
+ * cohort, otherwise falls back to the on-chain `accruedYield` (pendingRewards)
+ * which is a degraded signal but better than blanking the KPI. */
+export function resolveCumulativeYieldPaid(
+  matchingPosition: { currentYield: number } | null | undefined,
+  accruedYield: number,
+): number {
+  return matchingPosition?.currentYield ?? accruedYield
+}
 
 interface UsePositionDataOptions {
   vaultId: string
@@ -39,6 +51,12 @@ export function usePositionData({
   const { address: connectedAddress } = useAccount()
   const vaultConfig = useVaultById(vaultId)
   const isDemo = useDemoMode()
+  // Backend-mirrored positions carry cumulative yield-paid figures (driven by
+  // event indexer + claim mutation). On-chain `pendingRewards` is *just*
+  // unclaimed — using it as cumulative drops the user's lifetime yield to zero
+  // right after they claim. We prefer the backend's `currentYield` when the
+  // matching cohort is present.
+  const { positions: userPositions } = useUserData()
 
   // Use provided wallet address or connected address
   const effectiveWalletAddress = propWalletAddress || connectedAddress
@@ -110,9 +128,17 @@ export function usePositionData({
     const progressPercent = Math.min(100, Math.round((elapsedDays / lockDuration) * 100))
     const isTargetReached = progressPercent >= 100
 
+    // Resolve cumulative yield from the backend mirror when present. Match by
+    // positionId first (cohort-specific), then fall back to vaultId.
+    const matchingPosition = positionId
+      ? userPositions.find((p) => p.id === positionId)
+      : userPositions.find((p) => p.vaultId === vaultId && p.state !== 'withdrawn')
+    const cumulativeYieldPaid = resolveCumulativeYieldPaid(matchingPosition, accruedYield)
+
     return {
       capitalDeployed,
       accruedYield,
+      cumulativeYieldPaid,
       positionValue,
       unlockTimeline: {
         daysRemaining,

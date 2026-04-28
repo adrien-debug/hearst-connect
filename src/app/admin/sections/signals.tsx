@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSignals, useSignalMutations } from '@/hooks/useSignals'
 import { useAgentsStatus } from '@/hooks/useMarketData'
+import { ExecuteRebalanceButton } from '@/components/admin/execute-rebalance-button'
 import type { DbRebalanceSignal } from '@/lib/db/schema'
 
 const STATUS_CSS: Record<string, string> = {
@@ -25,7 +27,9 @@ export function SignalsSection() {
   const [filter, setFilter] = useState<string>('')
   const { data, isLoading } = useSignals(filter || undefined)
   const { data: agentsData } = useAgentsStatus()
-  const { approve, reject, execute } = useSignalMutations()
+  const { approve, reject } = useSignalMutations()
+  const qc = useQueryClient()
+  const refreshSignals = () => qc.invalidateQueries({ queryKey: ['signals'] })
 
   const signals = data?.signals ?? []
   const agents = agentsData?.agents ?? []
@@ -70,7 +74,7 @@ export function SignalsSection() {
               signal={sig}
               onApprove={() => approve.mutate(sig.id)}
               onReject={() => reject.mutate(sig.id)}
-              onExecute={() => execute.mutate(sig.id)}
+              onExecuted={refreshSignals}
             />
           ))}
         </div>
@@ -83,12 +87,12 @@ function SignalCard({
   signal: sig,
   onApprove,
   onReject,
-  onExecute,
+  onExecuted,
 }: {
   signal: DbRebalanceSignal
   onApprove: () => void
   onReject: () => void
-  onExecute: () => void
+  onExecuted: () => void
 }) {
   const statusClass = STATUS_CSS[sig.status] ?? 'admin-text-secondary'
   const icon = TYPE_ICONS[sig.type] ?? '📋'
@@ -133,7 +137,17 @@ function SignalCard({
       )}
       {sig.status === 'approved' && (
         <div className="signals-actions">
-          <button onClick={onExecute} className="signals-action-btn signals-action-execute">Execute</button>
+          <ExecuteRebalanceButton
+            signal={sig}
+            onExecutedOffChain={onExecuted}
+            onExecutedOnChain={onExecuted}
+          />
+        </div>
+      )}
+      {sig.status === 'executed' && sig.txHash && (
+        <div className="signals-meta">
+          <span>tx: {sig.txHash.slice(0, 10)}…{sig.txHash.slice(-6)}</span>
+          {sig.executor && <span>by {sig.executor.slice(0, 6)}…{sig.executor.slice(-4)}</span>}
         </div>
       )}
     </div>

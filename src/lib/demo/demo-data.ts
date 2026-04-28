@@ -371,6 +371,9 @@ export const DEMO_SIGNALS = {
       createdBy: 'strategy' as const,
       approvedAt: NOW() - 30 * 60 * 1000,
       executedAt: NOW() - 28 * 60 * 1000,
+      txHash: null,
+      chainId: null,
+      executor: null,
     },
     {
       id: 'sig-2',
@@ -385,6 +388,9 @@ export const DEMO_SIGNALS = {
       createdBy: 'strategy' as const,
       approvedAt: NOW() - 90 * 60 * 1000,
       executedAt: NOW() - 80 * 60 * 1000,
+      txHash: null,
+      chainId: null,
+      executor: null,
     },
     {
       id: 'sig-3',
@@ -399,6 +405,9 @@ export const DEMO_SIGNALS = {
       createdBy: 'strategy' as const,
       approvedAt: NOW() - 5 * 60 * 60 * 1000,
       executedAt: NOW() - 4 * 60 * 60 * 1000,
+      txHash: null,
+      chainId: null,
+      executor: null,
     },
     {
       id: 'sig-4',
@@ -413,6 +422,9 @@ export const DEMO_SIGNALS = {
       createdBy: 'watcher' as const,
       approvedAt: null,
       executedAt: null,
+      txHash: null,
+      chainId: null,
+      executor: null,
     },
   ],
 }
@@ -446,6 +458,7 @@ export function getDemoPositionData(vaultId: string, positionId?: string) {
   return {
     capitalDeployed: p.deposited,
     accruedYield: p.claimable,
+    cumulativeYieldPaid: p.currentYield,
     positionValue: p.deposited + p.currentYield,
     unlockTimeline: {
       daysRemaining: p.daysRemaining,

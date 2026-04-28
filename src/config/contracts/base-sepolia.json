@@ -1,0 +1,12 @@
+{
+  "chainId": 84532,
+  "chainName": "base-sepolia",
+  "deployedAt": null,
+  "txHash": null,
+  "contracts": {
+    "HearstVault": null,
+    "HearstVaultImpl": null,
+    "HearstPosition": null,
+    "HearstPositionImpl": null
+  }
+}

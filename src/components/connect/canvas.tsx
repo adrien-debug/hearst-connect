@@ -3,20 +3,25 @@
 import '@/styles/connect/dashboard-vars.css'
 import { useEffect, useState } from 'react'
 import { useConnectRouting } from './use-connect-routing'
-import { TOKENS, MONO } from './constants'
+import { TOKENS, MONO, fmtUsdCompact } from './constants'
 import { PortfolioSummary } from './portfolio-summary'
 import { VaultDetailPanel } from './vault-detail-panel'
 import { SubscribePanel } from './subscribe-panel'
 import { SimulationPanel } from './simulation-panel'
 import { AvailableVaultsPanel } from './available-vaults-panel'
 import { LoadingState } from './empty-states'
-import type { VaultLine, Aggregate, AvailableVault } from './data'
+import { Modal } from './modal'
+import { NetworkMismatchBanner } from './network-mismatch-banner'
+import type { VaultLine, Aggregate, ActiveVault, MaturedVault, AvailableVault } from './data'
 import { SIMULATION_VIEW_ID, AVAILABLE_VAULTS_VIEW_ID } from './view-ids'
 import { DockRadial } from './dock-radial'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { useDemoMode } from '@/lib/demo/use-demo-mode'
 import { DEMO_WALLET_ADDRESS } from '@/lib/demo/demo-data'
+import { useLiveActions } from '@/hooks/useLiveActions'
+import { useVaultById } from '@/hooks/useVaultRegistry'
+import { useToast } from './toast'
 
 
 export function Canvas() {
@@ -197,7 +202,7 @@ function MainPanel({
   if (isSimulation) return <SimulationPanel />
   if (selected) {
     if (selected.type === 'available') return <SubscribePanel vault={selected} onBack={onBack} />
-    return <VaultDetailPanel vault={selected} onBack={onBack} />
+    return <PositionDetailContainer vault={selected} onBack={onBack} />
   }
   if (isAvailableVaultsList) {
     return <AvailableVaultsPanel vaults={availableVaults} onVaultSelect={onVaultSelect} />
@@ -209,6 +214,197 @@ function MainPanel({
       onVaultSelect={onVaultSelect}
       onAvailableVaultsClick={() => onVaultSelect(AVAILABLE_VAULTS_VIEW_ID)}
     />
+  )
+}
+
+/** PositionDetailContainer — Wires the read-only VaultDetailPanel to the live
+ * action layer. Owns the per-vault `useLiveActions` hook (legal here because
+ * each container hosts one position), the withdraw confirmation modal, and
+ * surfaces the claim/exit handlers + pending flags down to the panel.
+ *
+ * Claim is one-click (recurring action, no confirmation). Withdraw goes
+ * through a modal because it's irreversible: a wrong click ends the position. */
+function PositionDetailContainer({
+  vault,
+  onBack,
+}: {
+  vault: ActiveVault | MaturedVault
+  onBack: () => void
+}) {
+  const productId = vault.productId ?? vault.id
+  const live = useLiveActions(productId)
+  const vaultConfig = useVaultById(productId)
+  const explorerBase = vaultConfig?.chain?.blockExplorers?.default?.url
+  const toast = useToast()
+  const [exitModalOpen, setExitModalOpen] = useState(false)
+  const explorerTxUrl = (txHash: string) =>
+    explorerBase ? `${explorerBase.replace(/\/$/, '')}/tx/${txHash}` : undefined
+
+  const handleClaim = async () => {
+    const result = await live.claim()
+    if (result.success) {
+      toast.success(`Claimed from ${vault.name}`, {
+        body: 'Yield distributed to your wallet.',
+        action: result.txHash && explorerTxUrl(result.txHash)
+          ? { label: 'View tx', href: explorerTxUrl(result.txHash)! }
+          : undefined,
+      })
+    } else {
+      toast.error('Claim failed', {
+        body: result.error ?? 'Unknown error. Check your wallet and try again.',
+      })
+    }
+  }
+
+  const handleConfirmExit = async () => {
+    setExitModalOpen(false)
+    const result = await live.withdraw()
+    if (result.success) {
+      toast.success(`Exited ${vault.name}`, {
+        body: 'Principal and pending yield returned to your wallet.',
+        action: result.txHash && explorerTxUrl(result.txHash)
+          ? { label: 'View tx', href: explorerTxUrl(result.txHash)! }
+          : undefined,
+      })
+    } else {
+      toast.error('Exit failed', {
+        body: result.error ?? 'Unknown error. Check your wallet and try again.',
+      })
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <NetworkMismatchBanner
+        expectedChainId={vaultConfig?.chain?.id}
+        expectedChainName={vaultConfig?.chain?.name}
+      />
+      <VaultDetailPanel
+        vault={vault}
+        onBack={onBack}
+        onClaim={live.canClaim ? handleClaim : undefined}
+        onExit={live.canWithdraw ? () => setExitModalOpen(true) : undefined}
+        isClaiming={live.isPending}
+        isExiting={live.isPending}
+      />
+      <Modal
+        isOpen={exitModalOpen}
+        onClose={() => setExitModalOpen(false)}
+        title="Exit position"
+        size="sm"
+        footer={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: TOKENS.spacing[3],
+          }}>
+            <button
+              type="button"
+              onClick={() => setExitModalOpen(false)}
+              disabled={live.isPending}
+              style={{
+                padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
+                background: 'transparent',
+                color: TOKENS.colors.textSecondary,
+                border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+                borderRadius: TOKENS.radius.sm,
+                fontFamily: MONO,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.bold,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                cursor: live.isPending ? 'wait' : 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmExit}
+              disabled={live.isPending}
+              style={{
+                padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
+                background: TOKENS.colors.accent,
+                color: TOKENS.colors.black,
+                border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
+                borderRadius: TOKENS.radius.sm,
+                fontFamily: MONO,
+                fontSize: TOKENS.fontSizes.xs,
+                fontWeight: TOKENS.fontWeights.black,
+                letterSpacing: TOKENS.letterSpacing.display,
+                textTransform: 'uppercase',
+                cursor: live.isPending ? 'wait' : 'pointer',
+                opacity: live.isPending ? 0.6 : 1,
+              }}
+            >
+              {live.isPending ? 'Exiting…' : 'Confirm exit →'}
+            </button>
+          </div>
+        }
+      >
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: TOKENS.spacing[4],
+          color: TOKENS.colors.textSecondary,
+          fontSize: TOKENS.fontSizes.sm,
+          lineHeight: 1.5,
+        }}>
+          <p style={{ margin: 0 }}>
+            You are about to withdraw your position from <strong style={{ color: TOKENS.colors.textPrimary }}>{vault.name}</strong>.
+            This is a one-time, irreversible action.
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            columnGap: TOKENS.spacing[4],
+            rowGap: TOKENS.spacing[2],
+            padding: TOKENS.spacing[4],
+            background: TOKENS.colors.bgTertiary,
+            border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
+            borderRadius: TOKENS.radius.md,
+            fontFamily: MONO,
+            fontSize: TOKENS.fontSizes.xs,
+          }}>
+            <span style={{
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              color: TOKENS.colors.textGhost,
+            }}>
+              Principal
+            </span>
+            <span style={{
+              fontWeight: TOKENS.fontWeights.black,
+              color: TOKENS.colors.textPrimary,
+              textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              {fmtUsdCompact(vault.deposited)}
+            </span>
+            <span style={{
+              fontWeight: TOKENS.fontWeights.bold,
+              letterSpacing: TOKENS.letterSpacing.display,
+              textTransform: 'uppercase',
+              color: TOKENS.colors.textGhost,
+            }}>
+              + Pending yield
+            </span>
+            <span style={{
+              fontWeight: TOKENS.fontWeights.black,
+              color: TOKENS.colors.accent,
+              textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              +{fmtUsdCompact(vault.claimable ?? 0)}
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: TOKENS.fontSizes.xs, color: TOKENS.colors.textGhost }}>
+            You will sign one transaction. Funds will arrive in your wallet within ~1 block.
+          </p>
+        </div>
+      </Modal>
+    </div>
   )
 }
 

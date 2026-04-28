@@ -42,17 +42,43 @@ export function EmptyState({
   )
 }
 
-export function VaultNotConfigured() {
+export function VaultNotConfigured({ onBack }: { onBack?: () => void }) {
   return (
     <EmptyState
       title="Vault not configured"
-      description="This vault is not yet configured. Please check back later."
+      description="This vault hasn't been wired up to a chain registry yet. Pick another position from your portfolio."
       icon={
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
           <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       }
-    />
+    >
+      {onBack && <PrimaryEmptyAction label="Back to portfolio" onClick={onBack} />}
+    </EmptyState>
+  )
+}
+
+function PrimaryEmptyAction({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
+        background: TOKENS.colors.accentSubtle,
+        color: TOKENS.colors.accent,
+        border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
+        borderRadius: TOKENS.radius.md,
+        fontFamily: TOKENS.fonts.mono,
+        fontSize: TOKENS.fontSizes.xs,
+        fontWeight: TOKENS.fontWeights.bold,
+        letterSpacing: TOKENS.letterSpacing.display,
+        textTransform: 'uppercase',
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -68,23 +94,7 @@ export function WalletNotConnected({ onConnect }: { onConnect?: () => void }) {
         </svg>
       }
     >
-      {onConnect && (
-        <button
-          onClick={onConnect}
-          style={{
-            padding: `${TOKENS.spacing[2]} ${TOKENS.spacing[4]}`,
-            background: TOKENS.colors.accentSubtle,
-            color: TOKENS.colors.accent,
-            border: `${TOKENS.borders.thin} solid ${TOKENS.colors.accent}`,
-            borderRadius: TOKENS.radius.md,
-            fontSize: TOKENS.fontSizes.sm,
-            fontWeight: TOKENS.fontWeights.semibold,
-            cursor: 'pointer',
-          }}
-        >
-          Connect Wallet
-        </button>
-      )}
+      {onConnect && <PrimaryEmptyAction label="Connect wallet" onClick={onConnect} />}
     </EmptyState>
   )
 }

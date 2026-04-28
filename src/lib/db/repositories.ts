@@ -538,6 +538,9 @@ export const SignalRepository = {
       createdBy: input.createdBy,
       approvedAt: null,
       executedAt: null,
+      txHash: null,
+      chainId: null,
+      executor: null,
     }
     db.prepare(`
       INSERT INTO rebalance_signals (id, timestamp, type, vault_id, description, params_json, status, risk_score, risk_notes, created_by, approved_at, executed_at)
@@ -561,6 +564,24 @@ export const SignalRepository = {
 
     vals.push(id)
     db.prepare(`UPDATE rebalance_signals SET ${sets.join(', ')} WHERE id = ?`).run(...vals)
+    return this.findById(id)
+  },
+
+  /** Records on-chain execution metadata after a Rebalance tx confirms. */
+  markExecutedOnChain(
+    id: string,
+    txHash: string,
+    chainId: number,
+    executor: string
+  ): DbRebalanceSignal | null {
+    const db = getDb()
+    const existing = this.findById(id)
+    if (!existing) return null
+    db.prepare(`
+      UPDATE rebalance_signals
+      SET status = 'executed', executed_at = ?, tx_hash = ?, chain_id = ?, executor = ?
+      WHERE id = ?
+    `).run(Date.now(), txHash, chainId, executor, id)
     return this.findById(id)
   },
 }
@@ -636,6 +657,9 @@ function mapSignalRow(row: Record<string, unknown>): DbRebalanceSignal {
     createdBy: String(row.created_by) as DbRebalanceSignal['createdBy'],
     approvedAt: row.approved_at != null ? Number(row.approved_at) : null,
     executedAt: row.executed_at != null ? Number(row.executed_at) : null,
+    txHash: row.tx_hash ? String(row.tx_hash) : null,
+    chainId: row.chain_id != null ? Number(row.chain_id) : null,
+    executor: row.executor ? String(row.executor) : null,
   }
 }
 

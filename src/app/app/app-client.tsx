@@ -5,6 +5,7 @@ import { useAccount, useConnect } from 'wagmi'
 import { useRouter } from 'next/navigation'
 import { Canvas } from '@/components/connect/canvas'
 import { NavigationProvider } from '@/components/connect/use-connect-routing'
+import { ToastProvider } from '@/components/connect/toast'
 import { useSiweAuth } from '@/hooks/useSiweAuth'
 import { useDemoMode, isDemoModeSync } from '@/lib/demo/use-demo-mode'
 
@@ -574,10 +575,12 @@ function AccessGate({ children }: { children: React.ReactNode }) {
 
 export function AppClient() {
   return (
-    <NavigationProvider>
-      <AccessGate>
-        <Canvas />
-      </AccessGate>
-    </NavigationProvider>
+    <ToastProvider>
+      <NavigationProvider>
+        <AccessGate>
+          <Canvas />
+        </AccessGate>
+      </NavigationProvider>
+    </ToastProvider>
   )
 }

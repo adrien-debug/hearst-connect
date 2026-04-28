@@ -8,7 +8,13 @@
     "start": "next start --port 8100",
     "lint": "tsc -p . --noEmit && node scripts/check-design-system.mjs",
     "lint:design": "node scripts/check-design-system.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "contracts:build": "cd contracts && forge build && cd .. && node scripts/sync-abi.mjs",
+    "contracts:test": "cd contracts && forge test -vvv",
+    "contracts:coverage": "cd contracts && forge coverage --report lcov",
+    "contracts:fmt": "cd contracts && forge fmt",
+    "contracts:deploy:sepolia": "cd contracts && forge script script/Deploy.s.sol:DeployScript --rpc-url base_sepolia --broadcast --verify -vvvv && cd .. && node scripts/sync-addresses.mjs 84532",
+    "contracts:sync": "node scripts/sync-abi.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",

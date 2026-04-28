@@ -164,6 +164,9 @@ export interface DbRebalanceSignal {
   createdBy: AgentName
   approvedAt: number | null
   executedAt: number | null
+  txHash: string | null
+  chainId: number | null
+  executor: string | null
 }
 
 export interface DbRebalanceSignalInput {

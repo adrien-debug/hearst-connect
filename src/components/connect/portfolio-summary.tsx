@@ -9,6 +9,9 @@ import { buildMonthlyPortfolioCurve, generateNiceTicks } from './utils/portfolio
 import { fitValue, type SmartFitMode, useSmartFit, useShellPadding } from './smart-fit'
 import { type VaultLine, type Aggregate, type ActiveVault, type AvailableVault } from './data'
 import { useUserData } from '@/hooks/useUserData'
+import { useLiveActions } from '@/hooks/useLiveActions'
+import { useVaultById } from '@/hooks/useVaultRegistry'
+import { useToast } from './toast'
 
 import { CockpitGauge } from './cockpit-gauge'
 import { CardAction } from './card'
@@ -35,7 +38,7 @@ export function PortfolioSummary({
   })
   const { padding: shellPadding, gap: shellGap } = useShellPadding(mode)
   const [mounted, setMounted] = useState(false)
-  const [isClaimingAll, setIsClaimingAll] = useState(false)
+  const [isClaimingAllState, setIsClaimingAllState] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
   const { actions: userActions, activity: userActivity, stats: userStats } = useUserData()
@@ -52,24 +55,61 @@ export function PortfolioSummary({
     : 0
   const nextDistribution = mounted ? computeNextDailyDistribution() : null
 
-  const handleClaimAll = async () => {
+  const toast = useToast()
+  const [claimQueue, setClaimQueue] = useState<string[]>([])
+  const [claimRunStats, setClaimRunStats] = useState<{ total: number; ok: number; failed: number } | null>(null)
+  const claimingVaultId = claimQueue[0] ?? null
+  const isClaimingAll = isClaimingAllState || claimQueue.length > 0
+  const handleClaimAll = () => {
     if (safeAgg.totalClaimable === 0 || isClaimingAll) return
-
-    setIsClaimingAll(true)
-    try {
-      const claimableVaults = activeVaults.filter(v => v.claimable > 0)
-      
-      for (const vault of claimableVaults) {
-        console.log(`[ClaimAll] Claiming ${vault.claimable} from vault ${vault.id}`)
-      }
-      
-      userActions.refresh()
-    } catch (error) {
-      console.error('[ClaimAll] Error:', error)
-    } finally {
-      setIsClaimingAll(false)
-    }
+    const ids = activeVaults
+      .filter((v) => v.claimable > 0)
+      .map((v) => v.productId ?? v.id)
+    if (ids.length === 0) return
+    setClaimRunStats({ total: ids.length, ok: 0, failed: 0 })
+    setClaimQueue(ids)
   }
+  const handleClaimWorkerDone = (result: { success: boolean }) => {
+    setClaimRunStats((stats) =>
+      stats
+        ? {
+            ...stats,
+            ok: stats.ok + (result.success ? 1 : 0),
+            failed: stats.failed + (result.success ? 0 : 1),
+          }
+        : stats,
+    )
+    setClaimQueue((q) => q.slice(1))
+  }
+  // Once the queue empties, refresh once + show a summary toast. The effect
+  // pattern (vs inline) avoids refetching on every queue tick.
+  useEffect(() => {
+    if (claimQueue.length === 0 && isClaimingAllState) {
+      userActions.refresh()
+      setIsClaimingAllState(false)
+      if (claimRunStats) {
+        if (claimRunStats.failed === 0) {
+          toast.success(`Claimed ${claimRunStats.ok} position${claimRunStats.ok === 1 ? '' : 's'}`, {
+            body: 'Yield distributed across your wallet.',
+          })
+        } else if (claimRunStats.ok === 0) {
+          toast.error('Claim All failed', {
+            body: `${claimRunStats.failed} position${claimRunStats.failed === 1 ? '' : 's'} could not be claimed.`,
+          })
+        } else {
+          toast.info(`${claimRunStats.ok} of ${claimRunStats.total} positions claimed`, {
+            body: `${claimRunStats.failed} failed. Check your wallet and retry the rest.`,
+          })
+        }
+        setClaimRunStats(null)
+      }
+    }
+  }, [claimQueue.length, isClaimingAllState, userActions, claimRunStats, toast])
+  useEffect(() => {
+    if (claimQueue.length > 0 && !isClaimingAllState) {
+      setIsClaimingAllState(true)
+    }
+  }, [claimQueue.length, isClaimingAllState])
 
   // Memoized derived data — prevents recalculation on every render
   const { data: valueHistory, labels: valueHistoryLabels } = useMemo(
@@ -100,6 +140,7 @@ export function PortfolioSummary({
     <div
       className="flex-1"
       suppressHydrationWarning
+      data-claim-worker-active={claimingVaultId ?? undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -334,7 +375,11 @@ export function PortfolioSummary({
                   height: 'var(--dashboard-control-height-sm)',
                 }}
               >
-                {isClaimingAll ? 'Claiming...' : `Claim ${safeAgg.totalClaimable > 0 ? fmtUsdCompact(safeAgg.totalClaimable) : 'All'}`}
+                {isClaimingAll
+                  ? claimQueue.length > 0
+                    ? `Claiming… ${activeVaults.filter((v) => v.claimable > 0).length - claimQueue.length + 1}/${activeVaults.filter((v) => v.claimable > 0).length}`
+                    : 'Claiming…'
+                  : `Claim ${safeAgg.totalClaimable > 0 ? fmtUsdCompact(safeAgg.totalClaimable) : 'All'}`}
               </button>
             </div>
 
@@ -361,15 +406,13 @@ export function PortfolioSummary({
                   />
                 ) : (
                   activeVaults.map((vault, index) => (
-                    <VaultCardCompact
+                    <VaultCardWithActions
                       key={vault.id}
                       vault={vault}
                       index={index}
                       total={safeAgg.totalDeposited}
                       mode={mode}
-                      onClick={() => onVaultSelect?.(vault.id)}
-                      onClaim={() => onVaultSelect?.(vault.id)}
-                      onExit={() => onVaultSelect?.(vault.id)}
+                      onOpen={() => onVaultSelect?.(vault.id)}
                     />
                   ))
                 )}
@@ -446,6 +489,16 @@ export function PortfolioSummary({
           </DashboardSideCard>
         </div>
       </div>
+      {/* Hidden Claim All worker — runs the contract write for the head of the
+       * queue. The `key` prop forces a fresh mount per vault so the wagmi
+       * write hook is reset between sequential claims. */}
+      {claimingVaultId && (
+        <ClaimWorker
+          key={claimingVaultId}
+          vaultId={claimingVaultId}
+          onComplete={handleClaimWorkerDone}
+        />
+      )}
     </div>
   )
 }
@@ -1377,6 +1430,88 @@ function DashboardVaultCard({
         </span>
       </div>
     </div>
+  )
+}
+
+/** ClaimWorker — Headless component that claims one vault on mount and signals
+ * completion through `onComplete` (success or failure). Used by the parent's
+ * `claimQueue` machinery: the parent renders one ClaimWorker at a time keyed
+ * by vaultId, and as each worker finishes the parent advances the queue.
+ *
+ * Headless because there's no UI here — visual progress lives in the parent's
+ * "Claim All" button label. */
+function ClaimWorker({
+  vaultId,
+  onComplete,
+}: {
+  vaultId: string
+  onComplete: (result: { success: boolean; error?: string }) => void
+}) {
+  const live = useLiveActions(vaultId)
+  const startedRef = useRef(false)
+  useEffect(() => {
+    if (startedRef.current) return
+    startedRef.current = true
+    void live.claim().then((result) => {
+      onComplete({ success: result.success, error: result.error })
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return null
+}
+
+/** VaultCardWithActions — Wraps VaultCardCompact with a per-vault `useLiveActions`
+ * so that hover-overlay Claim/Exit buttons trigger real chain calls instead of
+ * just navigating to the detail page. Hosting the hook inside this child
+ * component (rather than the parent's map loop) keeps Rules of Hooks happy:
+ * one mount = one hook order. */
+function VaultCardWithActions({
+  vault,
+  index,
+  total,
+  mode,
+  onOpen,
+}: {
+  vault: ActiveVault
+  index: number
+  total: number
+  mode: SmartFitMode
+  onOpen: () => void
+}) {
+  const productId = vault.productId ?? vault.id
+  const live = useLiveActions(productId)
+  const vaultConfig = useVaultById(productId)
+  const explorerBase = vaultConfig?.chain?.blockExplorers?.default?.url
+  const toast = useToast()
+
+  const handleClaim = async () => {
+    if (!live.canClaim || live.isPending) return
+    const result = await live.claim()
+    if (result.success) {
+      const txUrl = result.txHash && explorerBase
+        ? `${explorerBase.replace(/\/$/, '')}/tx/${result.txHash}`
+        : undefined
+      toast.success(`Claimed from ${vault.name}`, {
+        body: 'Yield distributed to your wallet.',
+        action: txUrl ? { label: 'View tx', href: txUrl } : undefined,
+      })
+    } else {
+      toast.error('Claim failed', {
+        body: result.error ?? 'Unknown error. Check your wallet and try again.',
+      })
+    }
+  }
+
+  return (
+    <VaultCardCompact
+      vault={vault}
+      index={index}
+      total={total}
+      mode={mode}
+      onClick={onOpen}
+      onClaim={live.canClaim ? handleClaim : undefined}
+      onExit={onOpen}
+    />
   )
 }
 
