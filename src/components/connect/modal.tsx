@@ -84,7 +84,7 @@ export function Modal({
           position: 'absolute',
           inset: 0,
           background: 'var(--hc-overlay)',
-          animation: 'fadeIn 200ms ease-out',
+          animation: 'fadeIn var(--dashboard-duration) var(--dashboard-ease)',
         }}
       />
 
@@ -98,10 +98,10 @@ export function Modal({
           borderRadius: TOKENS.radius.lg,
           border: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           boxShadow: 'var(--hc-shadow-lg)',
-          animation: 'scaleIn 200ms ease-out',
+          animation: 'scaleIn var(--dashboard-duration) var(--dashboard-ease)',
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: 'calc(100vh - 48px)',
+          maxHeight: 'calc(100vh - var(--space-12))',
         }}
       >
         {/* Header */}
@@ -237,7 +237,7 @@ export function TransactionState({
               border: `${TOKENS.borders.heavy} solid ${TOKENS.colors.borderSubtle}`,
               borderTopColor: TOKENS.colors.accent,
               borderRadius: TOKENS.radius.full,
-              animation: 'spin 1s linear infinite',
+              animation: 'spin var(--dashboard-duration-loader, 1s) linear infinite',
             }}
           />
           <p style={{ color: TOKENS.colors.textSecondary, margin: 0 }}>{message}</p>
@@ -255,7 +255,7 @@ export function TransactionState({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              animation: 'scaleIn 300ms ease-out',
+              animation: 'scaleIn var(--dashboard-duration-slow) var(--dashboard-ease)',
             }}
           >
             <svg width={TOKENS.spacing[6]} height={TOKENS.spacing[6]} viewBox="0 0 24 24" fill="none">

@@ -76,6 +76,21 @@
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
+  /* Borders */
+  --border-thin: 1px;
+  --border-medium: 3px;
+  --border-thick: 6px;
+
+  /* Dock chrome — referenced by canvas footer height and dock-radial bottom offset */
+  --dock-chrome-height: var(--space-16);
+
+  /* Panel sidebar widths — avoids magic px in grid column definitions */
+  --panel-sidebar-md: 380px;
+  --panel-sidebar-sm: 320px;
+
+  /* line-height for display figures (1.1) */
+  --leading-display: 1.1;
+
   /* Animation */
   --transition-fast: 120ms ease-out;
   --transition-base: 150ms ease-out;

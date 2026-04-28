@@ -251,7 +251,7 @@ export function VaultCardCompact({ vault, index, mode, onClick, onClaim, onExit,
             justifyContent: 'center',
             gap: TOKENS.spacing[2],
             padding: TOKENS.spacing[2],
-            animation: 'fadeIn 150ms ease-out',
+            animation: 'fadeIn var(--dashboard-duration-fast) var(--dashboard-ease)',
           }}
           onClick={(e) => e.stopPropagation()}
         >

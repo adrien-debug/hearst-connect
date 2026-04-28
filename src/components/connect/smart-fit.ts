@@ -52,9 +52,9 @@ export function useShellPadding(mode?: SmartFitMode) {
   const effectiveMode = mode || 'normal'
 
   const values = {
-    normal: { padding: 24, gap: 24 },
-    tight: { padding: 16, gap: 16 },
-    limit: { padding: 12, gap: 12 },
+    normal: { padding: 'var(--space-6)', gap: 'var(--space-6)' },
+    tight:  { padding: 'var(--space-4)', gap: 'var(--space-4)' },
+    limit:  { padding: 'var(--space-3)', gap: 'var(--space-3)' },
   }
 
   return values[effectiveMode]

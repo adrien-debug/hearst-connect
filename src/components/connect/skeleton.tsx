@@ -10,7 +10,7 @@ interface SkeletonProps {
 /** Placeholder layout while vault detail data loads */
 export function Skeleton({ mode }: SkeletonProps) {
   const basePulse = {
-    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+    animation: 'pulse var(--dashboard-duration-pulse, 2s) var(--ds-ease-standard) infinite',
     background: TOKENS.colors.bgTertiary,
     borderRadius: TOKENS.radius.sm,
   }

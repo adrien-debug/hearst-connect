@@ -121,7 +121,7 @@ export const TOKENS = {
     sm: 'var(--dashboard-radius-sm)',
     md: 'var(--dashboard-radius-card)',
     lg: 'var(--dashboard-radius-box)',
-    xl: '20px',
+    xl: 'var(--radius-xl)',
     full: 'var(--dashboard-radius-badge)',
     dot: 'var(--dashboard-radius-dot)',
   },

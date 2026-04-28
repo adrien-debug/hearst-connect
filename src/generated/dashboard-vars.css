@@ -307,6 +307,9 @@
   /* ─── ANIMATION TOKENS ────────────────────────────────────────────────── */
   --dashboard-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --dashboard-ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Loader/pulse durations — referenced by spinner and skeleton animations */
+  --dashboard-duration-loader: 1s;
+  --dashboard-duration-pulse: 2s;
 
   /* ─── GLOW ORB TOKENS (vault card visual) ─────────────────────────────── */
   --dashboard-vault-header-height: 72px;

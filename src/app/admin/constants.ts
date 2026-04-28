@@ -63,8 +63,8 @@ export const ADMIN_TOKENS = {
     terminalGreen: 'var(--color-terminal-green)',
   },
   fonts: {
-    sans: "'Satoshi Variable', Inter, -apple-system, sans-serif",
-    mono: "'IBM Plex Mono', 'SF Mono', ui-monospace, monospace",
+    sans: 'var(--font-sans)',
+    mono: 'var(--font-mono)',
   },
   fontSizes: {
     /** 10px — sub-micro figure, only for ultra-dense badges/glyphs */

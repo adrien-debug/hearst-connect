@@ -156,9 +156,9 @@ export function PortfolioSummary({
       <div
         style={{
           padding: fitValue(mode, {
-            normal: `${shellPadding * 0.75}px ${shellPadding}px`,
-            tight: `${shellPadding * 0.5}px ${shellPadding * 0.75}px`,
-            limit: `${shellPadding * 0.4}px ${shellPadding * 0.5}px`,
+            normal: 'var(--space-5) var(--space-6)',
+            tight: 'var(--space-3) var(--space-4)',
+            limit: 'var(--space-2) var(--space-3)',
           }),
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
@@ -230,8 +230,8 @@ export function PortfolioSummary({
           tight: 'minmax(0, 1fr) 320px',
           limit: 'minmax(0, 1fr)',
         }),
-        padding: `${shellPadding}px`,
-        gap: `${shellGap}px`,
+        padding: shellPadding,
+        gap: shellGap,
         minHeight: 0,
         minWidth: 0,
         overflow: 'hidden',

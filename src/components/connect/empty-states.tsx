@@ -34,7 +34,7 @@ export function EmptyState({
       <div style={{ fontSize: TOKENS.fontSizes.lg, fontWeight: 600, color: TOKENS.colors.textPrimary }}>
         {title}
       </div>
-      <div style={{ fontSize: TOKENS.fontSizes.sm, maxWidth: '280px', lineHeight: 1.5 }}>
+      <div style={{ fontSize: TOKENS.fontSizes.sm, maxWidth: '280px', lineHeight: 'var(--dashboard-line-height-normal)' }}>
         {description}
       </div>
       {children}
@@ -111,12 +111,12 @@ export function LoadingState() {
     >
       <div
         style={{
-          width: '32px',
-          height: '32px',
+          width: TOKENS.icon.xl,
+          height: TOKENS.icon.xl,
           border: `${TOKENS.borders.thick} solid ${TOKENS.colors.borderSubtle}`,
           borderTopColor: TOKENS.colors.accent,
           borderRadius: TOKENS.radius.full,
-          animation: 'spin 1s linear infinite',
+          animation: 'spin var(--dashboard-duration-loader, 1s) linear infinite',
         }}
       />
     </div>

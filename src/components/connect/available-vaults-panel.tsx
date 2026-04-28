@@ -52,9 +52,9 @@ export function AvailableVaultsPanel({ vaults, onVaultSelect }: AvailableVaultsP
       <div
         style={{
           padding: fitValue(mode, {
-            normal: `${shellPadding}px`,
-            tight: `${shellPadding * 0.75}px`,
-            limit: `${shellPadding * 0.5}px`,
+            normal: 'var(--space-6)',
+            tight: 'var(--space-4)',
+            limit: 'var(--space-3)',
           }),
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           background: TOKENS.colors.black,

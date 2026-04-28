@@ -54,13 +54,13 @@ const AGENT_META: Record<AgentName, { label: string; desc: string; icon: string;
     label: 'Strategy Optimizer',
     desc: 'Analyse les conditions et génère des signaux de rebalance si justifiés.',
     icon: '⚡',
-    color: '#52c97a',
+    color: 'var(--dashboard-chart-palette-mid)',
   },
   audit: {
     label: 'Audit & Risk',
     desc: 'Audite les signaux pending, vérifie les risques, peut bloquer.',
     icon: '🛡',
-    color: '#d4d4d8',
+    color: 'var(--dashboard-chart-palette-grey-1)',
   },
 }
 

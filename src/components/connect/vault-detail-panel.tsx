@@ -96,8 +96,8 @@ export function VaultDetailPanel({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          padding: `${shellPadding}px`,
-          gap: `${shellGap}px`,
+          padding: shellPadding,
+          gap: shellGap,
         }}
       >
         <div style={{ marginBottom: TOKENS.spacing[4] }}>
@@ -132,8 +132,8 @@ export function VaultDetailPanel({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          padding: `${shellPadding}px`,
-          gap: `${shellGap}px`,
+          padding: shellPadding,
+          gap: shellGap,
         }}
       >
         <div style={{ marginBottom: TOKENS.spacing[4] }}>
@@ -180,8 +180,8 @@ export function VaultDetailPanel({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          padding: `${shellPadding}px`,
-          gap: `${shellGap}px`,
+          padding: shellPadding,
+          gap: shellGap,
         }}
       >
         <div style={{ marginBottom: TOKENS.spacing[4] }}>
@@ -231,7 +231,6 @@ export function VaultDetailPanel({
         isReadyForExit={isPositionReadyForExit}
         onBack={onBack}
         mode={mode}
-        shellPadding={shellPadding}
         feesLabel={vaultConfig?.fees}
         targetLabel={vault.target}
         lockPeriodDays={vaultConfig?.lockPeriodDays}
@@ -509,7 +508,6 @@ function PositionHeader({
   isReadyForExit,
   onBack,
   mode,
-  shellPadding,
   feesLabel,
   targetLabel,
   lockPeriodDays,
@@ -528,7 +526,6 @@ function PositionHeader({
   isReadyForExit: boolean
   onBack?: () => void
   mode: SmartFitMode
-  shellPadding: number
   feesLabel?: string
   targetLabel?: string
   lockPeriodDays?: number
@@ -554,9 +551,9 @@ function PositionHeader({
   return (
     <div style={{
       padding: fitValue(mode, {
-        normal: `${shellPadding}px`,
-        tight: `${shellPadding * 0.75}px`,
-        limit: `${shellPadding * 0.5}px`,
+        normal: 'var(--space-6)',
+        tight: 'var(--space-4)',
+        limit: 'var(--space-3)',
       }),
       borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
       flexShrink: 0,

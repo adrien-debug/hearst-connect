@@ -18,7 +18,7 @@ interface StepDepositProps {
   onApprove: () => void
   onDeposit: () => void
   onBack: () => void
-  shellGap: number
+  shellGap: string
 }
 
 const SCENARIO_TITLES: Record<MarketRegime, string> = {

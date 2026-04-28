@@ -84,9 +84,9 @@ export function SimulationPanel() {
       <div
         style={{
           padding: fitValue(mode, {
-            normal: `${pad}px`,
-            tight: `${pad * 0.75}px`,
-            limit: `${pad * 0.5}px`,
+            normal: 'var(--space-6)',
+            tight: 'var(--space-4)',
+            limit: 'var(--space-3)',
           }),
           borderBottom: `${TOKENS.borders.thin} solid ${TOKENS.colors.borderSubtle}`,
           flexShrink: 0,
@@ -163,8 +163,8 @@ export function SimulationPanel() {
           flexDirection: 'column',
           minHeight: 0,
           overflow: 'hidden', // Changed from auto to hidden to fit in screen
-          padding: `${pad}px`,
-          gap: `${shellGap}px`,
+          padding: pad,
+          gap: shellGap,
         }}
       >
         {/* Chart & Recap Grid */}
@@ -176,14 +176,14 @@ export function SimulationPanel() {
             tight: '1fr 320px',
             limit: '1fr',
           }),
-          gap: `${shellGap}px`,
+          gap: shellGap,
           minHeight: 0,
         }}>
           {/* Left Column: Chart + Controls */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: `${shellGap}px`,
+            gap: shellGap,
             minHeight: 0,
           }}>
             {/* Projection Chart */}
