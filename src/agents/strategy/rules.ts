@@ -5,6 +5,29 @@
 import { createSignal } from './signals'
 import type { RebalanceSignal, SignalType } from '../shared/types'
 
+type Regime = 'BULL' | 'SIDEWAYS' | 'BEAR'
+
+// Prime vault: [RWA Mining, USDC Yield, BTC Hedged] — must sum to 100
+const REGIME_WEIGHTS: Record<Regime, number[]> = {
+  BULL:     [55, 25, 20],
+  SIDEWAYS: [40, 30, 30],
+  BEAR:     [30, 45, 25],
+}
+
+const SIGNAL_WEIGHTS: Record<SignalType, (r: Regime) => number[]> = {
+  TAKE_PROFIT:  ()  => [40, 45, 15], // lock-in gains: reduce BTC, park in yield
+  REDUCE_RISK:  ()  => [30, 45, 25], // defensive shift regardless of regime
+  INCREASE_BTC: ()  => [35, 25, 40], // accumulate BTC during fear
+  YIELD_ROTATE: ()  => [30, 50, 20], // rotate mining → USDC yield
+  REBALANCE:    (r) => REGIME_WEIGHTS[r], // back to regime target
+}
+
+function determineRegime(fearGreed: number, btc7dChange: number): Regime {
+  if (fearGreed >= 60 && btc7dChange >= 3) return 'BULL'
+  if (fearGreed <= 35 || btc7dChange <= -5) return 'BEAR'
+  return 'SIDEWAYS'
+}
+
 interface MarketState {
   btcPrice: number
   btc24hChange: number
@@ -54,6 +77,7 @@ export function evaluateRules(
 ): Omit<RebalanceSignal, 'createdBy'>[] {
   const signals: Omit<RebalanceSignal, 'createdBy'>[] = []
   const now = Date.now()
+  const regime = determineRegime(market.fearGreed, market.btc7dChange)
 
   const onCooldown = (type: SignalType): boolean => {
     const hours = cfg.cooldowns[type]
@@ -72,7 +96,7 @@ export function evaluateRules(
           'TAKE_PROFIT',
           `BTC à $${market.btcPrice.toFixed(0)} a franchi +${((level.mult - 1) * 100).toFixed(0)}% vs entrée ($${cfg.btcEntry}). Vendre ${pctToSell}% de la poche BTC.`,
           30,
-          { targetPrice: target, pctToSell, currentPrice: market.btcPrice }
+          { targetPrice: target, pctToSell, currentPrice: market.btcPrice, weights: SIGNAL_WEIGHTS.TAKE_PROFIT(regime), regime }
         ))
         break
       }
@@ -85,7 +109,7 @@ export function evaluateRules(
       'REDUCE_RISK',
       `Fear & Greed à ${market.fearGreed} (${market.fearLabel}). Marché surchauffé — réduire l'exposition BTC.`,
       45,
-      { fearGreed: market.fearGreed }
+      { fearGreed: market.fearGreed, weights: SIGNAL_WEIGHTS.REDUCE_RISK(regime), regime }
     ))
   }
 
@@ -95,7 +119,7 @@ export function evaluateRules(
       'INCREASE_BTC',
       `Fear & Greed à ${market.fearGreed} (${market.fearLabel}). Zone de peur historique — envisager d'augmenter l'allocation BTC.`,
       55,
-      { fearGreed: market.fearGreed }
+      { fearGreed: market.fearGreed, weights: SIGNAL_WEIGHTS.INCREASE_BTC(regime), regime }
     ))
   }
 
@@ -109,7 +133,7 @@ export function evaluateRules(
         'YIELD_ROTATE',
         `${better} APY (${Math.max(market.usdcApy, market.usdtApy).toFixed(2)}%) est +${yieldDiff.toFixed(2)}% vs ${worse}. Rotation stablecoin recommandée.`,
         20,
-        { usdcApy: market.usdcApy, usdtApy: market.usdtApy, diff: yieldDiff }
+        { usdcApy: market.usdcApy, usdtApy: market.usdtApy, diff: yieldDiff, weights: SIGNAL_WEIGHTS.YIELD_ROTATE(regime), regime }
       ))
     }
   }
@@ -120,7 +144,7 @@ export function evaluateRules(
       'REBALANCE',
       `BTC a bougé de ${market.btc7dChange.toFixed(1)}% en 7 jours. L'allocation a probablement drifté — rebalance vers la cible.`,
       35,
-      { btc7dChange: market.btc7dChange }
+      { btc7dChange: market.btc7dChange, weights: SIGNAL_WEIGHTS.REBALANCE(regime), regime }
     ))
   }
 
