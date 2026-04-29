@@ -147,12 +147,8 @@ export function useSiweAuth() {
         issuedAt: new Date().toISOString(),
       })
 
-      console.log('[useSiweAuth] Message built, signing...')
-
       // 3. Sign with wallet
       const signature = await signMessageAsync({ message, account: address })
-
-      console.log('[useSiweAuth] Signed, verifying with server...')
 
       // 4. Verify with server
       const verifyRes = await fetch('/api/auth/verify', {
@@ -180,7 +176,6 @@ export function useSiweAuth() {
       })
 
       setApiAuthenticated(true)
-      console.log('[useSiweAuth] Authenticated:', result.address)
       return true
 
     } catch (error) {
@@ -205,9 +200,7 @@ export function useSiweAuth() {
       })
       setApiAuthenticated(false)
 
-      if (isRejection) {
-        console.log('[useSiweAuth] User rejected signature')
-      } else {
+      if (!isRejection) {
         console.error('[useSiweAuth] Auth failed:', error)
       }
       return false

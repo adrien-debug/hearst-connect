@@ -439,29 +439,7 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-/* Connect scope scrollbars (always dark) */
-.connect-scope ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.connect-scope ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.connect-scope ::-webkit-scrollbar-thumb {
-  background: var(--hc-scrollbar-thumb);
-  border-radius: 3px;
-}
-
-.connect-scope ::-webkit-scrollbar-thumb:hover {
-  background: var(--hc-scrollbar-thumb-hover);
-}
-
-.connect-scope {
-  scrollbar-width: thin;
-  scrollbar-color: var(--hc-scrollbar-thumb) transparent;
-}
+/* Connect scope scrollbars → defined in src/styles/connect/dashboard-vars.css */
 
 /* ============================================
    LIGHT THEME GLOBAL STYLES - "Light Stylé"
