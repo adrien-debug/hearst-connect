@@ -4,7 +4,7 @@
  */
 
 import Database from 'better-sqlite3'
-import { mkdirSync } from 'fs'
+import { mkdirSync, copyFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
 let db: Database.Database | null = null
@@ -14,18 +14,34 @@ export function _setTestDb(testDb: Database.Database): void {
   db = testDb
 }
 
+function resolveDbPath(): string {
+  // Vercel serverless: process.cwd() is read-only. Copy seed DB to /tmp on
+  // first use so writes succeed. /tmp persists across requests within the same
+  // warm Lambda instance but resets on cold start (acceptable for testnet phase).
+  if (process.env.NODE_ENV === 'production') {
+    const tmpPath = '/tmp/hearst.db'
+    if (!existsSync(tmpPath)) {
+      const seedPath = join(process.cwd(), 'data', 'hearst.db')
+      if (existsSync(seedPath)) {
+        try {
+          copyFileSync(seedPath, tmpPath)
+        } catch (e) {
+          console.error('[DB] Failed to copy seed DB to /tmp:', e)
+        }
+      }
+    }
+    return tmpPath
+  }
+
+  const dataDir = join(process.cwd(), 'data')
+  mkdirSync(dataDir, { recursive: true })
+  return join(dataDir, 'hearst.db')
+}
+
 export function getDb(): Database.Database {
   if (db) return db
 
-  // Ensure data directory exists
-  const dataDir = join(process.cwd(), 'data')
-  try {
-    mkdirSync(dataDir, { recursive: true })
-  } catch (e) {
-    console.error('[DB] Failed to create data directory:', e)
-  }
-
-  const dbPath = join(dataDir, 'hearst.db')
+  const dbPath = resolveDbPath()
 
   try {
     db = new Database(dbPath)

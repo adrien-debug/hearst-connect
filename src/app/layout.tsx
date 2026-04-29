@@ -15,7 +15,7 @@ import localFont from 'next/font/local';
 const satoshi = localFont({
   src: '../../public/fonts/Satoshi-Variable.woff2',
   variable: '--font-satoshi',
-  display: 'swap',
+  display: 'optional',
   weight: '300 900',
 });
 

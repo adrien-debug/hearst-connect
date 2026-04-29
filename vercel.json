@@ -2,5 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "framework": "nextjs",
-  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- ."
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- .",
+  "alias": ["hearst-connect.vercel.app"]
 }
